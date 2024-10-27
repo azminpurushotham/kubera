@@ -12,7 +12,6 @@ import com.collection.kubera.ui.theme.KuberaTheme
 class SplashActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        print("dssfsfsdfsdfd")
         setContent {
             KuberaTheme {
                 // A surface container using the 'background' color from the theme
