@@ -1,4 +1,4 @@
-package com.collection.kubera
+package com.collection.kubera.ui.landing
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import com.collection.kubera.ui.theme.KuberaTheme
 import com.collection.kubera.ui.BakingScreen
 
-class SplashActivity : ComponentActivity() {
+class LandingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -20,7 +20,7 @@ class SplashActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    BakingScreen()
+                    LandingScreen()
                 }
             }
         }
