@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "kubera"
+rootProject.name ="kashflowclt"
 include(":app")
  

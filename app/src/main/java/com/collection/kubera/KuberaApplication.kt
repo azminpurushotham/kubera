@@ -18,6 +18,9 @@ package com.collection.kubera
 
 import android.app.Application
 import android.util.Log
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.google.android.gms.common.GooglePlayServicesRepairableException
+import com.google.android.gms.security.ProviderInstaller
 import com.google.firebase.FirebaseApp
 import timber.log.Timber
 
@@ -38,6 +41,21 @@ class KuberaApplication : Application() {
         FirebaseApp.initializeApp(this)?.let {
             Log.d("FirebaseInit", "Firebase successfully initialized")
         }
+        installProvider()
         Timber.plant(Timber.DebugTree())
+    }
+
+
+    fun installProvider() {
+        try {
+            ProviderInstaller.installIfNeeded(applicationContext)
+        } catch (e: GooglePlayServicesRepairableException) {
+            // Prompt user to update Google Play Services
+        } catch (e: GooglePlayServicesNotAvailableException) {
+            // Handle case where Google Play Services is not available
+        } catch (e: Exception) {
+            // Log unexpected errors
+            e.printStackTrace()
+        }
     }
 }

@@ -20,20 +20,17 @@ class RegistrationViewModel : ViewModel() {
         _uiState.asStateFlow()
     private val _users = MutableStateFlow<List<User>>(emptyList())
     val users: StateFlow<List<User>> get() = _users
-    val firestore = FirebaseFirestore.getInstance()
 
     fun getUsers(){
         _uiState.value = UiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val snapshot = firestore.collection("user").get().await()
-                _users.value = snapshot.documents.mapNotNull { it.toObject(User::class.java) }
-                _users.value.forEach {
-                    Timber.tag("Users").v(it.username)
-                }
-            } catch (e: Exception) {
-                Timber.tag("ERROR").e(e)
+            val firestore = FirebaseFirestore.getInstance()
+            val snapshot = firestore.collection("user").get().await()
+            _users.value = snapshot.documents.mapNotNull { it.toObject(User::class.java) }
+            _users.value.forEach {
+                Timber.tag("Users").v(it.username)
             }
+            _uiState.value = UiState.Success("Success")
         }
     }
 }

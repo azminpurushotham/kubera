@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
     implementation(libs.generativeai)
     implementation(libs.icons)
     implementation(libs.timber)
@@ -60,6 +61,8 @@ dependencies {
     implementation(libs.firebase.analytics.ktx)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
+    implementation(libs.play.services.base)
+//    implementation(libs.play.services.provider)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
