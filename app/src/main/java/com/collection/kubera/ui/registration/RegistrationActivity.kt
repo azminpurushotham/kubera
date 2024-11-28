@@ -1,4 +1,4 @@
-package com.collection.kubera.ui.login
+package com.collection.kubera.ui.registration
 
 import android.app.Activity
 import android.os.Bundle
@@ -13,11 +13,10 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.view.WindowInsetsControllerCompat
 import com.collection.kubera.ui.theme.KuberaTheme
 
-class LoginActivity : ComponentActivity() {
+class RegistrationActivity : ComponentActivity() {
     @Composable
     fun StatusBarWithPlatformApi() {
         val activity = LocalContext.current as Activity
@@ -39,7 +38,7 @@ class LoginActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    LoginScreen()
+                    RegistrationScreen()
                 }
             }
         }

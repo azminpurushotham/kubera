@@ -53,6 +53,7 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.generativeai)
+    implementation(libs.icons)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)
