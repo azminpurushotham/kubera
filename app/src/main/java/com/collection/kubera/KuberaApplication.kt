@@ -17,6 +17,10 @@
 package com.collection.kubera
 
 import android.app.Application
+import android.util.Log
+import com.google.firebase.FirebaseApp
+import timber.log.Timber
+
 //import com.collection.kubera.data.AppContainer
 //import com.collection.kubera.data.AppContainerImpl
 
@@ -30,6 +34,10 @@ class KuberaApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-//        container = AppContainerImpl(this)
+        println("KuberaApplication")
+        FirebaseApp.initializeApp(this)?.let {
+            Log.d("FirebaseInit", "Firebase successfully initialized")
+        }
+        Timber.plant(Timber.DebugTree())
     }
 }
