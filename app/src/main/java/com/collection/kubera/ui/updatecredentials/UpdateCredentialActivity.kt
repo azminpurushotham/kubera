@@ -1,6 +1,7 @@
 package com.collection.kubera.ui.updatecredentials
 
 import android.app.Activity
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,6 +15,10 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.collection.kubera.data.User
 import com.collection.kubera.ui.theme.KuberaTheme
 
 class UpdateCredentialActivity : ComponentActivity() {
@@ -30,6 +35,13 @@ class UpdateCredentialActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        savedInstanceState?.getString("userName")
+        val userCredentials: User? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra("userCredentials", User::class.java)
+        } else {
+            @Suppress("DEPRECATION") // Suppress warning for deprecated method
+            intent.getParcelableExtra("userCredentials")
+        }
         setContent {
             KuberaTheme {
                 StatusBarWithPlatformApi()
@@ -38,9 +50,23 @@ class UpdateCredentialActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    UpdateCredentialsScreen()
+                    userCredentials?.let {
+                        val viewModel: UpdateCredentialsViewModel = viewModel(
+                            factory = ViewModelFactory(userCredentials)
+                        )
+                        UpdateCredentialsScreen(viewModel)
+                    }
                 }
             }
         }
+    }
+}
+class ViewModelFactory(private val param: User) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(UpdateCredentialsViewModel::class.java)) {
+            return UpdateCredentialsViewModel(param) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

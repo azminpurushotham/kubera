@@ -1,6 +1,7 @@
 package com.collection.kubera.ui.login
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.collection.kubera.states.LoginUiState
 import com.collection.kubera.ui.registration.RegistrationActivity
 import com.collection.kubera.ui.theme.KuberaTheme
 
@@ -58,6 +62,7 @@ fun LoginScreen(
     val passwordCharacterLimit = 8
     var passwordVisible by remember { mutableStateOf(false) }
 
+    val uiState by viewModel.uiState.collectAsState()
     var isEnabled by remember { mutableStateOf(false) }
 
     fun validateUserName(userName: String) {
@@ -72,17 +77,9 @@ fun LoginScreen(
         isEnabled = !isErrorUserName && !isErrorPassword
     }
 
+
     KuberaTheme {
-        Scaffold(/*topBar = {
-        TopAppBar(
-            title = { Text("Login") },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        )
-    },*/
-            content = { paddingValues ->
+        Scaffold(content = { paddingValues ->
                 // Page content goes here
                 Column(
                     modifier = Modifier
@@ -92,6 +89,30 @@ fun LoginScreen(
                     verticalArrangement = Arrangement.Center, // Vertically center items
                     horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
                 ) {
+                    when(uiState){
+                        LoginUiState.Loading -> {
+                            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+                        }
+                        is LoginUiState.Initial -> {
+
+                        }
+                        is LoginUiState.LoginFiled -> {
+                            Toast.makeText(context, (uiState as LoginUiState.LoginFiled).message, Toast.LENGTH_LONG).show()
+                        }
+                        is LoginUiState.LoginSuccess -> {
+                            Toast.makeText(context, (uiState as LoginUiState.LoginSuccess).message, Toast.LENGTH_LONG).show()
+                        }
+                        is LoginUiState.PasswordError -> {
+                            Toast.makeText(context, (uiState as LoginUiState.PasswordError).message, Toast.LENGTH_LONG).show()
+                        }
+                        is LoginUiState.UserCredentials -> {
+
+                        }
+                        is LoginUiState.UserNameError -> {
+                            Toast.makeText(context, (uiState as LoginUiState.UserNameError).message, Toast.LENGTH_LONG).show()
+                        }
+                    }
+
                     Text("Login", fontWeight = FontWeight(600), fontSize = 24.sp)
                     OutlinedTextField(
                         value = userName,
@@ -169,7 +190,9 @@ fun LoginScreen(
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     Button(
-                        onClick = {},
+                        onClick = {
+                            viewModel.login(userName, password)
+                        },
                         shape = RoundedCornerShape(5.dp),
                         modifier = Modifier.fillMaxWidth(),
                         enabled = isEnabled, // Control button's enabled state

@@ -56,6 +56,7 @@ dependencies {
     implementation(libs.generativeai)
     implementation(libs.icons)
     implementation(libs.timber)
+    implementation(libs.gson)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)

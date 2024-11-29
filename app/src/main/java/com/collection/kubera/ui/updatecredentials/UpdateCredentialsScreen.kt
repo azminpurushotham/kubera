@@ -1,5 +1,6 @@
 package com.collection.kubera.ui.updatecredentials
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -44,9 +45,7 @@ import com.collection.kubera.ui.theme.KuberaTheme
 
 @Preview
 @Composable
-fun UpdateCredentialsScreen(
-    viewModel: UpdateCredentialsViewModel = viewModel()
-) {
+fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<UpdateCredentialsViewModel>()) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     var userName by remember { mutableStateOf("") }
@@ -80,16 +79,43 @@ fun UpdateCredentialsScreen(
         isEnabled = !isErrorUserName && !isErrorPassword
     }
 
+    when (uiState) {
+        is UpdateCredentialsUiState.Initial -> {
+
+        }
+
+        is UpdateCredentialsUiState.Loading -> {
+
+        }
+
+        is UpdateCredentialsUiState.UserCredentials->{
+            userName = (uiState as UpdateCredentialsUiState.UserCredentials).user.username
+        }
+
+        is UpdateCredentialsUiState.UpdationSuccess -> {
+            Toast.makeText(
+                context,
+                (uiState as UpdateCredentialsUiState.UpdationSuccess).message,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
+        is UpdateCredentialsUiState.UpdationFiled -> {
+            Toast.makeText(
+                context,
+                (uiState as UpdateCredentialsUiState.UpdationFiled).message,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+
+        is UpdateCredentialsUiState.ConfirmPasswordError ->{}
+        is UpdateCredentialsUiState.PasswordError -> {}
+        is UpdateCredentialsUiState.PasswordMismatchError -> {}
+        is UpdateCredentialsUiState.UserNameError -> {}
+    }
+
     KuberaTheme {
-        Scaffold(/*topBar = {
-        TopAppBar(
-            title = { Text("Login") },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        )
-    },*/
+        Scaffold(
             content = { paddingValues ->
                 // Page content goes here
                 Column(
@@ -100,8 +126,18 @@ fun UpdateCredentialsScreen(
                     verticalArrangement = Arrangement.Center, // Vertically center items
                     horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
                 ) {
-                    Text("Change Credentials", fontWeight = FontWeight(600), fontSize = 24.sp,color = MaterialTheme.colorScheme.onSurface)
-                    Text("Please update your username and password", fontWeight = FontWeight(300), fontSize = 14.sp, color = MaterialTheme.colorScheme.onPrimary)
+                    Text(
+                        "Change Credentials",
+                        fontWeight = FontWeight(600),
+                        fontSize = 24.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        "Please update your username and password",
+                        fontWeight = FontWeight(300),
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
                     OutlinedTextField(
                         value = userName,
                         onValueChange = {
@@ -202,7 +238,9 @@ fun UpdateCredentialsScreen(
                         trailingIcon = {
                             val icon =
                                 if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Default.VisibilityOff
-                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                            IconButton(onClick = {
+                                confirmPasswordVisible = !confirmPasswordVisible
+                            }) {
                                 Icon(
                                     imageVector = icon,
                                     contentDescription = "Toggle password visibility"
@@ -216,7 +254,7 @@ fun UpdateCredentialsScreen(
                                     text = "Limit: ${confirmPassword.length}/$passwordCharacterLimit",
                                     color = MaterialTheme.colorScheme.error
                                 )
-                            }else if(uiState is UpdateCredentialsUiState.PasswordMismatchError){
+                            } else if (uiState is UpdateCredentialsUiState.PasswordMismatchError) {
                                 Text(
                                     modifier = Modifier.fillMaxWidth(),
                                     text = (uiState as UpdateCredentialsUiState.PasswordMismatchError).message,
@@ -228,7 +266,11 @@ fun UpdateCredentialsScreen(
                     Spacer(modifier = Modifier.height(20.dp))
                     Button(
                         onClick = {
-                            viewModel.updateCredentials(userName, password,confirmPassword)
+                            viewModel.updateCredentials(
+                                userName,
+                                password,
+                                confirmPassword
+                            )
                         },
                         shape = RoundedCornerShape(5.dp),
                         modifier = Modifier.fillMaxWidth(),

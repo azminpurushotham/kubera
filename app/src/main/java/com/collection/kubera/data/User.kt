@@ -5,18 +5,21 @@ import android.os.Parcelable
 import com.google.firebase.Timestamp
 
 data class User(
+    var id: String = "",
     val loggedintime: Timestamp? = Timestamp.now(),
     val password: String = "",
     val status: Boolean = false,
     val username: String = ""
 ): Parcelable{
     constructor(parcel: Parcel) : this(
+        parcel.readString()?:"",
         parcel.readParcelable(Timestamp::class.java.classLoader),
         parcel.readString()?:"",
         parcel.readByte() != 0.toByte(),
         parcel.readString()?:""
     )
     override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeString(id)
         parcel.writeParcelable(loggedintime, flags)
         parcel.writeString(password)
         parcel.writeByte(if (status) 1 else 0)

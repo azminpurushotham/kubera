@@ -1,5 +1,7 @@
 package com.collection.kubera.states
 
+import com.collection.kubera.data.User
+
 /**
  * A sealed hierarchy describing the state of the text generation.
  */
@@ -14,6 +16,7 @@ sealed interface UpdateCredentialsUiState{
      */
     object Loading : UpdateCredentialsUiState
 
+    data class UserCredentials(val user: User): UpdateCredentialsUiState
     data class UserNameError(val message: String): UpdateCredentialsUiState
     data class PasswordError(val message: String): UpdateCredentialsUiState
     data class ConfirmPasswordError(val message: String): UpdateCredentialsUiState
