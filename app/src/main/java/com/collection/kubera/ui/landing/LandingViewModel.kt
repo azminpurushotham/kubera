@@ -3,7 +3,7 @@ package com.collection.kubera.ui.landing
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.UiState
+import com.collection.kubera.states.UiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

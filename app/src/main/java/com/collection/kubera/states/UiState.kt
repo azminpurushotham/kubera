@@ -1,4 +1,4 @@
-package com.collection.kubera
+package com.collection.kubera.states
 
 /**
  * A sealed hierarchy describing the state of the text generation.

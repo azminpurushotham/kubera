@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.collection.kubera.BakingViewModel
 import com.collection.kubera.R
-import com.collection.kubera.UiState
+import com.collection.kubera.states.UiState
 
 val images = arrayOf(
     // Image generated using Gemini from the prompt "cupcake image"

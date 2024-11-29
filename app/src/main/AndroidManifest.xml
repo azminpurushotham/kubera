@@ -46,6 +46,11 @@
             android:label="Register new user"
             android:theme="@style/Theme.Kubera">
         </activity>
+        <activity android:name=".ui.updatecredentials.UpdateCredentialActivity"
+            android:exported="true"
+            android:label="Update credentials"
+            android:theme="@style/Theme.Kubera">
+        </activity>
 
     </application>
 

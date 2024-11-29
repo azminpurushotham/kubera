@@ -2,9 +2,10 @@ package com.collection.kubera.ui.registration
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.UiState
+import com.collection.kubera.states.RegistrationUiState
 import com.collection.kubera.data.User
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,23 +15,39 @@ import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
 class RegistrationViewModel : ViewModel() {
-    private val _uiState: MutableStateFlow<UiState> =
-        MutableStateFlow(UiState.Initial)
-    val uiState: StateFlow<UiState> =
+    private val _uiState: MutableStateFlow<RegistrationUiState> =
+        MutableStateFlow(RegistrationUiState.Initial)
+    val uiState: StateFlow<RegistrationUiState> =
         _uiState.asStateFlow()
     private val _users = MutableStateFlow<List<User>>(emptyList())
     val users: StateFlow<List<User>> get() = _users
+    val firestore = FirebaseFirestore.getInstance()
 
     fun getUsers(){
-        _uiState.value = UiState.Loading
+        Timber.v("getUsers")
+        _uiState.value = RegistrationUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            val firestore = FirebaseFirestore.getInstance()
-            val snapshot = firestore.collection("user").get().await()
+            val snapshot = firestore.collection("user")
+                .orderBy("username",Query.Direction.ASCENDING)
+                .get().await()
             _users.value = snapshot.documents.mapNotNull { it.toObject(User::class.java) }
             _users.value.forEach {
                 Timber.tag("Users").v(it.username)
             }
-            _uiState.value = UiState.Success("Success")
+            _uiState.value = RegistrationUiState.RegistrationSuccess("Success")
+            _uiState.value = RegistrationUiState.Initial
+        }
+    }
+
+    fun login(userName: String, password: String) {
+        Timber.v("login")
+        _uiState.value = RegistrationUiState.Loading
+        users.value.indexOfFirst { it.username == userName && it.password == password}.also {
+            it.takeIf { it >= 0 }?.let {
+                _uiState.value = RegistrationUiState.RegistrationSuccess("Successfully logged in")
+            } ?: run {
+                _uiState.value = RegistrationUiState.RegistrationError("Please enter correct credentials")
+            }
         }
     }
 }

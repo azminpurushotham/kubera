@@ -1,10 +1,6 @@
-package com.collection.kubera.ui.registration
+package com.collection.kubera.ui.updatecredentials
 
-import android.content.Intent
-import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,18 +14,13 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,49 +30,55 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.collection.kubera.data.User
-import com.collection.kubera.states.RegistrationUiState
+import com.collection.kubera.states.UpdateCredentialsUiState
 import com.collection.kubera.ui.theme.KuberaTheme
-import com.collection.kubera.ui.updatecredentials.UpdateCredentialActivity
 
 @Preview
 @Composable
-fun RegistrationScreen(
-    viewModel: RegistrationViewModel = viewModel()
+fun UpdateCredentialsScreen(
+    viewModel: UpdateCredentialsViewModel = viewModel()
 ) {
     val context = LocalContext.current
-    var expanded by remember { mutableStateOf(false) } // Tracks whether the menu is open
-    var isEnabled by remember { mutableStateOf(false) } // Tracks whether the menu is open
-    var userName by remember { mutableStateOf("Select user") } // Tracks selected item
-    val users by viewModel.users.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
-    var selectedUser by remember { mutableStateOf<User?>(null) }
+    var userName by remember { mutableStateOf("") }
+    var isErrorUserName by rememberSaveable { mutableStateOf(false) }
+    val userNameCharacterLimit = 5
 
     var password by remember { mutableStateOf("") }
     var isErrorPassword by rememberSaveable { mutableStateOf(false) }
     val passwordCharacterLimit = 8
     var passwordVisible by remember { mutableStateOf(false) }
 
+    var confirmPassword by remember { mutableStateOf("") }
+    var isErrorConfirmPassword by rememberSaveable { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
+    var isEnabled by remember { mutableStateOf(false) }
+
+    fun validateUserName(userName: String) {
+        isErrorUserName = userName.length < userNameCharacterLimit
+    }
+
     fun validatePassword(password: String) {
         isErrorPassword = password.length < passwordCharacterLimit
     }
 
-    fun enableButton() {
-        isEnabled = !userName.contains("Select") && !isErrorPassword
+    fun validateConfirmPassword(password: String) {
+        isErrorConfirmPassword = confirmPassword.length < passwordCharacterLimit
     }
 
-    viewModel.getUsers()
+    fun enableButton() {
+        isEnabled = !isErrorUserName && !isErrorPassword
+    }
 
     KuberaTheme {
         Scaffold(/*topBar = {
@@ -103,84 +100,45 @@ fun RegistrationScreen(
                     verticalArrangement = Arrangement.Center, // Vertically center items
                     horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
                 ) {
-
-                    when(uiState){
-                       is RegistrationUiState.Initial -> {
-
-                        }
-                        RegistrationUiState.Loading->{
-                            CircularProgressIndicator(
-                                modifier = Modifier.align(Alignment.CenterHorizontally),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                            )
-                        }
-
-                        is RegistrationUiState.RegistrationInit -> {
-
-                        }
-                        is RegistrationUiState.RegistrationSuccess ->{
-                            val intent = Intent(context, UpdateCredentialActivity::class.java)
-                            intent.apply {
-                                putExtra("userCredentials",selectedUser)
+                    Text("Change Credentials", fontWeight = FontWeight(600), fontSize = 24.sp,color = MaterialTheme.colorScheme.onSurface)
+                    Text("Please update your username and password", fontWeight = FontWeight(300), fontSize = 14.sp, color = MaterialTheme.colorScheme.onPrimary)
+                    OutlinedTextField(
+                        value = userName,
+                        onValueChange = {
+                            if (it.length < 20) {
+                                userName = it
+                                validateUserName(userName)
                             }
-                            context.startActivity(intent)
-                        }
-                        is RegistrationUiState.RegistrationError -> {
-                            Toast.makeText(
-                                context,
-                                (uiState as RegistrationUiState.RegistrationError).errorMessage,
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Text("Registration", fontWeight = FontWeight(600), fontSize = 24.sp)
-                    Spacer(modifier = Modifier.height(20.dp))
-                    OutlinedButton(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        shape = RoundedCornerShape(5.dp),
-                        onClick = {
-                            expanded = true
+                            enableButton()
                         },
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            containerColor = Color.Transparent,
+                        label = { Text("User Name") },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                            focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            cursorColor = MaterialTheme.colorScheme.onPrimary
                         ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurface),
-                    ) {
-                        Text(userName, color = MaterialTheme.colorScheme.onPrimary)
-                    }
-
-                    Box(
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        isError = isErrorUserName,
                         modifier = Modifier.fillMaxWidth(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        DropdownMenu(
-                            expanded = expanded, // Controls visibility
-                            onDismissRequest = { expanded = false }, // Close when clicking outside
-                            modifier = Modifier.fillMaxWidth(), // Make the dropdown full-width
-                            offset = DpOffset(x = 100.dp, y = 10.dp), // Adjust the menu position
-                            containerColor = MaterialTheme.colorScheme.primary
-                        ) {
-                            users.forEach { user ->
-                                DropdownMenuItem(
-                                    text = { Text(user.username) },
-                                    onClick = {
-                                        userName = user.username
-                                        expanded = false
-                                        selectedUser = user
-                                    })
+                        supportingText = {
+                            if (isErrorUserName) {
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = "Limit: ${userName.length}/$userNameCharacterLimit",
+                                    color = MaterialTheme.colorScheme.error
+                                )
                             }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(20.dp)) // Adds 16dp space
+                        },
+                    )
+                    Spacer(modifier = Modifier.height(10.dp)) // Adds 16dp space
                     OutlinedTextField(
                         value = password,
                         onValueChange = {
                             if (it.length < 20) {
-                                password = it.trim()
+                                password = it
                                 validatePassword(password)
                             }
                             enableButton()
@@ -218,10 +176,59 @@ fun RegistrationScreen(
                             }
                         },
                     )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = confirmPassword,
+                        onValueChange = {
+                            if (it.length < 20) {
+                                confirmPassword = it
+                                validateConfirmPassword(confirmPassword)
+                            }
+                            enableButton()
+                        },
+                        label = { Text("Confirm Password") },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                            focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            cursorColor = MaterialTheme.colorScheme.onPrimary,
+                        ),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                        isError = isErrorConfirmPassword,
+                        modifier = Modifier.fillMaxWidth(),
+                        visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        trailingIcon = {
+                            val icon =
+                                if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Default.VisibilityOff
+                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = "Toggle password visibility"
+                                )
+                            }
+                        },
+                        supportingText = {
+                            if (isErrorConfirmPassword) {
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = "Limit: ${confirmPassword.length}/$passwordCharacterLimit",
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }else if(uiState is UpdateCredentialsUiState.PasswordMismatchError){
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = (uiState as UpdateCredentialsUiState.PasswordMismatchError).message,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        },
+                    )
                     Spacer(modifier = Modifier.height(20.dp))
                     Button(
                         onClick = {
-                            viewModel.login(userName, password)
+                            viewModel.updateCredentials(userName, password,confirmPassword)
                         },
                         shape = RoundedCornerShape(5.dp),
                         modifier = Modifier.fillMaxWidth(),
@@ -231,19 +238,16 @@ fun RegistrationScreen(
                             contentColor = if (isEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
                         )
                     ) {
-                        Text("Registration")
-                    }
-                    TextButton(
-                        onClick = {},
-                        modifier = Modifier.align(alignment = Alignment.End),
-                    ) {
-                        Text("Login", color = MaterialTheme.colorScheme.onPrimary)
+                        Text("Save")
                     }
                 }
             }
         )
     }
+
+
 }
+
 
 
 
