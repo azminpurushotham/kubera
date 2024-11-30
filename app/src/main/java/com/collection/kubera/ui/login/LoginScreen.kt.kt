@@ -118,7 +118,7 @@ fun LoginScreen(
                         value = userName,
                         onValueChange = {
                             if (it.length < 20) {
-                                userName = it
+                                userName = it.trim()
                                 validateUserName(userName)
                             }
                             enableButton()
@@ -150,7 +150,7 @@ fun LoginScreen(
                         value = password,
                         onValueChange = {
                             if (it.length < 20) {
-                                password = it
+                                password = it.trim()
                                 validatePassword(password)
                             }
                             enableButton()

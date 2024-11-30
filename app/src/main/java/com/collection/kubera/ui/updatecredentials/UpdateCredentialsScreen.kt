@@ -1,5 +1,7 @@
 package com.collection.kubera.ui.updatecredentials
 
+import android.app.Activity
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -41,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.collection.kubera.states.UpdateCredentialsUiState
+import com.collection.kubera.ui.login.LoginActivity
 import com.collection.kubera.ui.theme.KuberaTheme
 
 @Preview
@@ -98,6 +101,10 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
                 (uiState as UpdateCredentialsUiState.UpdationSuccess).message,
                 Toast.LENGTH_LONG
             ).show()
+            val intent  = Intent(context,LoginActivity::class.java)
+            context.startActivity(intent)
+            val currentActivity = context as? Activity
+            currentActivity?.finish()
         }
 
         is UpdateCredentialsUiState.UpdationFiled -> {
@@ -142,7 +149,7 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
                         value = userName,
                         onValueChange = {
                             if (it.length < 20) {
-                                userName = it
+                                userName = it.trim()
                                 validateUserName(userName)
                             }
                             enableButton()
@@ -174,7 +181,7 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
                         value = password,
                         onValueChange = {
                             if (it.length < 20) {
-                                password = it
+                                password = it.trim()
                                 validatePassword(password)
                             }
                             enableButton()
@@ -217,7 +224,7 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
                         value = confirmPassword,
                         onValueChange = {
                             if (it.length < 20) {
-                                confirmPassword = it
+                                confirmPassword = it.trim()
                                 validateConfirmPassword(confirmPassword)
                             }
                             enableButton()

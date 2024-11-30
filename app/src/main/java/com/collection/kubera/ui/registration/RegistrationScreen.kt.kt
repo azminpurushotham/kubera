@@ -1,5 +1,6 @@
 package com.collection.kubera.ui.registration
 
+import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
@@ -52,6 +53,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.collection.kubera.data.User
 import com.collection.kubera.states.RegistrationUiState
+import com.collection.kubera.ui.login.LoginActivity
 import com.collection.kubera.ui.theme.KuberaTheme
 import com.collection.kubera.ui.updatecredentials.UpdateCredentialActivity
 
@@ -234,10 +236,14 @@ fun RegistrationScreen(
                         Text("Registration")
                     }
                     TextButton(
-                        onClick = {},
+                        onClick = {
+                            context.startActivity(Intent(context, LoginActivity::class.java))
+                            val currentActivity = context as? Activity
+                            currentActivity?.finish()
+                        },
                         modifier = Modifier.align(alignment = Alignment.End),
                     ) {
-                        Text("Login", color = MaterialTheme.colorScheme.onPrimary)
+                        Text("Go Back To Login", color = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
             }
