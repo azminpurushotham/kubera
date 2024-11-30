@@ -16,6 +16,7 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = accentD,
     onPrimary = onprimaryD,
     background = backgroundD,
+    surface = backgroundDarkD,
     onSurface = onSurfaceD,
     error = red
 )
