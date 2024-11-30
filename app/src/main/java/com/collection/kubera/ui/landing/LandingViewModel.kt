@@ -1,9 +1,11 @@
 package com.collection.kubera.ui.landing
 
+import android.content.SharedPreferences
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.states.UiState
+import com.collection.kubera.utils.ISLOGGEDIN
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,5 +33,9 @@ class LandingViewModel : ViewModel() {
                 _uiState.value = UiState.Error(e.localizedMessage ?: "")
             }
         }
+    }
+
+    fun checkLoginStatus(pref: SharedPreferences): Boolean {
+       return pref.getBoolean(ISLOGGEDIN, false)
     }
 }

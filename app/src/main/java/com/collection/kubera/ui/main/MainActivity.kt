@@ -1,4 +1,4 @@
-package com.collection.kubera
+package com.collection.kubera.ui.main
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -7,8 +7,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.collection.kubera.ui.home.HomeScreen
 import com.collection.kubera.ui.theme.KuberaTheme
-import com.collection.kubera.ui.BakingScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -20,7 +23,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    BakingScreen()
+                    val navController = rememberNavController()
+                    NavHost(navController = navController, startDestination = "home") {
+                        composable("home") {HomeScreen()}
+                    }
                 }
             }
         }

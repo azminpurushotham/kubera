@@ -44,8 +44,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.collection.kubera.states.LoginUiState
+import com.collection.kubera.ui.main.MainActivity
 import com.collection.kubera.ui.registration.RegistrationActivity
 import com.collection.kubera.ui.theme.KuberaTheme
+import com.collection.kubera.utils.ISLOGGEDIN
+import com.collection.kubera.utils.PASSWORD
+import com.collection.kubera.utils.PreferenceHelper
+import com.collection.kubera.utils.PreferenceHelper.set
+import com.collection.kubera.utils.USER_NAME
 
 @Preview
 @Composable
@@ -65,6 +71,8 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     var isEnabled by remember { mutableStateOf(false) }
 
+    val pref = PreferenceHelper.getPrefs(context)
+
     fun validateUserName(userName: String) {
         isErrorUserName = userName.length < userNameCharacterLimit
     }
@@ -80,140 +88,168 @@ fun LoginScreen(
 
     KuberaTheme {
         Scaffold(content = { paddingValues ->
-                // Page content goes here
-                Column(
-                    modifier = Modifier
-                        .padding(paddingValues)
-                        .padding(20.dp)
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.Center, // Vertically center items
-                    horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
-                ) {
-                    when(uiState){
-                        LoginUiState.Loading -> {
-                            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                        }
-                        is LoginUiState.Initial -> {
-
-                        }
-                        is LoginUiState.LoginFiled -> {
-                            Toast.makeText(context, (uiState as LoginUiState.LoginFiled).message, Toast.LENGTH_LONG).show()
-                        }
-                        is LoginUiState.LoginSuccess -> {
-                            Toast.makeText(context, (uiState as LoginUiState.LoginSuccess).message, Toast.LENGTH_LONG).show()
-                        }
-                        is LoginUiState.PasswordError -> {
-                            Toast.makeText(context, (uiState as LoginUiState.PasswordError).message, Toast.LENGTH_LONG).show()
-                        }
-                        is LoginUiState.UserCredentials -> {
-
-                        }
-                        is LoginUiState.UserNameError -> {
-                            Toast.makeText(context, (uiState as LoginUiState.UserNameError).message, Toast.LENGTH_LONG).show()
-                        }
+            // Page content goes here
+            Column(
+                modifier = Modifier
+                    .padding(paddingValues)
+                    .padding(20.dp)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.Center, // Vertically center items
+                horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
+            ) {
+                when (uiState) {
+                    LoginUiState.Loading -> {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                     }
 
-                    Text("Login", fontWeight = FontWeight(600), fontSize = 24.sp)
-                    OutlinedTextField(
-                        value = userName,
-                        onValueChange = {
-                            if (it.length < 20) {
-                                userName = it.trim()
-                                validateUserName(userName)
-                            }
-                            enableButton()
-                        },
-                        label = { Text("User Name") },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                            focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                            cursorColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                        isError = isErrorUserName,
-                        modifier = Modifier.fillMaxWidth(),
-                        supportingText = {
-                            if (isErrorUserName) {
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = "Limit: ${userName.length}/$userNameCharacterLimit",
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        },
-                    )
-                    Spacer(modifier = Modifier.height(20.dp)) // Adds 16dp space
-                    OutlinedTextField(
-                        value = password,
-                        onValueChange = {
-                            if (it.length < 20) {
-                                password = it.trim()
-                                validatePassword(password)
-                            }
-                            enableButton()
-                        },
-                        label = { Text("Password") },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                            focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                            cursorColor = MaterialTheme.colorScheme.onPrimary,
-                        ),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                        isError = isErrorPassword,
-                        modifier = Modifier.fillMaxWidth(),
-                        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            val icon =
-                                if (passwordVisible) Icons.Filled.Visibility else Icons.Default.VisibilityOff
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                                Icon(
-                                    imageVector = icon,
-                                    contentDescription = "Toggle password visibility"
-                                )
-                            }
-                        },
-                        supportingText = {
-                            if (isErrorPassword) {
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = "Limit: ${password.length}/$passwordCharacterLimit",
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        },
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Button(
-                        onClick = {
-                            viewModel.login(userName, password)
-                        },
-                        shape = RoundedCornerShape(5.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = isEnabled, // Control button's enabled state
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
-                            contentColor = if (isEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
-                        )
-                    ) {
-                        Text("Login")
+                    is LoginUiState.Initial -> {
+
                     }
-                    TextButton(
-                        onClick = {
-                            val intent  = Intent(context, RegistrationActivity::class.java)
-                            context.startActivity(intent)
-                                  },
-                        modifier = Modifier.align(alignment = Alignment.End),
-                    ) {
-                        Text("Register as new user", color = MaterialTheme.colorScheme.onPrimary)
+
+                    is LoginUiState.LoginFiled -> {
+                        Toast.makeText(
+                            context,
+                            (uiState as LoginUiState.LoginFiled).message,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+                    is LoginUiState.LoginSuccess -> {
+                        Toast.makeText(
+                            context,
+                            (uiState as LoginUiState.LoginSuccess).message,
+                            Toast.LENGTH_LONG
+                        ).show()
+                        pref[USER_NAME] = userName
+                        pref[PASSWORD] = password
+                        pref[ISLOGGEDIN] = true
+                        context.startActivity(Intent(context, MainActivity::class.java))
+                        val currentActivity = context as? MainActivity
+                        currentActivity?.finish()
+                    }
+
+                    is LoginUiState.PasswordError -> {
+                        Toast.makeText(
+                            context,
+                            (uiState as LoginUiState.PasswordError).message,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+                    is LoginUiState.UserCredentials -> {
+
+                    }
+
+                    is LoginUiState.UserNameError -> {
+                        Toast.makeText(
+                            context,
+                            (uiState as LoginUiState.UserNameError).message,
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
+
+                Text("Login", fontWeight = FontWeight(600), fontSize = 24.sp)
+                OutlinedTextField(
+                    value = userName,
+                    onValueChange = {
+                        if (it.length < 20) {
+                            userName = it.trim()
+                            validateUserName(userName)
+                        }
+                        enableButton()
+                    },
+                    label = { Text("User Name") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        cursorColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    isError = isErrorUserName,
+                    modifier = Modifier.fillMaxWidth(),
+                    supportingText = {
+                        if (isErrorUserName) {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = "Limit: ${userName.length}/$userNameCharacterLimit",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                )
+                Spacer(modifier = Modifier.height(20.dp)) // Adds 16dp space
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        if (it.length < 20) {
+                            password = it.trim()
+                            validatePassword(password)
+                        }
+                        enableButton()
+                    },
+                    label = { Text("Password") },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        cursorColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                    isError = isErrorPassword,
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        val icon =
+                            if (passwordVisible) Icons.Filled.Visibility else Icons.Default.VisibilityOff
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = "Toggle password visibility"
+                            )
+                        }
+                    },
+                    supportingText = {
+                        if (isErrorPassword) {
+                            Text(
+                                modifier = Modifier.fillMaxWidth(),
+                                text = "Limit: ${password.length}/$passwordCharacterLimit",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    },
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(
+                    onClick = {
+                        viewModel.login(userName, password)
+                    },
+                    shape = RoundedCornerShape(5.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = isEnabled, // Control button's enabled state
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
+                        contentColor = if (isEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
+                    )
+                ) {
+                    Text("Login")
+                }
+                TextButton(
+                    onClick = {
+                        val intent = Intent(context, RegistrationActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.align(alignment = Alignment.End),
+                ) {
+                    Text("Register as new user", color = MaterialTheme.colorScheme.onPrimary)
+                }
             }
+        }
         )
     }
 
