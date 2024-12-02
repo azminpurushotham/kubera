@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.collection.kubera.ui.addnewshop.AddNewShopScreen
 import com.collection.kubera.ui.home.HomeScreen
 import com.collection.kubera.ui.theme.KuberaTheme
 
@@ -26,6 +27,7 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     NavHost(navController = navController, startDestination = "home") {
                         composable("home") {HomeScreen()}
+                        composable("addnewshop") { AddNewShopScreen() }
                     }
                 }
             }

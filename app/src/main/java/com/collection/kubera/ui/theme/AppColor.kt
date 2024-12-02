@@ -10,6 +10,7 @@ val backgroundDarkD = Color(0xFF1a1d20)
 val onprimaryD = Color(0xFFD2D3D4)
 val accentD = Color(0xFF625459)
 val Pink80 = Color(0xFFEFB8C8)
+val drawerColorD = Color(0xE8212529)
 
 val Purple40 = Color(0xFFD7D3D3)
 val PurpleGrey40 = Color(0xFF625b71)
