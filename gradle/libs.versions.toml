@@ -19,6 +19,7 @@ timber = "5.0.1"
 gsm-base = "18.5.0"
 nav_version = "2.8.4"
 gson = "2.10.1"
+accompanist = "0.36.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -46,6 +47,7 @@ generativeai = { group = "com.google.ai.client.generativeai", name = "generative
 icons = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIcons" }
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+accompanist = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "accompanist" }
 
 
 [plugins]

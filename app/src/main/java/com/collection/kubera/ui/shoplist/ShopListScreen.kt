@@ -4,12 +4,9 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,32 +16,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,13 +44,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.collection.kubera.data.Shop
 import com.collection.kubera.data.User
 import com.collection.kubera.states.HomeUiState
-import com.collection.kubera.ui.theme.KuberaTheme
 import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.red
 import com.collection.kubera.ui.updatecredentials.UpdateCredentialActivity
-import kotlinx.coroutines.launch
 
 @Preview
 @Composable
@@ -73,15 +58,14 @@ fun ShopListScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    var selectedUser by remember { mutableStateOf<User?>(null) }
-
+    val shopList by viewModel.shopList.collectAsState()
     var shopName by remember { mutableStateOf("") }
     var isErrorPassword by rememberSaveable { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
 
     val colorItems = listOf(green, red)
 
-    viewModel.getUsers()
+    viewModel.getShops()
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -107,12 +91,6 @@ fun ShopListScreen(
             }
 
             is HomeUiState.HomeSuccess -> {
-                val intent =
-                    Intent(context, UpdateCredentialActivity::class.java)
-                intent.apply {
-                    putExtra("userCredentials", selectedUser)
-                }
-                context.startActivity(intent)
             }
 
             is HomeUiState.HomeError -> {
@@ -194,7 +172,7 @@ fun ShopListScreen(
         }
 
         Spacer(modifier = Modifier.height(10.dp))
-        for (item in 0..20) {
+        for (item in shopList) {
             Row(
                 modifier = Modifier
                     .background(color = MaterialTheme.colorScheme.background)
@@ -209,12 +187,12 @@ fun ShopListScreen(
             ) {
                 Column {
                     Text(
-                        "User Name $item",
+                        "${item.firstName} ${item.lastName}",
                         fontWeight = FontWeight(400), fontSize = 15.sp,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     Text(
-                        "Shop Name $item",
+                        item.shopName,
                         fontWeight = FontWeight(400), fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
@@ -226,7 +204,7 @@ fun ShopListScreen(
                         color = colorItems.random(),
                     )
                     Text(
-                        "1-Dec-2024 10:00 am",
+                        item.date.toString(),
                         fontWeight = FontWeight(400), fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onPrimary
                     )

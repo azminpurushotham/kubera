@@ -3,34 +3,32 @@ package com.collection.kubera.ui.main
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.collection.kubera.ui.addnewshop.AddNewShopScreen
-import com.collection.kubera.ui.home.HomeScreen
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import com.collection.kubera.ui.AppNavGraph
 import com.collection.kubera.ui.theme.KuberaTheme
+import com.collection.kubera.ui.theme.primaryD
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setStatusBarColor()
         setContent {
             KuberaTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background,
-                ) {
-                    val navController = rememberNavController()
-                    NavHost(navController = navController, startDestination = "home") {
-                        composable("home") {HomeScreen()}
-                        composable("addnewshop") { AddNewShopScreen() }
-                    }
-                }
+                AppNavGraph()
             }
         }
+    }
+
+    private fun setStatusBarColor() {
+        // Enable edge-to-edge rendering
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        // Set status bar color
+        val statusBarColor = primaryD // Replace with your theme color
+        window.statusBarColor = statusBarColor.toArgb()
+        // Adjust system bar icon color (light or dark)
+        WindowInsetsControllerCompat(window, window.decorView).isAppearanceLightStatusBars = false
     }
 }

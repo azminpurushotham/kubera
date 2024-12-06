@@ -7,10 +7,10 @@ import com.collection.kubera.ui.AllDestinations.ADD_NEW_SHOP
 import com.collection.kubera.ui.AllDestinations.LOGOUT
 
 object AllDestinations {
-    const val SHOP_LIST = "shoplist"
-    const val PROFILE = "profile"
-    const val ADD_NEW_SHOP = "add_new_shop"
-    const val LOGOUT = "logout"
+    const val SHOP_LIST = "Shop List"
+    const val PROFILE = "Profile"
+    const val ADD_NEW_SHOP = "Add New Shop"
+    const val LOGOUT = "Logout"
 }
 
 class AppNavigationActions(private val navController: NavHostController) {

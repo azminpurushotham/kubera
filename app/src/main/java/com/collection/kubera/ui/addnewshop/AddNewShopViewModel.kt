@@ -2,8 +2,10 @@ package com.collection.kubera.ui.addnewshop
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.collection.kubera.data.Shop
 import com.collection.kubera.data.User
-import com.collection.kubera.states.HomeUiState
+import com.collection.kubera.states.AddNewShopUiState
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.Dispatchers
@@ -15,9 +17,9 @@ import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
 class AddNewShopViewModel : ViewModel() {
-    private val _uiState: MutableStateFlow<HomeUiState> =
-        MutableStateFlow(HomeUiState.Initial)
-    val uiState: StateFlow<HomeUiState> =
+    private val _uiState: MutableStateFlow<AddNewShopUiState> =
+        MutableStateFlow(AddNewShopUiState.Initial)
+    val uiState: StateFlow<AddNewShopUiState> =
         _uiState.asStateFlow()
     private val _users = MutableStateFlow<List<User>>(emptyList())
     val users: StateFlow<List<User>> get() = _users
@@ -25,7 +27,7 @@ class AddNewShopViewModel : ViewModel() {
 
     fun getUsers() {
         Timber.v("getUsers")
-        _uiState.value = HomeUiState.Loading
+        _uiState.value = AddNewShopUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             val snapshot = firestore.collection("user")
                 .orderBy("username", Query.Direction.ASCENDING)
@@ -33,23 +35,58 @@ class AddNewShopViewModel : ViewModel() {
             _users.value = snapshot.documents.mapNotNull {
                 it.toObject(User::class.java)?.apply { id = it.id }
             }
-            _uiState.value = HomeUiState.HomeSuccess("Success")
-            _uiState.value = HomeUiState.Initial
+            _uiState.value = AddNewShopUiState.AddNewShopSuccess("Success")
+            _uiState.value = AddNewShopUiState.Initial
         }
     }
 
     fun login(userName: String, password: String) {
         Timber.v("login")
-        _uiState.value = HomeUiState.Loading
+        _uiState.value = AddNewShopUiState.Loading
         users.value.indexOfFirst { (it.username.equals(userName) && it.password.equals(password)) }
             .also { result ->
                 result.takeIf { result >= 0 }?.let {
                     _uiState.value =
-                        HomeUiState.HomeSuccess("Successfully logged in")
+                        AddNewShopUiState.AddNewShopSuccess("Successfully logged in")
                 } ?: run {
                     _uiState.value =
-                        HomeUiState.HomeError("Please enter correct credentials")
+                        AddNewShopUiState.AddNewShopError("Please enter correct credentials")
                 }
             }
+    }
+
+    fun saveShopDetails(
+        shopName: String,
+        location: String,
+        landmark: String?,
+        firstName: String,
+        lastName: String?,
+        phoneNumber: Long,
+        secondPhoneNumber: Long?,
+        mailId: String?
+    ) {
+        Timber.v("saveShopDetails")
+        _uiState.value = AddNewShopUiState.Loading
+        viewModelScope.launch(Dispatchers.IO) {
+            val prm = Shop().apply {
+                if (shopName.isNotEmpty()) this.shopName = shopName
+                if (location.isNotEmpty()) this.location = location
+                if ((landmark?:"").isNotEmpty()) this.landmark = landmark!!
+                if (firstName.isNotEmpty()) this.firstName = firstName
+                if ((lastName?:"").isNotEmpty()) this.lastName = lastName!!
+                if (phoneNumber.toString().isNotEmpty()) this.phoneNumber = phoneNumber
+                if (secondPhoneNumber !=null && secondPhoneNumber.toString().isNotEmpty()) this.secondPhoneNumber = secondPhoneNumber!!
+                if ((mailId?:"").isNotEmpty()) this.mailId = mailId!!
+                this.date = Timestamp.now()
+                this.status = true
+            }
+            firestore.collection("shop")
+                .add(prm).addOnSuccessListener {
+                    _uiState.value = AddNewShopUiState.AddNewShopSuccess("Success")
+                }.addOnFailureListener {
+                    _uiState.value = AddNewShopUiState.AddNewShopError("Error")
+                }
+        }
+
     }
 }

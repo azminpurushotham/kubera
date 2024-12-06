@@ -57,7 +57,8 @@ dependencies {
     implementation(libs.icons)
     implementation(libs.timber)
     implementation(libs.gson)
-    
+    implementation(libs.accompanist)
+
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)
     implementation(libs.firebase.auth.ktx)

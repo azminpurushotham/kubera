@@ -2,6 +2,7 @@ package com.collection.kubera.ui.shoplist
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.collection.kubera.data.Shop
 import com.collection.kubera.data.User
 import com.collection.kubera.states.HomeUiState
 import com.google.firebase.firestore.FirebaseFirestore
@@ -19,37 +20,22 @@ class ShopListViewModel : ViewModel() {
         MutableStateFlow(HomeUiState.Initial)
     val uiState: StateFlow<HomeUiState> =
         _uiState.asStateFlow()
-    private val _users = MutableStateFlow<List<User>>(emptyList())
-    val users: StateFlow<List<User>> get() = _users
+    private val _shopList = MutableStateFlow<List<Shop>>(emptyList())
+    val shopList: StateFlow<List<Shop>> get() = _shopList
     private val firestore = FirebaseFirestore.getInstance()
 
-    fun getUsers() {
-        Timber.v("getUsers")
+    fun getShops() {
+        Timber.v("getShops")
         _uiState.value = HomeUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            val snapshot = firestore.collection("user")
-                .orderBy("username", Query.Direction.ASCENDING)
+            val snapshot = firestore.collection("shop")
+                .orderBy("shopName", Query.Direction.ASCENDING)
                 .get().await()
-            _users.value = snapshot.documents.mapNotNull {
-                it.toObject(User::class.java)?.apply { id = it.id }
+            _shopList.value = snapshot.documents.mapNotNull {
+                it.toObject(Shop::class.java)?.apply { id = it.id }
             }
             _uiState.value = HomeUiState.HomeSuccess("Success")
             _uiState.value = HomeUiState.Initial
         }
-    }
-
-    fun login(userName: String, password: String) {
-        Timber.v("login")
-        _uiState.value = HomeUiState.Loading
-        users.value.indexOfFirst { (it.username.equals(userName) && it.password.equals(password)) }
-            .also { result ->
-                result.takeIf { result >= 0 }?.let {
-                    _uiState.value =
-                        HomeUiState.HomeSuccess("Successfully logged in")
-                } ?: run {
-                    _uiState.value =
-                        HomeUiState.HomeError("Please enter correct credentials")
-                }
-            }
     }
 }

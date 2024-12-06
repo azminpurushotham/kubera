@@ -1,11 +1,8 @@
 package com.collection.kubera.ui.addnewshop
 
-import android.content.Intent
-import android.widget.Toast
-import androidx.compose.foundation.background
+import android.util.Patterns
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,13 +12,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -38,17 +31,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.collection.kubera.data.User
-import com.collection.kubera.states.HomeUiState
-import com.collection.kubera.ui.theme.green
-import com.collection.kubera.ui.theme.red
-import com.collection.kubera.ui.updatecredentials.UpdateCredentialActivity
+import com.collection.kubera.states.AddNewShopUiState
+import com.collection.kubera.ui.theme.headingLabelD
 
 @Preview
 @Composable
@@ -57,169 +45,419 @@ fun AddNewShopScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    var selectedUser by remember { mutableStateOf<User?>(null) }
-
+    var isEnabled by remember { mutableStateOf(false) }
+    val characterLimit = 3
+    val phoneNumberLimit = 10
+    val nameLimit = 30
+    var firstName by remember { mutableStateOf("") }
+    var isFirstNameError by rememberSaveable { mutableStateOf(false) }
+    var lastName by remember { mutableStateOf("") }
+    var isLastNameError by rememberSaveable { mutableStateOf(false) }
     var shopName by remember { mutableStateOf("") }
-    var isErrorPassword by rememberSaveable { mutableStateOf(false) }
-    var passwordVisible by remember { mutableStateOf(false) }
+    var isShopNameError by rememberSaveable { mutableStateOf(false) }
+    var location by remember { mutableStateOf("") }
+    var isLocationError by rememberSaveable { mutableStateOf(false) }
+    var landmark by remember { mutableStateOf("") }
+    var isLandmarkError by rememberSaveable { mutableStateOf(false) }
+    var phoneNumber by remember { mutableStateOf("") }
+    var isPhoneNumberError by rememberSaveable { mutableStateOf(false) }
+    var secondPhoneNumber by remember { mutableStateOf("") }
+    var isSecondPhoneNumberError by rememberSaveable { mutableStateOf(false) }
+    var mailId by remember { mutableStateOf("") }
+    var isMailIdError by rememberSaveable { mutableStateOf(false) }
+    var isMailIdFormateError by rememberSaveable { mutableStateOf(false) }
 
-    val colorItems = listOf(green, red)
 
-    viewModel.getUsers()
+    fun validateShopName(shopName: String) {
+        isShopNameError = shopName.length < characterLimit
+    }
+
+    fun validateFirstName(firstName: String) {
+        isFirstNameError = firstName.length < characterLimit
+    }
+
+    fun validateLastName(lastName: String) {
+        isLastNameError = lastName.length < characterLimit
+    }
+
+    fun validateLocation(location: String) {
+        isLocationError = location.length < characterLimit
+    }
+
+    fun validateLandmark(landmark: String) {
+        isLandmarkError = landmark.length < characterLimit
+    }
+
+    fun validatePhoneNumber(phoneNumber: Long?) {
+        isPhoneNumberError = phoneNumber != null
+        isPhoneNumberError = ((phoneNumber ?: 0).toString().length) != phoneNumberLimit
+    }
+
+    fun validateSecondPhoneNumber(secondPhoneNumber: Long?) {
+        isSecondPhoneNumberError = secondPhoneNumber != null
+        isSecondPhoneNumberError = (secondPhoneNumber ?: 0).toString().length != phoneNumberLimit
+    }
+
+    fun validateEmail(mailId: String) {
+        isMailIdFormateError = !Patterns.EMAIL_ADDRESS.matcher(mailId).matches()
+    }
+
+    fun enableButton() {
+        isEnabled = !isShopNameError && shopName.isNotEmpty()
+                && !isFirstNameError && firstName.isNotEmpty()
+//                && !isLastNameError
+                && !isLocationError && location.isNotEmpty()
+//                && !isLandmarkError
+                && !isPhoneNumberError && phoneNumber.isNotEmpty()
+//                && !isSecondPhoneNumberError
+//                && !isMailIdError
+    }
+
+
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
+            .padding(16.dp)
             .fillMaxSize(),
         verticalArrangement = Arrangement.Center, // Vertically center items
         horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
     ) {
 
         when (uiState) {
-            is HomeUiState.Initial -> {
+            is AddNewShopUiState.Initial -> {
 
             }
 
-            HomeUiState.Loading -> {
+            AddNewShopUiState.Loading -> {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             }
 
-            is HomeUiState.HomeInit -> {
+            is AddNewShopUiState.AddNewShopInit -> {
 
             }
 
-            is HomeUiState.HomeSuccess -> {
-                val intent =
-                    Intent(context, UpdateCredentialActivity::class.java)
-                intent.apply {
-                    putExtra("userCredentials", selectedUser)
-                }
-                context.startActivity(intent)
+            is AddNewShopUiState.AddNewShopSuccess -> {
             }
 
-            is HomeUiState.HomeError -> {
-                Toast.makeText(
-                    context,
-                    (uiState as HomeUiState.HomeError).errorMessage,
-                    Toast.LENGTH_LONG
-                ).show()
+            is AddNewShopUiState.AddNewShopError -> {
+
             }
         }
-        Spacer(modifier = Modifier.height(15.dp))
+
+        Spacer(Modifier.height(20.dp))
+        Text(
+            "Enter Shop Details",
+            fontSize = 18.sp,
+            fontWeight = FontWeight(1),
+            color = headingLabelD,
+            modifier = Modifier.align(Alignment.Start)
+        )
         OutlinedTextField(
             value = shopName,
             onValueChange = {
-                shopName = it
+                if (shopName.length <= nameLimit) {
+                    shopName = it
+                    shopName = shopName.replaceFirstChar { word -> word.uppercaseChar() }
+                    validateShopName(shopName)
+                }
+                enableButton()
             },
+            label = { Text("Shop Name") },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.onSurface,
                 unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
                 focusedLabelColor = MaterialTheme.colorScheme.onSurface,
                 unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
                 cursorColor = MaterialTheme.colorScheme.onPrimary,
-                focusedTextColor = MaterialTheme.colorScheme.onSurface
             ),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-            isError = isErrorPassword,
-            shape = RoundedCornerShape(20.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .padding(start = 16.dp, end = 16.dp),
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            trailingIcon = {
-                val icon = Icons.Filled.Search
-                IconButton(onClick = { }) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = "Toggle password visibility"
+            isError = isShopNameError,
+            modifier = Modifier.fillMaxWidth(),
+            supportingText = {
+                if (isShopNameError) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Limit: ${shopName.length}/$characterLimit",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+        )
+        OutlinedTextField(
+            value = location,
+            onValueChange = {
+                if (it.length <= nameLimit) {
+                    location = it
+                    location = location.replaceFirstChar { word -> word.uppercaseChar() }
+                    validateLocation(location)
+                }
+                enableButton()
+            },
+            label = { Text("Location") },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                cursorColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+            isError = isLocationError,
+            modifier = Modifier.fillMaxWidth(),
+            supportingText = {
+                if (isLocationError) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Limit: ${location.length}/$characterLimit",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+        )
+
+        OutlinedTextField(
+            value = landmark,
+            onValueChange = {
+                if (it.length <= nameLimit) {
+                    landmark = it
+                    landmark = landmark.replaceFirstChar { word -> word.uppercaseChar() }
+                    validateLandmark(landmark)
+                }
+                enableButton()
+            },
+            label = { Text("Landmark (optional)") },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                cursorColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+            isError = isLandmarkError,
+            modifier = Modifier.fillMaxWidth(),
+            supportingText = {
+                if (isLandmarkError) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Limit: ${landmark.length}/$characterLimit",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+        )
+
+        Spacer(Modifier.height(30.dp))
+        Text(
+            "Enter Owner Details",
+            fontSize = 18.sp,
+            fontWeight = FontWeight(1),
+            color = headingLabelD,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        OutlinedTextField(
+            value = firstName,
+            onValueChange = {
+                if (it.length <= nameLimit) {
+                    firstName = it.trim()
+                    firstName = firstName.replaceFirstChar { word -> word.uppercaseChar() }
+                    validateFirstName(firstName)
+                }
+                enableButton()
+            },
+            label = { Text("First Name") },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                cursorColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+            isError = isFirstNameError,
+            modifier = Modifier.fillMaxWidth(),
+            supportingText = {
+                if (isFirstNameError) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Limit: ${firstName.length}/$characterLimit",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+        )
+
+        OutlinedTextField(
+            value = lastName,
+            onValueChange = {
+                if (it.length <= nameLimit) {
+                    lastName = it.trim()
+                    lastName = lastName.replaceFirstChar { word -> word.uppercaseChar() }
+                    validateLastName(lastName)
+                }
+                enableButton()
+            },
+            label = { Text("Last Name (optional)") },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                cursorColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+            isError = isLastNameError,
+            modifier = Modifier.fillMaxWidth(),
+            supportingText = {
+                if (isLastNameError) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Limit: ${lastName.length}/$characterLimit",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+        )
+
+
+        OutlinedTextField(
+            value = phoneNumber,
+            onValueChange = {
+                if (it.length <= phoneNumberLimit) {
+                    phoneNumber = it.trim()
+                    if (phoneNumber.isNotEmpty()) {
+                        validatePhoneNumber(phoneNumber.toLong())
+                    }
+                }
+                enableButton()
+            },
+            label = { Text("Phone Number") },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                cursorColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            isError = isPhoneNumberError,
+            modifier = Modifier.fillMaxWidth(),
+            supportingText = {
+                if (isPhoneNumberError) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Limit: ${(phoneNumber ?: 0).toString().length}/$phoneNumberLimit",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+        )
+
+        OutlinedTextField(
+            value = secondPhoneNumber,
+            onValueChange = {
+                if (it.length <= phoneNumberLimit) {
+                    secondPhoneNumber = it.trim()
+                    if (secondPhoneNumber.isNotEmpty()) {
+                        validateSecondPhoneNumber(secondPhoneNumber.toLong())
+                    }
+                }
+                enableButton()
+            },
+            label = { Text("Secondary Phone Number (optional)") },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                cursorColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+            isError = isSecondPhoneNumberError,
+            modifier = Modifier.fillMaxWidth(),
+            supportingText = {
+                if (isSecondPhoneNumberError) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Limit: ${(secondPhoneNumber ?: 0).toString().length}/$phoneNumberLimit",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+        )
+        OutlinedTextField(
+            value = mailId,
+            onValueChange = {
+                if (it.length <= 50) {
+                    mailId = it.trim()
+                    validateEmail(mailId)
+                }
+                enableButton()
+            },
+            label = { Text("Mail Id (optional)") },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                cursorColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            isError = isMailIdError||isMailIdFormateError,
+            modifier = Modifier.fillMaxWidth(),
+            supportingText = {
+                if (isMailIdError) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Limit: ${mailId.length}/$characterLimit",
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+               else if (isMailIdFormateError) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = "Email not valid",
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             },
         )
         Spacer(modifier = Modifier.height(20.dp))
-        Card(
-            elevation = CardDefaults.cardElevation(20.dp),
-            shape = RoundedCornerShape(0.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .background(color = MaterialTheme.colorScheme.background)
-                    .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 8.dp,
-                        bottom = 8.dp
-                    )
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        "9:00 am",
-                        fontWeight = FontWeight(600), fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Text(
-                        "1-Dec-2024",
-                        fontWeight = FontWeight(400), fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-                Text(
-                    "1000", fontWeight = FontWeight(400),
-                    fontSize = 30.sp,
-                    color = green,
+        Button(
+            onClick = {
+                viewModel.saveShopDetails(
+                    shopName,
+                    location,
+                    landmark,
+                    firstName,
+                    lastName,
+                    phoneNumber.toLong(),
+                    if(secondPhoneNumber.isNotEmpty()) secondPhoneNumber.toLong() else null,
+                    mailId
                 )
-            }
+            },
+            shape = RoundedCornerShape(5.dp),
+            modifier = Modifier.fillMaxWidth(),
+            enabled = isEnabled, // Control button's enabled state
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surface, // Green when enabled, Gray when disabled
+                contentColor = if (isEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
+            )
+        ) {
+            Text("Save")
         }
-
-        Spacer(modifier = Modifier.height(10.dp))
-        for (item in 0..20) {
-            Row(
-                modifier = Modifier
-                    .background(color = MaterialTheme.colorScheme.background)
-                    .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 8.dp,
-                        bottom = 16.dp
-                    )
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        "User Name $item",
-                        fontWeight = FontWeight(400), fontSize = 15.sp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Text(
-                        "Shop Name $item",
-                        fontWeight = FontWeight(400), fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-                Column {
-                    Text(
-                        "1000", fontWeight = FontWeight(500),
-                        fontSize = 15.sp,
-                        color = colorItems.random(),
-                    )
-                    Text(
-                        "1-Dec-2024 10:00 am",
-                        fontWeight = FontWeight(400), fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                }
-            }
-        }
-
     }
 }
-
 
 
