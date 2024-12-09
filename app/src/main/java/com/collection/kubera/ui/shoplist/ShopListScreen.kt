@@ -180,7 +180,7 @@ fun ShopListScreen(
             Card(
                 onClick = {
                     Timber.v("SHOP_DETAILS")
-                    navController.navigate(SHOP_DETAILS)
+                    navController.navigate("${SHOP_DETAILS}/${item.id}")
                 }) {
                 Row(
                     modifier = Modifier

@@ -1,6 +1,5 @@
 package com.collection.kubera.ui.shopdetails
 
-import android.util.Patterns
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -19,10 +18,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,85 +26,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.collection.kubera.states.AddNewShopUiState
+import com.collection.kubera.states.ShopDetailUiState
 import com.collection.kubera.ui.theme.headingLabelD
 
 @Preview
 @Composable
 fun ShopDetailsScreen(
-    viewModel: ShopDetailsViewModel = viewModel()
+    id: String? = null,
+    viewModel: ShopDetailsViewModel = viewModel(), 
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    var isEnabled by remember { mutableStateOf(false) }
-    val characterLimit = 3
-    val phoneNumberLimit = 10
-    val nameLimit = 30
-    var firstName by remember { mutableStateOf("") }
-    var isFirstNameError by rememberSaveable { mutableStateOf(false) }
-    var lastName by remember { mutableStateOf("") }
-    var isLastNameError by rememberSaveable { mutableStateOf(false) }
-    var shopName by remember { mutableStateOf("") }
-    var isShopNameError by rememberSaveable { mutableStateOf(false) }
-    var location by remember { mutableStateOf("") }
-    var isLocationError by rememberSaveable { mutableStateOf(false) }
-    var landmark by remember { mutableStateOf("") }
-    var balance by remember { mutableStateOf("") }
-    var isLandmarkError by rememberSaveable { mutableStateOf(false) }
-    var phoneNumber by remember { mutableStateOf("") }
-    var isPhoneNumberError by rememberSaveable { mutableStateOf(false) }
-    var secondPhoneNumber by remember { mutableStateOf("") }
-    var isSecondPhoneNumberError by rememberSaveable { mutableStateOf(false) }
-    var mailId by remember { mutableStateOf("") }
-    var isMailIdError by rememberSaveable { mutableStateOf(false) }
-    var isMailIdFormateError by rememberSaveable { mutableStateOf(false) }
-
-
-    fun validateShopName(shopName: String) {
-        isShopNameError = shopName.length < characterLimit
-    }
-
-    fun validateFirstName(firstName: String) {
-        isFirstNameError = firstName.length < characterLimit
-    }
-
-    fun validateLastName(lastName: String) {
-        isLastNameError = lastName.length < characterLimit
-    }
-
-    fun validateLocation(location: String) {
-        isLocationError = location.length < characterLimit
-    }
-
-    fun validateLandmark(landmark: String) {
-        isLandmarkError = landmark.length < characterLimit
-    }
-
-    fun validatePhoneNumber(phoneNumber: Long?) {
-        isPhoneNumberError = phoneNumber != null
-        isPhoneNumberError = ((phoneNumber ?: 0).toString().length) != phoneNumberLimit
-    }
-
-    fun validateSecondPhoneNumber(secondPhoneNumber: Long?) {
-        isSecondPhoneNumberError = secondPhoneNumber != null
-        isSecondPhoneNumberError = (secondPhoneNumber ?: 0).toString().length != phoneNumberLimit
-    }
-
-    fun validateEmail(mailId: String) {
-        isMailIdFormateError = !Patterns.EMAIL_ADDRESS.matcher(mailId).matches()
-    }
-
-    fun enableButton() {
-        isEnabled = !isShopNameError && shopName.isNotEmpty()
-                && !isFirstNameError && firstName.isNotEmpty()
-//                && !isLastNameError
-                && !isLocationError && location.isNotEmpty()
-//                && !isLandmarkError
-                && !isPhoneNumberError && phoneNumber.isNotEmpty()
-//                && !isSecondPhoneNumberError
-//                && !isMailIdError
-    }
-
+    val shop by viewModel.shop.collectAsState()
 
     Column(
         modifier = Modifier
@@ -121,27 +49,28 @@ fun ShopDetailsScreen(
     ) {
 
         when (uiState) {
-            is AddNewShopUiState.Initial -> {
+            is ShopDetailUiState.Initial -> {
 
             }
 
-            AddNewShopUiState.Loading -> {
+            ShopDetailUiState.Loading -> {
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             }
 
-            is AddNewShopUiState.AddNewShopInit -> {
+            is ShopDetailUiState.ShopDetailInit -> {
 
             }
 
-            is AddNewShopUiState.AddNewShopSuccess -> {
+            is ShopDetailUiState.ShopDetailSuccess -> {
             }
 
-            is AddNewShopUiState.AddNewShopError -> {
+            is ShopDetailUiState.ShopDetailError -> {
 
             }
+
         }
 
         Text(
@@ -152,20 +81,20 @@ fun ShopDetailsScreen(
             modifier = Modifier.align(Alignment.Start)
         )
         Text(
-            text = shopName,
+            text = shop?.shopName?:"",
             fontSize = MaterialTheme.typography.bodyMedium.fontSize,
             color = headingLabelD,
         )
         Text(
-            text = location,
+            text = shop?.location?:"",
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = landmark,
+            text = shop?.landmark?:"",
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = balance,
+            text = (shop?.balance?:0).toString(),
             color = MaterialTheme.colorScheme.onSurface,
         )
 
@@ -178,50 +107,26 @@ fun ShopDetailsScreen(
             modifier = Modifier.align(Alignment.Start)
         )
         Text(
-            text = firstName,
+            text = shop?.firstName?:"",
             color = MaterialTheme.colorScheme.onPrimary,
         )
         Text(
-            text = lastName,
+            text = shop?.lastName?:"",
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = phoneNumber,
+            text = shop?.phoneNumber?:"",
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = secondPhoneNumber,
+            text = shop?.secondPhoneNumber?:"",
             color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
-            text = mailId,
+            text = shop?.mailId?:"",
             color = MaterialTheme.colorScheme.onSurface,
         )
         Spacer(modifier = Modifier.height(20.dp))
-        Button(
-            onClick = {
-                viewModel.saveShopDetails(
-                    shopName,
-                    location,
-                    landmark,
-                    balance,
-                    firstName,
-                    lastName,
-                    phoneNumber,
-                    if (secondPhoneNumber.isNotEmpty()) secondPhoneNumber else null,
-                    mailId
-                )
-            },
-            shape = RoundedCornerShape(5.dp),
-            modifier = Modifier.fillMaxWidth(),
-            enabled = isEnabled, // Control button's enabled state
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surface, // Green when enabled, Gray when disabled
-                contentColor = if (isEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
-            )
-        ) {
-            Text("Save")
-        }
     }
 }
 

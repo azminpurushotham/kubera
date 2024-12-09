@@ -66,7 +66,7 @@ fun AppNavGraph(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(text = currentRoute) },
+                    title = { Text(text = getTitle(currentRoute)) },
                     modifier = Modifier.fillMaxWidth(),
                     navigationIcon = {
                         IconButton(onClick = {
@@ -96,10 +96,23 @@ fun AppNavGraph(
                 composable(AllDestinations.ADD_NEW_SHOP) {
                     AddNewShopScreen()
                 }
-                composable(AllDestinations.SHOP_DETAILS) {
-                    ShopDetailsScreen()
+                composable("${AllDestinations.SHOP_DETAILS}/{shopId}") { backStackEntry ->
+                    val shopId = backStackEntry.arguments?.getString("shopId")
+                    ShopDetailsScreen(shopId)
                 }
             }
         }
+    }
+}
+
+fun getTitle(currentRoute: String): String {
+    if(currentRoute.contains(AllDestinations.SHOP_DETAILS)){
+        return  AllDestinations.SHOP_DETAILS
+    }
+    return when (currentRoute) {
+        AllDestinations.SHOP_LIST -> AllDestinations.SHOP_LIST
+        AllDestinations.PROFILE -> AllDestinations.PROFILE
+        AllDestinations.ADD_NEW_SHOP -> AllDestinations.ADD_NEW_SHOP
+        else -> AllDestinations.SHOP_LIST
     }
 }
