@@ -50,7 +50,7 @@ fun ShopDetailsScreen(
 
         when (uiState) {
             is ShopDetailUiState.Initial -> {
-
+//                id?.let { viewModel.getShopDetails(it) }
             }
 
             ShopDetailUiState.Loading -> {
