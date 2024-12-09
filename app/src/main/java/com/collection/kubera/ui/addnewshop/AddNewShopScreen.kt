@@ -58,6 +58,7 @@ fun AddNewShopScreen(
     var location by remember { mutableStateOf("") }
     var isLocationError by rememberSaveable { mutableStateOf(false) }
     var landmark by remember { mutableStateOf("") }
+    var balance by remember { mutableStateOf("") }
     var isLandmarkError by rememberSaveable { mutableStateOf(false) }
     var phoneNumber by remember { mutableStateOf("") }
     var isPhoneNumberError by rememberSaveable { mutableStateOf(false) }
@@ -147,7 +148,6 @@ fun AddNewShopScreen(
             }
         }
 
-        Spacer(Modifier.height(20.dp))
         Text(
             "Enter Shop Details",
             fontSize = 18.sp,
@@ -253,7 +253,27 @@ fun AddNewShopScreen(
             },
         )
 
-        Spacer(Modifier.height(30.dp))
+        OutlinedTextField(
+            value = balance,
+            onValueChange = {
+                if (it.length <= 10) {
+                    balance = it
+                }
+            },
+            label = { Text("Balance Amount (optional)") },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                cursorColor = MaterialTheme.colorScheme.onPrimary,
+            ),
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        Spacer(Modifier.height(60.dp))
         Text(
             "Enter Owner Details",
             fontSize = 18.sp,
@@ -440,10 +460,11 @@ fun AddNewShopScreen(
                     shopName,
                     location,
                     landmark,
+                    balance,
                     firstName,
                     lastName,
-                    phoneNumber.toLong(),
-                    if(secondPhoneNumber.isNotEmpty()) secondPhoneNumber.toLong() else null,
+                    phoneNumber,
+                    if(secondPhoneNumber.isNotEmpty()) secondPhoneNumber else null,
                     mailId
                 )
             },

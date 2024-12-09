@@ -30,6 +30,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.collection.kubera.ui.addnewshop.AddNewShopScreen
+import com.collection.kubera.ui.shopdetails.ShopDetailsScreen
 import com.collection.kubera.ui.shoplist.ShopListScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -86,7 +87,7 @@ fun AppNavGraph(
                 modifier = modifier.padding(it)
             ) {
                 composable(AllDestinations.SHOP_LIST) {
-                    ShopListScreen()
+                    ShopListScreen(navController)
                 }
 
                 composable(AllDestinations.ADD_NEW_SHOP) {
@@ -95,8 +96,8 @@ fun AppNavGraph(
                 composable(AllDestinations.ADD_NEW_SHOP) {
                     AddNewShopScreen()
                 }
-                composable(AllDestinations.ADD_NEW_SHOP) {
-                    AddNewShopScreen()
+                composable(AllDestinations.SHOP_DETAILS) {
+                    ShopDetailsScreen()
                 }
             }
         }

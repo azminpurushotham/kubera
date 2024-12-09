@@ -1,20 +1,28 @@
 package com.collection.kubera.data
 
+import android.os.Parcel
+import android.os.Parcelable
 import com.google.firebase.Timestamp
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 data class Shop(
-    var id: String,
-    var shopName: String,
-    var location: String,
-    var landmark: String,
-    var firstName: String,
-    var lastName: String,
-    var phoneNumber: Long,
-    var secondPhoneNumber: Long,
-    var mailId: String,
-    var date: Timestamp,
-    var status: Boolean
-){
+    var id: String = "",
+    var shopName: String = "",
+    var s_shopName: String = "",
+    var location: String = "",
+    var landmark: String = "",
+    var firstName: String = "",
+    var s_firstName: String = "",
+    var lastName: String = "",
+    var s_lastName: String = "",
+    var phoneNumber: String? = null,
+    var secondPhoneNumber: String? = null,
+    var mailId: String = "",
+    var balance: Long? = null,
+    var date: Timestamp? = null,
+    var status: Boolean = true
+): Parcelable {
     constructor() : this(
         "",
         "",
@@ -22,9 +30,63 @@ data class Shop(
         "",
         "",
         "",
-        0.toLong(),
-        0.toLong(),
         "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        null,
         Timestamp.now(),
         false)
+
+    val datedmy: String
+        get() {
+            val date = date?.toDate()
+            val formatter = SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault())
+            return formatter.format(date)
+        }
+    val time: String
+        get() {
+            val date = date?.toDate()
+            val formatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+            return formatter.format(date)
+        }
+
+    constructor(parcel: Parcel) : this(
+        parcel.readString()?:"",
+        parcel.readString()?:"",
+        parcel.readString()?:"",
+        parcel.readString()?:"",
+        parcel.readString()?:"",
+        parcel.readString()?:"",
+        parcel.readString()?:"",
+        parcel.readString()?:"",
+        parcel.readString()?:"",
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString()?:"",
+        parcel.readValue(Long::class.java.classLoader) as? Long,
+        parcel.readParcelable(Timestamp::class.java.classLoader),
+        parcel.readByte() != 0.toByte()
+    ) {
+    }
+
+    companion object CREATOR : Parcelable.Creator<Shop> {
+        override fun createFromParcel(parcel: Parcel): Shop {
+            return Shop(parcel)
+        }
+
+        override fun newArray(size: Int): Array<Shop?> {
+            return arrayOfNulls(size)
+        }
+    }
+
+    override fun describeContents(): Int {
+        TODO("Not yet implemented")
+    }
+
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        TODO("Not yet implemented")
+    }
 }

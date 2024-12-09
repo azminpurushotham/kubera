@@ -14,6 +14,8 @@ sealed interface HomeUiState{
      */
     object Loading : HomeUiState
 
+    object Searching : HomeUiState
+
     /**
      * Text has been generated
      */

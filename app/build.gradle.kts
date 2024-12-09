@@ -58,6 +58,7 @@ dependencies {
     implementation(libs.timber)
     implementation(libs.gson)
     implementation(libs.accompanist)
+    implementation(libs.navigation.animation)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)
@@ -67,6 +68,7 @@ dependencies {
 //    implementation(libs.play.services.provider)
 
     implementation(libs.navigation.compose)
+    implementation(libs.androidx.room.common)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

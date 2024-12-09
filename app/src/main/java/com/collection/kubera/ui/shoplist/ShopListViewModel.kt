@@ -3,7 +3,6 @@ package com.collection.kubera.ui.shoplist
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.Shop
-import com.collection.kubera.data.User
 import com.collection.kubera.states.HomeUiState
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -32,10 +31,42 @@ class ShopListViewModel : ViewModel() {
                 .orderBy("shopName", Query.Direction.ASCENDING)
                 .get().await()
             _shopList.value = snapshot.documents.mapNotNull {
-                it.toObject(Shop::class.java)?.apply { id = it.id }
+                it.toObject(Shop::class.java)
+                    ?.apply {
+                        id = it.id
+                    }
             }
             _uiState.value = HomeUiState.HomeSuccess("Success")
-            _uiState.value = HomeUiState.Initial
+        }
+    }
+
+    fun getShops(shopName: String) {
+        Timber.v("getShops ${shopName}")
+        if(shopName.length>2){
+            _uiState.value = HomeUiState.Searching
+            viewModelScope.launch(Dispatchers.IO) {
+                firestore.collection("shop")
+                    .whereGreaterThanOrEqualTo("s_firstname", shopName)
+//                    .whereArrayContains("s_firstname", shopName)
+//                    .whereLessThanOrEqualTo("s_firstname", shopName)
+//                    .whereLessThan(
+//                        "s_firstname",
+//                        shopName + "\uf8ff"
+//                    ) // "\uf8ff" ensures the range ends after the prefix
+                    .get()
+                    .addOnSuccessListener { result ->
+                        _shopList.value = result.documents.mapNotNull {
+                            it.toObject(Shop::class.java)
+                                ?.apply {
+                                    id = it.id
+                                }
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        println("Error querying documents: $e")
+                    }
+                _uiState.value = HomeUiState.HomeSuccess("Success")
+            }
         }
     }
 }

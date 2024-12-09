@@ -1,4 +1,4 @@
-package com.collection.kubera.ui.addnewshop
+package com.collection.kubera.ui.shopdetails
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
-class AddNewShopViewModel : ViewModel() {
+class ShopDetailsViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<AddNewShopUiState> =
         MutableStateFlow(AddNewShopUiState.Initial)
     val uiState: StateFlow<AddNewShopUiState> =
