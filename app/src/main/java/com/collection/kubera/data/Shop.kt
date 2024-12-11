@@ -20,7 +20,7 @@ data class Shop(
     var secondPhoneNumber: String? = null,
     var mailId: String = "",
     var balance: Long? = null,
-    var date: Timestamp? = null,
+    var timestamp: Timestamp? = null,
     var status: Boolean = true
 ): Parcelable {
     constructor() : this(
@@ -42,13 +42,13 @@ data class Shop(
 
     val datedmy: String
         get() {
-            val date = date?.toDate()
+            val date = timestamp?.toDate()
             val formatter = SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault())
             return formatter.format(date)
         }
     val time: String
         get() {
-            val date = date?.toDate()
+            val date = timestamp?.toDate()
             val formatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
             return formatter.format(date)
         }

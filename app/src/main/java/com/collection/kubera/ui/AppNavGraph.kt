@@ -107,7 +107,7 @@ fun AppNavGraph(
 
 fun getTitle(currentRoute: String): String {
     if(currentRoute.contains(AllDestinations.SHOP_DETAILS)){
-        return  AllDestinations.SHOP_DETAILS
+        return  "Details"
     }
     return when (currentRoute) {
         AllDestinations.SHOP_LIST -> AllDestinations.SHOP_LIST

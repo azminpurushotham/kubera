@@ -79,7 +79,7 @@ class AddNewShopViewModel : ViewModel() {
                 if (phoneNumber.toString().isNotEmpty()) this.phoneNumber = phoneNumber
                 if (secondPhoneNumber !=null && secondPhoneNumber.toString().isNotEmpty()) this.secondPhoneNumber = secondPhoneNumber!!
                 if ((mailId?:"").isNotEmpty()) this.mailId = mailId!!
-                this.date = Timestamp.now()
+                this.timestamp = Timestamp.now()
                 this.status = true
             }
             firestore.collection("shop")

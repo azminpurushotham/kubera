@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.ShopDetailUiState
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,16 +29,21 @@ class ShopDetailsViewModel : ViewModel() {
         _uiState.value = ShopDetailUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection("shop")
-                .whereEqualTo("id", id).get()
+                .document(id)
+                .get()
                 .addOnSuccessListener {result->
-                    _shop.value = result.documents.mapNotNull {
-                        it.toObject(Shop::class.java)
-                    }[0]
+                    if (result.data?.isNotEmpty() == true) {
+                        _shop.value =  result.toObject(Shop::class.java)
+                    }
                     _uiState.value = ShopDetailUiState.ShopDetailSuccess("Success")
                 }.addOnFailureListener {
                     _uiState.value = ShopDetailUiState.ShopDetailError("Error")
                 }
         }
+
+    }
+
+    fun updateBalance(id: String?, balance: String) {
 
     }
 }

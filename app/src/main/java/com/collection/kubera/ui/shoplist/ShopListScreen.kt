@@ -158,12 +158,12 @@ fun ShopListScreen(
                 Column {
                     Text(
                         "9:00 am",
-                        fontWeight = FontWeight(600), fontSize = 15.sp,
+                        fontWeight = FontWeight(600), fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     Text(
                         "1-Dec-2024",
-                        fontWeight = FontWeight(400), fontSize = 15.sp,
+                        fontWeight = FontWeight(400), fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
@@ -197,12 +197,14 @@ fun ShopListScreen(
                     Column {
                         Text(
                             "${item.firstName} ${item.lastName}",
-                            fontWeight = FontWeight(400), fontSize = 15.sp,
+                            fontWeight = FontWeight(400),
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                         Text(
                             item.shopName,
-                            fontWeight = FontWeight(400), fontSize = 12.sp,
+                            fontWeight = FontWeight(400),
+                            fontSize = MaterialTheme.typography.labelMedium.fontSize,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -210,20 +212,22 @@ fun ShopListScreen(
                         Text(
                             item.balance.toString(),
                             fontWeight = FontWeight(500),
-                            fontSize = 15.sp,
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             color = if ((item.balance ?: 0) > 0) green else red,
                             modifier = Modifier.align(Alignment.End)
                         )
                         Row(modifier = Modifier.align(Alignment.End)) {
                             Text(
                                 item.datedmy,
-                                fontWeight = FontWeight(400), fontSize = 12.sp,
+                                fontWeight = FontWeight(400),
+                                fontSize = MaterialTheme.typography.labelMedium.fontSize,
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                             Spacer(Modifier.width(10.dp))
                             Text(
                                 item.time,
-                                fontWeight = FontWeight(900), fontSize = 10.sp,
+                                fontWeight = FontWeight(900),
+                                fontSize =  MaterialTheme.typography.labelSmall.fontSize,
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
