@@ -358,6 +358,7 @@ fun ShopDetailsScreen(
             Text("Save")
         }
 
+        Spacer(modifier = Modifier.height(60.dp))
     }
 }
 
