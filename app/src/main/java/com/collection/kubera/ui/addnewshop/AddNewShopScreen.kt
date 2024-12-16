@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.collection.kubera.states.AddNewShopUiState
+import com.collection.kubera.ui.AllDestinations
 import com.collection.kubera.ui.theme.headingLabelD
 
 @Preview
@@ -140,7 +141,9 @@ fun AddNewShopScreen(
         is AddNewShopUiState.AddNewShopSuccess -> {
             isEnabled = false
             Toast.makeText(context, (uiState as AddNewShopUiState.AddNewShopSuccess).outputText, Toast.LENGTH_SHORT).show()
-            navController?.popBackStack()
+            navController?.popBackStack(
+                route = AllDestinations.SHOP_LIST,
+                inclusive = false)
         }
 
         is AddNewShopUiState.AddNewShopError -> {

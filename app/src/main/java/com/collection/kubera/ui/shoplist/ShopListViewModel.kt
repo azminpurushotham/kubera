@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.HomeUiState
+import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,12 +44,43 @@ class ShopListViewModel : ViewModel() {
 
     fun getShops(shopName: String) {
         Timber.v("getShops ${shopName}")
-        if(shopName.length>2){
+        if (shopName.length > 2) {
             _uiState.value = HomeUiState.Searching
             viewModelScope.launch(Dispatchers.IO) {
-                firestore.collection("shop")
-                    .whereGreaterThanOrEqualTo("s_firstname", shopName)
-                    .whereGreaterThanOrEqualTo("s_shopname", shopName)
+                val q1 = firestore.collection("shop")
+                    .whereGreaterThanOrEqualTo("s_shopName", shopName.lowercase())
+                    .get()
+                val q2 = firestore.collection("shop")
+                    .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
+                    .get()
+                val q3 = firestore.collection("shop")
+                    .whereGreaterThanOrEqualTo("s_lastName", shopName.lowercase())
+                    .get()
+
+
+                Tasks.whenAllComplete(q1, q2, q3)
+                    .addOnSuccessListener { tasks ->
+                        val results = tasks.flatMap { task ->
+                            val snapshot = task.result as QuerySnapshot
+                            snapshot.documents
+                        }.distinct() // To remove duplicates if the value matches both fields
+                        // Process the results
+
+                        _shopList.value = results.mapNotNull {
+                            it.toObject(Shop::class.java)
+                                ?.apply {
+                                    id = it.id
+                                }
+                        }
+                    }
+                    .addOnFailureListener { e ->
+                        println("Error querying documents: $e")
+                    }
+
+               /* firestore.collection("shop")
+                    .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
+                    .whereGreaterThanOrEqualTo("s_lastName", shopName.lowercase())
+                    .whereGreaterThanOrEqualTo("s_shopName", shopName.lowercase())
 //                    .whereArrayContains("s_firstname", shopName)
 //                    .whereLessThanOrEqualTo("s_firstname", shopName)
 //                    .whereLessThan(
@@ -65,7 +98,7 @@ class ShopListViewModel : ViewModel() {
                     }
                     .addOnFailureListener { e ->
                         println("Error querying documents: $e")
-                    }
+                    }*/
                 _uiState.value = HomeUiState.HomeSuccess("Success")
             }
         }

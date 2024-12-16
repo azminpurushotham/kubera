@@ -18,6 +18,7 @@ object AllDestinations {
 class AppNavigationActions(private val navController: NavHostController) {
     fun navigateToShopList() {
         navController.navigate(SHOP_LIST) {
+            launchSingleTop = true
             popUpTo(SHOP_LIST)
         }
     }
@@ -28,6 +29,7 @@ class AppNavigationActions(private val navController: NavHostController) {
     }
     fun navigateToAddNewShop() {
         navController.navigate(ADD_NEW_SHOP) {
+            launchSingleTop = true
             popUpTo(SHOP_LIST)
         }
     }
@@ -38,6 +40,7 @@ class AppNavigationActions(private val navController: NavHostController) {
     }
     fun navigateToShopDetails() {
         navController.navigate(SHOP_DETAILS) {
+            launchSingleTop = true
             popUpTo(SHOP_LIST)
         }
     }

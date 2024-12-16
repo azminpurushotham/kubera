@@ -61,6 +61,43 @@ fun ShopListScreen(
     val shopList by viewModel.shopList.collectAsState()
     var shopName by remember { mutableStateOf("") }
 
+    when (uiState) {
+        is HomeUiState.Initial -> {
+            viewModel.getShops()
+        }
+
+        HomeUiState.Loading -> {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+        }
+
+        is HomeUiState.HomeInit -> {
+
+        }
+
+        is HomeUiState.Searching -> {
+
+        }
+
+        is HomeUiState.HomeSuccess -> {
+            Timber.v("HomeSuccess")
+        }
+
+        is HomeUiState.HomeError -> {
+            Toast.makeText(
+                context,
+                (uiState as HomeUiState.HomeError).errorMessage,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
+
     Column(
         modifier = Modifier
             .verticalScroll(rememberScrollState())
@@ -69,38 +106,6 @@ fun ShopListScreen(
         horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
     ) {
 
-        when (uiState) {
-            is HomeUiState.Initial -> {
-                viewModel.getShops()
-            }
-
-            HomeUiState.Loading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                )
-            }
-
-            is HomeUiState.HomeInit -> {
-
-            }
-
-            is HomeUiState.Searching -> {
-
-            }
-
-            is HomeUiState.HomeSuccess -> {
-                Timber.v("HomeSuccess")
-            }
-
-            is HomeUiState.HomeError -> {
-                Toast.makeText(
-                    context,
-                    (uiState as HomeUiState.HomeError).errorMessage,
-                    Toast.LENGTH_LONG
-                ).show()
-            }
-        }
         Spacer(modifier = Modifier.height(15.dp))
         Box {
             OutlinedTextField(

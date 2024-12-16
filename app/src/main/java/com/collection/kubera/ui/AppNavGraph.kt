@@ -60,7 +60,8 @@ fun AppNavGraph(
                 closeDrawer = { coroutineScope.launch { drawerState.close() } },
                 modifier = Modifier
             )
-        }, drawerState = drawerState
+        },
+        drawerState = drawerState
     ) {
         Scaffold(
             topBar = {
