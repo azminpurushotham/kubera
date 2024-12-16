@@ -2,8 +2,8 @@ package com.collection.kubera.ui
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -22,8 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -70,14 +69,20 @@ fun AppNavGraph(
                     modifier = Modifier.fillMaxWidth(),
                     navigationIcon = {
                         IconButton(onClick = {
-                            coroutineScope.launch { drawerState.open() }
+                            when(currentRoute){
+                                AllDestinations.SHOP_LIST->{coroutineScope.launch{drawerState.open()}}
+                                else -> coroutineScope.launch { navController.popBackStack() }
+                            }
                         }, content = {
                             Icon(
-                                imageVector = Icons.Default.Menu, contentDescription = null
+                                imageVector = getIcon(currentRoute),
+                                contentDescription = null
                             )
                         })
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primary)
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.primary
+                    )
                 )
             }, modifier = Modifier
         ) {
@@ -89,12 +94,8 @@ fun AppNavGraph(
                 composable(AllDestinations.SHOP_LIST) {
                     ShopListScreen(navController)
                 }
-
                 composable(AllDestinations.ADD_NEW_SHOP) {
-                    AddNewShopScreen()
-                }
-                composable(AllDestinations.ADD_NEW_SHOP) {
-                    AddNewShopScreen()
+                    AddNewShopScreen(navController)
                 }
                 composable("${AllDestinations.SHOP_DETAILS}/{shopId}") { backStackEntry ->
                     val shopId = backStackEntry.arguments?.getString("shopId")
@@ -105,9 +106,16 @@ fun AppNavGraph(
     }
 }
 
+fun getIcon(currentRoute: String): ImageVector {
+  when(currentRoute){
+      AllDestinations.SHOP_LIST-> return Icons.Default.Menu
+  }
+    return Icons.Default.ArrowBackIosNew
+}
+
 fun getTitle(currentRoute: String): String {
-    if(currentRoute.contains(AllDestinations.SHOP_DETAILS)){
-        return  "Details"
+    if (currentRoute.contains(AllDestinations.SHOP_DETAILS)) {
+        return "Details"
     }
     return when (currentRoute) {
         AllDestinations.SHOP_LIST -> AllDestinations.SHOP_LIST

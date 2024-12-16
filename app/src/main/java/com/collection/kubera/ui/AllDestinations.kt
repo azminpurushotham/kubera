@@ -23,12 +23,12 @@ class AppNavigationActions(private val navController: NavHostController) {
     }
     fun navigateToProfile() {
         navController.navigate(PROFILE) {
-            popUpTo(PROFILE)
+            popUpTo(SHOP_LIST)
         }
     }
     fun navigateToAddNewShop() {
         navController.navigate(ADD_NEW_SHOP) {
-            popUpTo(ADD_NEW_SHOP)
+            popUpTo(SHOP_LIST)
         }
     }
     fun navigateToLogOut() {
@@ -38,7 +38,7 @@ class AppNavigationActions(private val navController: NavHostController) {
     }
     fun navigateToShopDetails() {
         navController.navigate(SHOP_DETAILS) {
-            popUpTo(SHOP_DETAILS)
+            popUpTo(SHOP_LIST)
         }
     }
 }

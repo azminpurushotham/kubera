@@ -47,6 +47,7 @@ class ShopListViewModel : ViewModel() {
             viewModelScope.launch(Dispatchers.IO) {
                 firestore.collection("shop")
                     .whereGreaterThanOrEqualTo("s_firstname", shopName)
+                    .whereGreaterThanOrEqualTo("s_shopname", shopName)
 //                    .whereArrayContains("s_firstname", shopName)
 //                    .whereLessThanOrEqualTo("s_firstname", shopName)
 //                    .whereLessThan(

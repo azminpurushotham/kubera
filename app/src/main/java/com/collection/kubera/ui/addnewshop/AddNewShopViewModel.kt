@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
+import java.util.Locale
 
 class AddNewShopViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<AddNewShopUiState> =
@@ -24,36 +25,6 @@ class AddNewShopViewModel : ViewModel() {
     private val _users = MutableStateFlow<List<User>>(emptyList())
     val users: StateFlow<List<User>> get() = _users
     private val firestore = FirebaseFirestore.getInstance()
-
-    fun getUsers() {
-        Timber.v("getUsers")
-        _uiState.value = AddNewShopUiState.Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            val snapshot = firestore.collection("user")
-                .orderBy("username", Query.Direction.ASCENDING)
-                .get().await()
-            _users.value = snapshot.documents.mapNotNull {
-                it.toObject(User::class.java)?.apply { id = it.id }
-            }
-            _uiState.value = AddNewShopUiState.AddNewShopSuccess("Success")
-            _uiState.value = AddNewShopUiState.Initial
-        }
-    }
-
-    fun login(userName: String, password: String) {
-        Timber.v("login")
-        _uiState.value = AddNewShopUiState.Loading
-        users.value.indexOfFirst { (it.username.equals(userName) && it.password.equals(password)) }
-            .also { result ->
-                result.takeIf { result >= 0 }?.let {
-                    _uiState.value =
-                        AddNewShopUiState.AddNewShopSuccess("Successfully logged in")
-                } ?: run {
-                    _uiState.value =
-                        AddNewShopUiState.AddNewShopError("Please enter correct credentials")
-                }
-            }
-    }
 
     fun saveShopDetails(
         shopName: String,
@@ -71,11 +42,14 @@ class AddNewShopViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             val prm = Shop().apply {
                 if (shopName.isNotEmpty()) this.shopName = shopName
+                if (shopName.isNotEmpty()) this.s_shopName = shopName.lowercase()
                 if (location.isNotEmpty()) this.location = location
                 if ((landmark?:"").isNotEmpty()) this.landmark = landmark!!
                 if ((balance?:"").isNotEmpty()) this.balance = (balance?:"0").toLong()
                 if (firstName.isNotEmpty()) this.firstName = firstName
+                if (firstName.isNotEmpty()) this.s_firstName = firstName.lowercase()
                 if ((lastName?:"").isNotEmpty()) this.lastName = lastName!!
+                if ((lastName?:"").isNotEmpty()) this.s_lastName = (lastName?:"").lowercase()
                 if (phoneNumber.toString().isNotEmpty()) this.phoneNumber = phoneNumber
                 if (secondPhoneNumber !=null && secondPhoneNumber.toString().isNotEmpty()) this.secondPhoneNumber = secondPhoneNumber!!
                 if ((mailId?:"").isNotEmpty()) this.mailId = mailId!!
@@ -84,9 +58,11 @@ class AddNewShopViewModel : ViewModel() {
             }
             firestore.collection("shop")
                 .add(prm).addOnSuccessListener {
-                    _uiState.value = AddNewShopUiState.AddNewShopSuccess("Success")
+                    _uiState.value = AddNewShopUiState.AddNewShopSuccess("New Shop Added Successfully")
+//                    _uiState.value = AddNewShopUiState.AddNewShopCompleted("New Shop Added Successfully")
                 }.addOnFailureListener {
-                    _uiState.value = AddNewShopUiState.AddNewShopError("Error")
+                    _uiState.value = AddNewShopUiState.AddNewShopError("Shop is not added,please try again")
+//                    _uiState.value = AddNewShopUiState.AddNewShopCompleted("Shop is not added,please try again")
                 }
         }
 

@@ -27,4 +27,8 @@ sealed interface AddNewShopUiState{
      * There was an error generating text
      */
     data class AddNewShopError(val errorMessage: String) : AddNewShopUiState
+    /**
+     * There was an error generating text
+     */
+    data class AddNewShopCompleted(val outputText: String) : AddNewShopUiState
 }

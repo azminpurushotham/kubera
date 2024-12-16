@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.Navigator
 import androidx.navigation.compose.rememberNavController
 import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
@@ -119,11 +118,12 @@ fun ShopListScreen(
                     focusedTextColor = MaterialTheme.colorScheme.onSurface
                 ),
                 singleLine = true,
+                label = { Text("Search shops here...") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
                 shape = RoundedCornerShape(30.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(60.dp)
                     .padding(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 0.dp),
                 trailingIcon = {
                     val icon = Icons.Filled.Search
@@ -210,7 +210,7 @@ fun ShopListScreen(
                     }
                     Column {
                         Text(
-                            item.balance.toString(),
+                            (item.balance?:0.0).toString(),
                             fontWeight = FontWeight(500),
                             fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             color = if ((item.balance ?: 0) > 0) green else red,
