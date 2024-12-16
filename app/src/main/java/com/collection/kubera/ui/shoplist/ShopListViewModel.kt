@@ -19,8 +19,7 @@ import timber.log.Timber
 class ShopListViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> =
         MutableStateFlow(HomeUiState.Initial)
-    val uiState: StateFlow<HomeUiState> =
-        _uiState.asStateFlow()
+    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
     private val _shopList = MutableStateFlow<List<Shop>>(emptyList())
     val shopList: StateFlow<List<Shop>> get() = _shopList
     private val firestore = FirebaseFirestore.getInstance()
