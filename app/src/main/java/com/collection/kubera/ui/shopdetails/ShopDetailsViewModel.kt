@@ -34,6 +34,9 @@ class ShopDetailsViewModel : ViewModel() {
                 .addOnSuccessListener {result->
                     if (result.data?.isNotEmpty() == true) {
                         _shop.value =  result.toObject(Shop::class.java)
+                            ?.apply {
+                                this.id = id
+                            }
                     }
                     _uiState.value = ShopDetailUiState.ShopDetailSuccess("Success")
                 }.addOnFailureListener {
@@ -44,6 +47,16 @@ class ShopDetailsViewModel : ViewModel() {
     }
 
     fun updateBalance(id: String?, balance: String) {
-
+        id?.let {
+            _uiState.value = ShopDetailUiState.Loading
+            firestore.collection("shop")
+                .document(it)
+                .update("balance", balance.toLong())
+                .addOnSuccessListener {result->
+                    _uiState.value = ShopDetailUiState.ShopDetailToast("Successfully balance updated")
+                }.addOnFailureListener {
+                    _uiState.value = ShopDetailUiState.ShopDetailToast("Balance not updated")
+                }
+        }
     }
 }

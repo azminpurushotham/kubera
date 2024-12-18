@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.gson)
     implementation(libs.accompanist)
     implementation(libs.navigation.animation)
+    implementation(libs.swiperefreshlayout)
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics.ktx)

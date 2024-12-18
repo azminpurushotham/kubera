@@ -1,5 +1,7 @@
 package com.collection.kubera.ui.shopdetails
 
+import android.graphics.Paint.Align
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,34 +20,42 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.collection.kubera.states.ShopDetailUiState
+import com.collection.kubera.ui.theme.backgroundDarkD
 import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.headingLabelD
 import com.collection.kubera.ui.theme.labelBackgroundD
 import com.collection.kubera.ui.theme.labelD
 import com.collection.kubera.ui.theme.red
+import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 fun ShopDetailsScreen(
@@ -59,8 +69,84 @@ fun ShopDetailsScreen(
     var balance by remember { mutableStateOf("") }
     var isEnabled by remember { mutableStateOf(false) }
 
+    val scope = rememberCoroutineScope()
+    val sheetState = rememberModalBottomSheetState()
+    var showBottomSheet by remember { mutableStateOf(false) }
+
     fun enableButton() {
         isEnabled = balance.isNotEmpty() && balance.toLong() > 0
+    }
+
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            sheetState = sheetState,
+            containerColor = backgroundDarkD,
+            content = {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "Confirmation",
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                    )
+                    Spacer(modifier = Modifier.height(30.dp))
+                    Text(
+                        "Do you want to ${selectedOption} the balance with",
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                    )
+                    Text(
+                        balance,
+                        color = if (selectedOption == "Credit") {
+                            green
+                        } else {
+                            red
+                        },
+                        fontSize = MaterialTheme.typography.headlineLarge.fontSize,
+                        fontWeight = FontWeight(600)
+                    )
+
+                    Spacer(modifier = Modifier.height(30.dp))
+                    Button(
+                        shape = RoundedCornerShape(5.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        enabled = isEnabled,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (selectedOption == "Credit") {
+                                green
+                            } else {
+                                red
+                            },
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        ),
+                        onClick = {
+                        scope.launch {
+                            sheetState.hide()
+                            viewModel.updateBalance(
+                                shop?.id,
+                                balance,
+                            )
+                        }
+                    }) {
+                        Text(selectedOption,
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontWeight = FontWeight(1),
+                            fontSize = MaterialTheme.typography.titleLarge.fontSize,)
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+            },
+            onDismissRequest = {
+                showBottomSheet = false
+            },
+        )
     }
 
     @Composable
@@ -117,6 +203,9 @@ fun ShopDetailsScreen(
             is ShopDetailUiState.ShopDetailError -> {
 
             }
+            is ShopDetailUiState.ShopDetailToast->{
+                Toast.makeText(context, (uiState as ShopDetailUiState.ShopDetailToast).outputText, Toast.LENGTH_SHORT).show()
+            }
 
         }
 
@@ -143,7 +232,11 @@ fun ShopDetailsScreen(
             modifier = Modifier.padding(start = 16.dp, top = 20.dp),
         )
         Text(
-            text = shop?.location ?: "--",
+            text = if ((shop?.location ?: "").isEmpty()) {
+                "--"
+            } else {
+                shop?.location ?: "--"
+            },
             fontSize = MaterialTheme.typography.titleMedium.fontSize,
             fontWeight = FontWeight(1),
             modifier = Modifier.padding(start = 16.dp),
@@ -158,7 +251,11 @@ fun ShopDetailsScreen(
             modifier = Modifier.padding(start = 16.dp, top = 20.dp),
         )
         Text(
-            text = shop?.landmark ?: "--",
+            text = if ((shop?.landmark ?: "").isEmpty()) {
+                "--"
+            } else {
+                shop?.landmark ?: "--"
+            },
             fontSize = MaterialTheme.typography.titleMedium.fontSize,
             fontWeight = FontWeight(1),
             modifier = Modifier.padding(start = 16.dp),
@@ -223,7 +320,11 @@ fun ShopDetailsScreen(
         )
 
         Text(
-            text = shop?.lastName ?: "--",
+            text = if ((shop?.lastName ?: "").isEmpty()) {
+                "--"
+            } else {
+                shop?.lastName ?: "--"
+            },
             fontSize = MaterialTheme.typography.titleMedium.fontSize,
             fontWeight = FontWeight(1),
             modifier = Modifier.padding(start = 16.dp),
@@ -239,7 +340,11 @@ fun ShopDetailsScreen(
         )
 
         Text(
-            text = shop?.phoneNumber ?: "--",
+            text = if ((shop?.phoneNumber ?: "").isEmpty()) {
+                "--"
+            } else {
+                shop?.phoneNumber ?: "--"
+            },
             fontSize = MaterialTheme.typography.titleMedium.fontSize,
             fontWeight = FontWeight(1),
             modifier = Modifier.padding(start = 16.dp),
@@ -255,7 +360,11 @@ fun ShopDetailsScreen(
         )
 
         Text(
-            text = shop?.secondPhoneNumber ?: "--",
+            text = if ((shop?.secondPhoneNumber ?: "").isEmpty()) {
+                "--"
+            } else {
+                shop?.secondPhoneNumber ?: "--"
+            },
             fontSize = MaterialTheme.typography.titleMedium.fontSize,
             fontWeight = FontWeight(1),
             modifier = Modifier.padding(start = 16.dp),
@@ -270,7 +379,11 @@ fun ShopDetailsScreen(
         )
 
         Text(
-            text = shop?.mailId ?: "--",
+            text = if ((shop?.mailId ?: "").isEmpty()) {
+                "--"
+            } else {
+                shop?.mailId ?: "--"
+            },
             fontSize = MaterialTheme.typography.titleMedium.fontSize,
             fontWeight = FontWeight(1),
             modifier = Modifier.padding(start = 16.dp),
@@ -336,19 +449,20 @@ fun ShopDetailsScreen(
             ),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth().padding(start = 50.dp, end = 50.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 50.dp, end = 50.dp),
         )
 
         Spacer(modifier = Modifier.height(20.dp))
         Button(
             onClick = {
-                viewModel.updateBalance(
-                    shop?.id,
-                    balance,
-                )
+                showBottomSheet = true
             },
             shape = RoundedCornerShape(5.dp),
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             enabled = isEnabled, // Control button's enabled state
             colors = ButtonDefaults.buttonColors(
                 containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surface, // Green when enabled, Gray when disabled
@@ -361,5 +475,6 @@ fun ShopDetailsScreen(
         Spacer(modifier = Modifier.height(60.dp))
     }
 }
+
 
 

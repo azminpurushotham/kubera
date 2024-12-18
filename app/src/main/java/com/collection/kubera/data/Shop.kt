@@ -11,7 +11,7 @@ data class Shop(
     var shopName: String = "",
     var s_shopName: String = "",
     var location: String = "",
-    var landmark: String = "",
+    var landmark: String? = "",
     var firstName: String = "",
     var s_firstName: String = "",
     var lastName: String = "",

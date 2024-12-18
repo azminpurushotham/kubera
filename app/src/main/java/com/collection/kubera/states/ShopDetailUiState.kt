@@ -23,6 +23,8 @@ sealed interface ShopDetailUiState{
      */
     data class ShopDetailSuccess(val outputText: String) : ShopDetailUiState
 
+    data class ShopDetailToast(val outputText: String) : ShopDetailUiState
+
     /**
      * There was an error generating text
      */

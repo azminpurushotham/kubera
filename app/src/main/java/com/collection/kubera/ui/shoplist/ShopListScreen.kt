@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
 import com.collection.kubera.ui.theme.green
@@ -60,6 +61,10 @@ fun ShopListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val shopList by viewModel.shopList.collectAsState()
     var shopName by remember { mutableStateOf("") }
+    // State to track if refreshing is happening
+    var isRefreshing by remember { mutableStateOf(false) }
+    // SwipeRefresh state
+//    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
     when (uiState) {
         is HomeUiState.Initial -> {
