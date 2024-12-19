@@ -14,6 +14,8 @@ sealed interface HomeUiState{
      */
     object Loading : HomeUiState
 
+    object Refreshing : HomeUiState
+
     object Searching : HomeUiState
 
     /**

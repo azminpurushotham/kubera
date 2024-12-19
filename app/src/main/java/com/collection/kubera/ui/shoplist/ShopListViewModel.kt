@@ -22,11 +22,51 @@ class ShopListViewModel : ViewModel() {
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
     private val _shopList = MutableStateFlow<List<Shop>>(emptyList())
     val shopList: StateFlow<List<Shop>> get() = _shopList
+    private val _balance = MutableStateFlow<Double>(0.0)
+    val balance: StateFlow<Double> get() = _balance
     private val firestore = FirebaseFirestore.getInstance()
 
     fun getShops() {
         Timber.v("getShops")
         _uiState.value = HomeUiState.Loading
+        viewModelScope.launch(Dispatchers.IO) {
+            val snapshot = firestore.collection("shop")
+                .orderBy("shopName", Query.Direction.ASCENDING)
+                .get().await()
+            _shopList.value = snapshot.documents.mapNotNull {
+                it.toObject(Shop::class.java)
+                    ?.apply {
+                        id = it.id
+                    }
+            }
+            _uiState.value = HomeUiState.HomeSuccess("Success")
+        }
+    }
+
+    fun getBalance() {
+        Timber.v("getBalance")
+        viewModelScope.launch(Dispatchers.IO) {
+              firestore.collection("shop")
+                .get()
+                .addOnSuccessListener {querySnapshot->
+                    var total = 0.0
+                    val fieldValues = querySnapshot.documents.mapNotNull{ it.getDouble("balance") }
+                    println("TOTAL")
+                    println(fieldValues)
+                    fieldValues.forEach {
+                        total += it
+                    }
+                    _balance.value = total
+                }
+                .addOnFailureListener {
+                    _balance.value = 0.0
+                }
+        }
+    }
+
+    fun getSwipeShops() {
+        Timber.v("getShops")
+        _uiState.value = HomeUiState.Refreshing
         viewModelScope.launch(Dispatchers.IO) {
             val snapshot = firestore.collection("shop")
                 .orderBy("shopName", Query.Direction.ASCENDING)

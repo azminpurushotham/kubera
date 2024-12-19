@@ -1,6 +1,5 @@
 package com.collection.kubera.ui.shopdetails
 
-import android.graphics.Paint.Align
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -40,7 +39,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -132,6 +130,7 @@ fun ShopDetailsScreen(
                             viewModel.updateBalance(
                                 shop?.id,
                                 balance,
+                                selectedOption
                             )
                         }
                     }) {

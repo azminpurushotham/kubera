@@ -21,7 +21,7 @@ nav_version = "2.8.4"
 gson = "2.10.1"
 accompanist = "0.36.0"
 roomCommon = "2.6.1"
-swiperefreshlayout = "1.1.0"
+swiperefreshlayout = "1.7.6"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -52,7 +52,7 @@ icons = { group = "androidx.compose.material", name = "material-icons-extended",
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
-swiperefreshlayout = {group="androidx.swiperefreshlayout",name="swiperefreshlayout",version.ref="swiperefreshlayout"}
+swiperefreshlayout = {group="androidx.compose.foundation",name="foundation",version.ref="swiperefreshlayout"}
 
 
 [plugins]
