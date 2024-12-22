@@ -112,7 +112,7 @@ fun AddNewShopScreen(
         isEnabled = !isShopNameError && shopName.isNotEmpty()
                 && !isFirstNameError && firstName.isNotEmpty()
 //                && !isLastNameError
-                && !isLocationError && location.isNotEmpty()
+//                && !isLocationError && location.isNotEmpty()
 //                && !isLandmarkError
                 && !isPhoneNumberError && phoneNumber.isNotEmpty()
 //                && !isSecondPhoneNumberError
@@ -205,71 +205,71 @@ fun AddNewShopScreen(
                 }
             },
         )
-        OutlinedTextField(
-            value = location,
-            onValueChange = {
-                if (it.length <= nameLimit) {
-                    location = it
-                    location = location.replaceFirstChar { word -> word.uppercaseChar() }
-                    validateLocation(location)
-                }
-                enableButton()
-            },
-            label = { Text("Location") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                cursorColor = MaterialTheme.colorScheme.onPrimary,
-            ),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-            isError = isLocationError,
-            modifier = Modifier.fillMaxWidth(),
-            supportingText = {
-                if (isLocationError) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "Limit: ${location.length}/$characterLimit",
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-        )
-
-        OutlinedTextField(
-            value = landmark,
-            onValueChange = {
-                if (it.length <= nameLimit) {
-                    landmark = it
-                    landmark = landmark.replaceFirstChar { word -> word.uppercaseChar() }
-                    validateLandmark(landmark)
-                }
-                enableButton()
-            },
-            label = { Text("Landmark (optional)") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                cursorColor = MaterialTheme.colorScheme.onPrimary,
-            ),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-            isError = isLandmarkError,
-            modifier = Modifier.fillMaxWidth(),
-            supportingText = {
-                if (isLandmarkError) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "Limit: ${landmark.length}/$characterLimit",
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-        )
+//        OutlinedTextField(
+//            value = location,
+//            onValueChange = {
+//                if (it.length <= nameLimit) {
+//                    location = it
+//                    location = location.replaceFirstChar { word -> word.uppercaseChar() }
+//                    validateLocation(location)
+//                }
+//                enableButton()
+//            },
+//            label = { Text("Location") },
+//            colors = OutlinedTextFieldDefaults.colors(
+//                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+//                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+//                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+//                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+//                cursorColor = MaterialTheme.colorScheme.onPrimary,
+//            ),
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+//            isError = isLocationError,
+//            modifier = Modifier.fillMaxWidth(),
+//            supportingText = {
+//                if (isLocationError) {
+//                    Text(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        text = "Limit: ${location.length}/$characterLimit",
+//                        color = MaterialTheme.colorScheme.error
+//                    )
+//                }
+//            },
+//        )
+//
+//        OutlinedTextField(
+//            value = landmark,
+//            onValueChange = {
+//                if (it.length <= nameLimit) {
+//                    landmark = it
+//                    landmark = landmark.replaceFirstChar { word -> word.uppercaseChar() }
+//                    validateLandmark(landmark)
+//                }
+//                enableButton()
+//            },
+//            label = { Text("Landmark (optional)") },
+//            colors = OutlinedTextFieldDefaults.colors(
+//                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+//                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+//                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+//                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+//                cursorColor = MaterialTheme.colorScheme.onPrimary,
+//            ),
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+//            isError = isLandmarkError,
+//            modifier = Modifier.fillMaxWidth(),
+//            supportingText = {
+//                if (isLandmarkError) {
+//                    Text(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        text = "Limit: ${landmark.length}/$characterLimit",
+//                        color = MaterialTheme.colorScheme.error
+//                    )
+//                }
+//            },
+//        )
 
         OutlinedTextField(
             value = balance,
@@ -433,44 +433,44 @@ fun AddNewShopScreen(
                 }
             },
         )
-        OutlinedTextField(
-            value = mailId,
-            onValueChange = {
-                if (it.length <= 50) {
-                    mailId = it.trim()
-                    validateEmail(mailId)
-                }
-                enableButton()
-            },
-            label = { Text("Mail Id (optional)") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                cursorColor = MaterialTheme.colorScheme.onPrimary,
-            ),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            isError = isMailIdError||isMailIdFormateError,
-            modifier = Modifier.fillMaxWidth(),
-            supportingText = {
-                if (isMailIdError) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "Limit: ${mailId.length}/$characterLimit",
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-               else if (isMailIdFormateError) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = "Email not valid",
-                        color = MaterialTheme.colorScheme.error
-                    )
-                }
-            },
-        )
+//        OutlinedTextField(
+//            value = mailId,
+//            onValueChange = {
+//                if (it.length <= 50) {
+//                    mailId = it.trim()
+//                    validateEmail(mailId)
+//                }
+//                enableButton()
+//            },
+//            label = { Text("Mail Id (optional)") },
+//            colors = OutlinedTextFieldDefaults.colors(
+//                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+//                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+//                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+//                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+//                cursorColor = MaterialTheme.colorScheme.onPrimary,
+//            ),
+//            singleLine = true,
+//            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+//            isError = isMailIdError||isMailIdFormateError,
+//            modifier = Modifier.fillMaxWidth(),
+//            supportingText = {
+//                if (isMailIdError) {
+//                    Text(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        text = "Limit: ${mailId.length}/$characterLimit",
+//                        color = MaterialTheme.colorScheme.error
+//                    )
+//                }
+//               else if (isMailIdFormateError) {
+//                    Text(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        text = "Email not valid",
+//                        color = MaterialTheme.colorScheme.error
+//                    )
+//                }
+//            },
+//        )
         Spacer(modifier = Modifier.height(20.dp))
         Button(
             onClick = {
@@ -490,7 +490,7 @@ fun AddNewShopScreen(
             modifier = Modifier.fillMaxWidth(),
             enabled = isEnabled, // Control button's enabled state
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surface, // Green when enabled, Gray when disabled
+                containerColor = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface, // Green when enabled, Gray when disabled
                 contentColor = if (isEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
             )
         ) {

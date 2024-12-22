@@ -47,7 +47,7 @@ fun AppDrawer(
             },
             shape = MaterialTheme.shapes.small,
             colors = NavigationDrawerItemDefaults.colors(
-                selectedContainerColor = MaterialTheme.colorScheme.surface, // Background color when selected
+                selectedContainerColor = MaterialTheme.colorScheme.tertiary, // Background color when selected
                 selectedTextColor = MaterialTheme.colorScheme.onSurface,    // Text color when selected
                 unselectedContainerColor = MaterialTheme.colorScheme.primary, // Background when not selected
                 unselectedTextColor = MaterialTheme.colorScheme.onPrimary    // Text color when not selected
@@ -68,7 +68,7 @@ fun AppDrawer(
             },
             shape = MaterialTheme.shapes.small,
             colors = NavigationDrawerItemDefaults.colors(
-                selectedContainerColor = MaterialTheme.colorScheme.surface, // Background color when selected
+                selectedContainerColor = MaterialTheme.colorScheme.tertiary, // Background color when selected
                 selectedTextColor = MaterialTheme.colorScheme.onSurface,    // Text color when selected
                 unselectedContainerColor = MaterialTheme.colorScheme.primary, // Background when not selected
                 unselectedTextColor = MaterialTheme.colorScheme.onPrimary    // Text color when not selected
@@ -89,7 +89,7 @@ fun AppDrawer(
             },
             shape = MaterialTheme.shapes.small,
             colors = NavigationDrawerItemDefaults.colors(
-                selectedContainerColor = MaterialTheme.colorScheme.surface, // Background color when selected
+                selectedContainerColor = MaterialTheme.colorScheme.tertiary, // Background color when selected
                 selectedTextColor = MaterialTheme.colorScheme.onSurface,    // Text color when selected
                 unselectedContainerColor = MaterialTheme.colorScheme.primary, // Background when not selected
                 unselectedTextColor = MaterialTheme.colorScheme.onPrimary    // Text color when not selected
@@ -110,7 +110,7 @@ fun AppDrawer(
             },
             shape = MaterialTheme.shapes.small,
             colors = NavigationDrawerItemDefaults.colors(
-                selectedContainerColor = MaterialTheme.colorScheme.surface, // Background color when selected
+                selectedContainerColor = MaterialTheme.colorScheme.tertiary, // Background color when selected
                 selectedTextColor = MaterialTheme.colorScheme.onSurface,    // Text color when selected
                 unselectedContainerColor = MaterialTheme.colorScheme.primary, // Background when not selected
                 unselectedTextColor = MaterialTheme.colorScheme.onPrimary    // Text color when not selected

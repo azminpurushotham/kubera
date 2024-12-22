@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +21,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -50,9 +50,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
+import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.red
-import com.google.android.gms.common.internal.safeparcel.SafeParcelable.Indicator
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -114,7 +114,7 @@ fun ShopListScreen(
             ).show()
         }
 
-        is HomeUiState.Refreshing->{
+        is HomeUiState.Refreshing -> {
             isRefreshing = true
         }
     }
@@ -175,7 +175,7 @@ fun ShopListScreen(
             ) {
                 Row(
                     modifier = Modifier
-                        .background(color = MaterialTheme.colorScheme.background)
+                        .background(color = boxColorD)
                         .padding(
                             start = 16.dp,
                             end = 16.dp,
@@ -188,12 +188,14 @@ fun ShopListScreen(
                     Column {
                         Text(
                             "9:00 am",
-                            fontWeight = FontWeight(600), fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                            fontWeight = FontWeight(600),
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                         Text(
                             "1-Dec-2024",
-                            fontWeight = FontWeight(400), fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                            fontWeight = FontWeight(400),
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -208,18 +210,21 @@ fun ShopListScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
             for (item in shopList) {
-                Card(
+                ElevatedCard(
+                    shape = RoundedCornerShape(0.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = boxColorD,
+                    ),
                     onClick = {
                         Timber.v("SHOP_DETAILS")
                         navController.navigate("${SHOP_DETAILS}/${item.id}")
                     }) {
                     Row(
                         modifier = Modifier
-                            .background(color = MaterialTheme.colorScheme.background)
                             .padding(
                                 start = 16.dp,
                                 end = 16.dp,
-                                top = 8.dp,
+                                top = 16.dp,
                                 bottom = 16.dp
                             )
                             .fillMaxWidth(),
@@ -228,20 +233,20 @@ fun ShopListScreen(
                         Column {
                             Text(
                                 "${item.firstName} ${item.lastName}",
-                                fontWeight = FontWeight(400),
+                                fontWeight = FontWeight(500),
                                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                                color = MaterialTheme.colorScheme.onPrimary
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
                                 item.shopName,
-                                fontWeight = FontWeight(400),
-                                fontSize = MaterialTheme.typography.labelMedium.fontSize,
+                                fontWeight = FontWeight(1),
+                                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                         Column {
                             Text(
-                                (item.balance?:0.0).toString(),
+                                (item.balance ?: 0.0).toString(),
                                 fontWeight = FontWeight(500),
                                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                                 color = if ((item.balance ?: 0) > 0) green else red,
@@ -258,13 +263,14 @@ fun ShopListScreen(
                                 Text(
                                     item.time,
                                     fontWeight = FontWeight(900),
-                                    fontSize =  MaterialTheme.typography.labelSmall.fontSize,
+                                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
                                     color = MaterialTheme.colorScheme.onPrimary
                                 )
                             }
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(2.dp))
             }
         }
     }

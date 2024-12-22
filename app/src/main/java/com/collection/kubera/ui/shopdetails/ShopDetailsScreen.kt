@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.collection.kubera.states.ShopDetailUiState
 import com.collection.kubera.ui.theme.backgroundDarkD
+import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.headingLabelD
 import com.collection.kubera.ui.theme.labelBackgroundD
@@ -79,7 +80,7 @@ fun ShopDetailsScreen(
     if (showBottomSheet) {
         ModalBottomSheet(
             sheetState = sheetState,
-            containerColor = backgroundDarkD,
+            containerColor = boxColorD,
             content = {
                 Column(
                     Modifier
@@ -94,7 +95,7 @@ fun ShopDetailsScreen(
                     )
                     Spacer(modifier = Modifier.height(30.dp))
                     Text(
-                        "Do you want to ${selectedOption} the balance with",
+                        "Do you want to ${selectedOption.uppercase()} the balance with",
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontSize = MaterialTheme.typography.titleMedium.fontSize,
                     )
@@ -125,19 +126,25 @@ fun ShopDetailsScreen(
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         ),
                         onClick = {
-                        scope.launch {
-                            sheetState.hide()
-                            viewModel.updateBalance(
-                                shop?.id,
-                                balance,
-                                selectedOption
-                            )
-                        }
-                    }) {
-                        Text(selectedOption,
+                            scope.launch {
+                                sheetState.hide()
+                                viewModel.updateBalance(
+                                    shop?.id,
+                                    balance,
+                                    selectedOption
+                                )
+                            }
+                        }) {
+                        Text(
+                            if (selectedOption == "Credit") {
+                                "Add Fund"
+                            } else {
+                                "Withdraw Fund"
+                            },
                             color = MaterialTheme.colorScheme.onPrimary,
                             fontWeight = FontWeight(1),
-                            fontSize = MaterialTheme.typography.titleLarge.fontSize,)
+                            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                        )
                     }
                     Spacer(modifier = Modifier.height(10.dp))
                 }
@@ -202,133 +209,126 @@ fun ShopDetailsScreen(
             is ShopDetailUiState.ShopDetailError -> {
 
             }
-            is ShopDetailUiState.ShopDetailToast->{
-                Toast.makeText(context, (uiState as ShopDetailUiState.ShopDetailToast).outputText, Toast.LENGTH_SHORT).show()
+
+            is ShopDetailUiState.ShopDetailToast -> {
+                Toast.makeText(
+                    context,
+                    (uiState as ShopDetailUiState.ShopDetailToast).outputText,
+                    Toast.LENGTH_SHORT
+                ).show()
             }
 
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .background(color = labelBackgroundD),
-        ) {
+
+        Text(
+            shop?.shopName ?: "--",
+            color = MaterialTheme.colorScheme.onPrimary,
+            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            modifier = Modifier.align(Alignment.Start).padding(start = 16.dp, top = 16.dp)
+        )
+
+//        Text(
+//            "Location",
+//            fontSize = MaterialTheme.typography.labelMedium.fontSize,
+//            fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
+//            color = labelD,
+//            modifier = Modifier.padding(start = 16.dp, top = 20.dp),
+//        )
+//        Text(
+//            text = if ((shop?.location ?: "").isEmpty()) {
+//                "--"
+//            } else {
+//                shop?.location ?: "--"
+//            },
+//            fontSize = MaterialTheme.typography.titleMedium.fontSize,
+//            fontWeight = FontWeight(1),
+//            modifier = Modifier.padding(start = 16.dp),
+//            color = headingLabelD,
+//        )
+//
+//        Text(
+//            "Landmark",
+//            fontSize = MaterialTheme.typography.labelMedium.fontSize,
+//            fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
+//            color = labelD,
+//            modifier = Modifier.padding(start = 16.dp, top = 20.dp),
+//        )
+//        Text(
+//            text = if ((shop?.landmark ?: "").isEmpty()) {
+//                "--"
+//            } else {
+//                shop?.landmark ?: "--"
+//            },
+//            fontSize = MaterialTheme.typography.titleMedium.fontSize,
+//            fontWeight = FontWeight(1),
+//            modifier = Modifier.padding(start = 16.dp),
+//            color = headingLabelD,
+//        )
+//        Text(
+//            "Shop Availability",
+//            fontSize = MaterialTheme.typography.labelMedium.fontSize,
+//            fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
+//            color = labelD,
+//            modifier = Modifier.padding(start = 16.dp, top = 20.dp),
+//        )
+//        Text(
+//            text = if (shop?.status ?: false) {
+//                "Available"
+//            } else {
+//                "Not Available"
+//            },
+//            fontSize = MaterialTheme.typography.titleMedium.fontSize,
+//            fontWeight = FontWeight(1),
+//            modifier = Modifier.padding(start = 16.dp),
+//            color = headingLabelD,
+//        )
+//
+//        Spacer(Modifier.height(20.dp))
+//        Box(
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .height(50.dp)
+//                .background(color = labelBackgroundD),
+//        ) {
+//            Text(
+//                "Contact Details",
+//                color = MaterialTheme.colorScheme.onPrimary,
+//                fontSize = MaterialTheme.typography.titleLarge.fontSize,
+//                modifier = Modifier.align(Alignment.Center)
+//            )
+//        }
+
+        Text(
+            "Contact Name",
+            fontSize = MaterialTheme.typography.labelMedium.fontSize,
+            fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
+            color = labelD,
+            modifier = Modifier.padding(start = 16.dp, top = 5.dp),
+        )
+
+        Row {
             Text(
-                shop?.shopName ?: "--",
-                color = MaterialTheme.colorScheme.onPrimary,
-                fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                modifier = Modifier.align(Alignment.Center)
+                text = shop?.firstName ?: "--",
+                fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                fontWeight = FontWeight(1),
+                modifier = Modifier.padding(start = 16.dp),
+                color = headingLabelD,
+            )
+            Text(
+                text = if ((shop?.lastName ?: "").isEmpty()) {
+                    "--"
+                } else {
+                    shop?.lastName ?: "--"
+                },
+                fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                fontWeight = FontWeight(1),
+                modifier = Modifier.padding(start = 16.dp),
+                color = headingLabelD,
             )
         }
 
 
-        Text(
-            "Location",
-            fontSize = MaterialTheme.typography.labelMedium.fontSize,
-            fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
-            color = labelD,
-            modifier = Modifier.padding(start = 16.dp, top = 20.dp),
-        )
-        Text(
-            text = if ((shop?.location ?: "").isEmpty()) {
-                "--"
-            } else {
-                shop?.location ?: "--"
-            },
-            fontSize = MaterialTheme.typography.titleMedium.fontSize,
-            fontWeight = FontWeight(1),
-            modifier = Modifier.padding(start = 16.dp),
-            color = headingLabelD,
-        )
-
-        Text(
-            "Landmark",
-            fontSize = MaterialTheme.typography.labelMedium.fontSize,
-            fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
-            color = labelD,
-            modifier = Modifier.padding(start = 16.dp, top = 20.dp),
-        )
-        Text(
-            text = if ((shop?.landmark ?: "").isEmpty()) {
-                "--"
-            } else {
-                shop?.landmark ?: "--"
-            },
-            fontSize = MaterialTheme.typography.titleMedium.fontSize,
-            fontWeight = FontWeight(1),
-            modifier = Modifier.padding(start = 16.dp),
-            color = headingLabelD,
-        )
-        Text(
-            "Shop Availability",
-            fontSize = MaterialTheme.typography.labelMedium.fontSize,
-            fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
-            color = labelD,
-            modifier = Modifier.padding(start = 16.dp, top = 20.dp),
-        )
-        Text(
-            text = if (shop?.status ?: false) {
-                "Available"
-            } else {
-                "Not Available"
-            },
-            fontSize = MaterialTheme.typography.titleMedium.fontSize,
-            fontWeight = FontWeight(1),
-            modifier = Modifier.padding(start = 16.dp),
-            color = headingLabelD,
-        )
-
-        Spacer(Modifier.height(20.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .background(color = labelBackgroundD),
-        ) {
-            Text(
-                "Contact Details",
-                color = MaterialTheme.colorScheme.onPrimary,
-                fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
-
-        Text(
-            "First Name",
-            fontSize = MaterialTheme.typography.labelMedium.fontSize,
-            fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
-            color = labelD,
-            modifier = Modifier.padding(start = 16.dp, top = 20.dp),
-        )
-
-        Text(
-            text = shop?.firstName ?: "--",
-            fontSize = MaterialTheme.typography.titleMedium.fontSize,
-            fontWeight = FontWeight(1),
-            modifier = Modifier.padding(start = 16.dp),
-            color = headingLabelD,
-        )
-
-        Text(
-            "Last Name",
-            fontSize = MaterialTheme.typography.labelMedium.fontSize,
-            fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
-            color = labelD,
-            modifier = Modifier.padding(start = 16.dp, top = 20.dp),
-        )
-
-        Text(
-            text = if ((shop?.lastName ?: "").isEmpty()) {
-                "--"
-            } else {
-                shop?.lastName ?: "--"
-            },
-            fontSize = MaterialTheme.typography.titleMedium.fontSize,
-            fontWeight = FontWeight(1),
-            modifier = Modifier.padding(start = 16.dp),
-            color = headingLabelD,
-        )
 
         Text(
             "Phone Number",
@@ -369,25 +369,25 @@ fun ShopDetailsScreen(
             modifier = Modifier.padding(start = 16.dp),
             color = headingLabelD,
         )
-        Text(
-            "Mail Id",
-            fontSize = MaterialTheme.typography.labelMedium.fontSize,
-            fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
-            color = labelD,
-            modifier = Modifier.padding(start = 16.dp, top = 20.dp),
-        )
-
-        Text(
-            text = if ((shop?.mailId ?: "").isEmpty()) {
-                "--"
-            } else {
-                shop?.mailId ?: "--"
-            },
-            fontSize = MaterialTheme.typography.titleMedium.fontSize,
-            fontWeight = FontWeight(1),
-            modifier = Modifier.padding(start = 16.dp),
-            color = headingLabelD,
-        )
+//        Text(
+//            "Mail Id",
+//            fontSize = MaterialTheme.typography.labelMedium.fontSize,
+//            fontWeight = MaterialTheme.typography.labelMedium.fontWeight,
+//            color = labelD,
+//            modifier = Modifier.padding(start = 16.dp, top = 20.dp),
+//        )
+//
+//        Text(
+//            text = if ((shop?.mailId ?: "").isEmpty()) {
+//                "--"
+//            } else {
+//                shop?.mailId ?: "--"
+//            },
+//            fontSize = MaterialTheme.typography.titleMedium.fontSize,
+//            fontWeight = FontWeight(1),
+//            modifier = Modifier.padding(start = 16.dp),
+//            color = headingLabelD,
+//        )
         Spacer(modifier = Modifier.height(20.dp))
         Box(
             modifier = Modifier
@@ -411,7 +411,7 @@ fun ShopDetailsScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             RadioButtonWithLabel(
-                label = "Credit",
+                label = "Add Fund",
                 selectedColor = green,
                 selected = selectedOption == "Credit",
                 onClick = {
@@ -420,7 +420,7 @@ fun ShopDetailsScreen(
                 }
             )
             RadioButtonWithLabel(
-                label = "Debit",
+                label = "Withdraw Fund",
                 selectedColor = red,
                 selected = selectedOption == "Debit",
                 onClick = {
@@ -464,7 +464,7 @@ fun ShopDetailsScreen(
                 .padding(16.dp),
             enabled = isEnabled, // Control button's enabled state
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surface, // Green when enabled, Gray when disabled
+                containerColor = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface, // Green when enabled, Gray when disabled
                 contentColor = if (isEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
             )
         ) {
