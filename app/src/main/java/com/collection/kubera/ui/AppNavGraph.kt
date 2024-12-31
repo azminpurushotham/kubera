@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -49,6 +50,7 @@ fun AppNavGraph(
         AppNavigationActions(navController)
     }
 
+
     ModalNavigationDrawer(
         drawerContent = {
             AppDrawer(
@@ -70,8 +72,11 @@ fun AppNavGraph(
                     modifier = Modifier.fillMaxWidth(),
                     navigationIcon = {
                         IconButton(onClick = {
-                            when(currentRoute){
-                                AllDestinations.SHOP_LIST->{coroutineScope.launch{drawerState.open()}}
+                            when (currentRoute) {
+                                AllDestinations.SHOP_LIST -> {
+                                    coroutineScope.launch { drawerState.open() }
+                                }
+
                                 else -> coroutineScope.launch { navController.popBackStack() }
                             }
                         }, content = {
@@ -108,9 +113,9 @@ fun AppNavGraph(
 }
 
 fun getIcon(currentRoute: String): ImageVector {
-  when(currentRoute){
-      AllDestinations.SHOP_LIST-> return Icons.Default.Menu
-  }
+    when (currentRoute) {
+        AllDestinations.SHOP_LIST -> return Icons.Default.Menu
+    }
     return Icons.Default.ArrowBackIosNew
 }
 

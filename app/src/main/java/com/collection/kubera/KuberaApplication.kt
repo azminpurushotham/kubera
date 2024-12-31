@@ -24,20 +24,16 @@ import com.google.android.gms.security.ProviderInstaller
 import com.google.firebase.FirebaseApp
 import timber.log.Timber
 
-//import com.collection.kubera.data.AppContainer
-//import com.collection.kubera.data.AppContainerImpl
 
 class KuberaApplication : Application() {
     companion object {
         const val JETNEWS_APP_URI = "https://developer.android.com/jetnews"
     }
 
-    // AppContainer instance used by the rest of classes to obtain dependencies
-//    lateinit var container: AppContainer
-
     override fun onCreate() {
         super.onCreate()
         println("KuberaApplication")
+
         FirebaseApp.initializeApp(this)?.let {
             Log.d("FirebaseInit", "Firebase successfully initialized")
         }
