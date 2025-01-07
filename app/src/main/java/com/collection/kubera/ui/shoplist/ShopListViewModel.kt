@@ -8,6 +8,7 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -83,22 +84,35 @@ class ShopListViewModel : ViewModel() {
 
     fun getShops(shopName: String) {
         Timber.v("getShops ${shopName}")
-        if (shopName.length > 2) {
+        if (shopName.length > 1) {
             _uiState.value = HomeUiState.Searching
             viewModelScope.launch(Dispatchers.IO) {
                 val q1 = firestore.collection("shop")
-                    .whereGreaterThanOrEqualTo("s_shopName", shopName.lowercase())
+                    .whereGreaterThanOrEqualTo("s_shopName", listOf( shopName.lowercase()))
+                    .whereLessThan("s_shopName", listOf( shopName.lowercase()))
+//                    .whereEqualTo("s_shopName", listOf( shopName.lowercase()))
                     .get()
                 val q2 = firestore.collection("shop")
-                    .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
+//                    .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
+                    .whereLessThan("s_firstName", shopName.lowercase())
+//                    .whereEqualTo("s_firstName", listOf( shopName.lowercase()))
                     .get()
                 val q3 = firestore.collection("shop")
                     .whereGreaterThanOrEqualTo("s_lastName", shopName.lowercase())
+                    .whereLessThan("s_lastName", shopName.lowercase())
+//                    .whereEqualTo("s_lastName", listOf( shopName.lowercase()))
                     .get()
 
 
-                Tasks.whenAllComplete(q1, q2, q3)
+                Tasks.whenAllComplete(/*q1, */q2/*, q3*/)
                     .addOnSuccessListener { tasks ->
+                        val combinedResults = mutableListOf<Map<String, Any>>()
+                        tasks.forEach { snapshot ->
+                            (snapshot.result as QuerySnapshot).forEach { document ->
+                                combinedResults.add(document.data ?: emptyMap())
+                                Timber.tag("SEARCH").i("${document.data}")
+                            }
+                        }
                         val results = tasks.flatMap { task ->
                             val snapshot = task.result as QuerySnapshot
                             snapshot.documents
@@ -111,6 +125,13 @@ class ShopListViewModel : ViewModel() {
                                     id = it.id
                                 }
                         }
+//                        _shopList.value = combinedResults.mapNotNull {
+//                            Gson().fromJson(it.toString(),Shop::class.java)
+//                            it.toObject(Shop::class.java)
+//                                ?.apply {
+//                                    id = it.id
+//                                }
+//                        }
                     }
                     .addOnFailureListener { e ->
                         println("Error querying documents: $e")
