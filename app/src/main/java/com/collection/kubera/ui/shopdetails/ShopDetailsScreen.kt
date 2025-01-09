@@ -1,6 +1,7 @@
 package com.collection.kubera.ui.shopdetails
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -41,28 +42,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.collection.kubera.states.ShopDetailUiState
-import com.collection.kubera.ui.theme.backgroundDarkD
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.headingLabelD
 import com.collection.kubera.ui.theme.labelBackgroundD
 import com.collection.kubera.ui.theme.labelD
 import com.collection.kubera.ui.theme.red
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
 fun ShopDetailsScreen(
     id: String? = null,
-    viewModel: ShopDetailsViewModel = viewModel(),
+    navController: NavHostController,
 ) {
     val context = LocalContext.current
-    val uiState by viewModel.uiState.collectAsState()
+    val viewModel: ShopDetailsViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState(ShopDetailUiState.Initial)
     val shop by viewModel.shop.collectAsState()
     var selectedOption by remember { mutableStateOf("Credit") } // Current selected option
     var balance by remember { mutableStateOf("") }
@@ -76,6 +77,43 @@ fun ShopDetailsScreen(
         isEnabled = balance.isNotEmpty() && balance.toLong() > 0
     }
 
+
+    when (uiState) {
+        is ShopDetailUiState.Initial -> {
+            id?.let { viewModel.getShopDetails(it) }
+        }
+
+        ShopDetailUiState.Loading -> {
+        }
+
+        is ShopDetailUiState.ShopDetailInit -> {
+
+        }
+
+        is ShopDetailUiState.ShopDetailSuccess -> {
+        }
+
+        is ShopDetailUiState.ShopDetailError -> {
+
+        }
+
+        is ShopDetailUiState.ShopDetailsPopBack -> {
+
+            if (viewModel.c==0) {
+                viewModel.c += 1
+                navController.popBackStack()
+            }
+        }
+
+        is ShopDetailUiState.ShopDetailToast -> {
+            Toast.makeText(
+                context,
+                (uiState as ShopDetailUiState.ShopDetailToast).outputText,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+    }
 
     if (showBottomSheet) {
         ModalBottomSheet(
@@ -186,46 +224,20 @@ fun ShopDetailsScreen(
         horizontalAlignment = Alignment.Start // Horizontally center items
     ) {
 
-        when (uiState) {
-            is ShopDetailUiState.Initial -> {
-                id?.let { viewModel.getShopDetails(it) }
-            }
-
-            ShopDetailUiState.Loading -> {
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                )
-            }
-
-            is ShopDetailUiState.ShopDetailInit -> {
-
-            }
-
-            is ShopDetailUiState.ShopDetailSuccess -> {
-
-            }
-
-            is ShopDetailUiState.ShopDetailError -> {
-
-            }
-
-            is ShopDetailUiState.ShopDetailToast -> {
-                Toast.makeText(
-                    context,
-                    (uiState as ShopDetailUiState.ShopDetailToast).outputText,
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-
+        if (uiState == ShopDetailUiState.Loading) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
         }
-
 
         Text(
             shop?.shopName ?: "--",
             color = MaterialTheme.colorScheme.onPrimary,
             fontSize = MaterialTheme.typography.titleLarge.fontSize,
-            modifier = Modifier.align(Alignment.Start).padding(start = 16.dp, top = 16.dp)
+            modifier = Modifier
+                .align(Alignment.Start)
+                .padding(start = 16.dp, top = 16.dp)
         )
 
 //        Text(

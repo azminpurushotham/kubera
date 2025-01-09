@@ -29,11 +29,11 @@ fun LandingScreen(
 
     if(isLoggedIn){
         context.startActivity(Intent(context, MainActivity::class.java))
-        val currentActivity = context as? MainActivity
+        val currentActivity = context as? LandingActivity
         currentActivity?.finish()
     }else{
         context.startActivity(Intent(context, LoginActivity::class.java))
-        val currentActivity = context as? LoginActivity
+        val currentActivity = context as? LandingActivity
         currentActivity?.finish()
     }
 

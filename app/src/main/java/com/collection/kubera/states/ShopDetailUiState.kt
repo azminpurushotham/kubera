@@ -23,6 +23,8 @@ sealed interface ShopDetailUiState{
      */
     data class ShopDetailSuccess(val outputText: String) : ShopDetailUiState
 
+    data class ShopDetailsPopBack(val outputText: String) : ShopDetailUiState
+
     data class ShopDetailToast(val outputText: String) : ShopDetailUiState
 
     /**
@@ -30,3 +32,5 @@ sealed interface ShopDetailUiState{
      */
     data class ShopDetailError(val errorMessage: String) : ShopDetailUiState
 }
+
+data class UiStateT(val data: String, val isLoading: Boolean)

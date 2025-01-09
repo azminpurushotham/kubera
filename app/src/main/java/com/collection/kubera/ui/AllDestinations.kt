@@ -18,13 +18,12 @@ object AllDestinations {
 class AppNavigationActions(private val navController: NavHostController) {
     fun navigateToShopList() {
         navController.navigate(SHOP_LIST) {
-            launchSingleTop = true
-            popUpTo(SHOP_LIST)
+            popUpTo(SHOP_LIST){inclusive = false}
         }
     }
     fun navigateToProfile() {
         navController.navigate(PROFILE) {
-            popUpTo(SHOP_LIST)
+            popUpTo(SHOP_LIST){inclusive = false}
         }
     }
     fun navigateToAddNewShop() {

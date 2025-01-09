@@ -47,19 +47,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
+import com.collection.kubera.ui.AllDestinations.SHOP_LIST
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.red
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
 fun ShopListScreen(
-    navController: NavHostController = rememberNavController(),
+    navController: NavHostController,
     viewModel: ShopListViewModel = viewModel()
 ) {
     val context = LocalContext.current
@@ -217,7 +216,11 @@ fun ShopListScreen(
                     ),
                     onClick = {
                         Timber.v("SHOP_DETAILS")
-                        navController.navigate("${SHOP_DETAILS}/${item.id}")
+                        navController.navigate("${SHOP_DETAILS}/${item.id}"){
+                            popUpTo(SHOP_LIST){
+                                inclusive = false
+                            }
+                        }
                     }) {
                     Row(
                         modifier = Modifier

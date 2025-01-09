@@ -39,11 +39,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun AppNavGraph(
     modifier: Modifier = Modifier,
-    navController: NavHostController = rememberNavController(),
     coroutineScope: CoroutineScope = rememberCoroutineScope(),
     drawerState: DrawerState = rememberDrawerState(initialValue = DrawerValue.Closed),
 ) {
 
+    val navController: NavHostController = rememberNavController()
     val currentNavBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = currentNavBackStackEntry?.destination?.route ?: AllDestinations.SHOP_LIST
     val navigationActions = remember(navController) {
@@ -77,7 +77,9 @@ fun AppNavGraph(
                                     coroutineScope.launch { drawerState.open() }
                                 }
 
-                                else -> coroutineScope.launch { navController.popBackStack() }
+                                else -> coroutineScope.launch {
+                                    navController.popBackStack()
+                                }
                             }
                         }, content = {
                             Icon(
@@ -105,7 +107,7 @@ fun AppNavGraph(
                 }
                 composable("${AllDestinations.SHOP_DETAILS}/{shopId}") { backStackEntry ->
                     val shopId = backStackEntry.arguments?.getString("shopId")
-                    ShopDetailsScreen(shopId)
+                    ShopDetailsScreen(shopId,navController)
                 }
             }
         }
