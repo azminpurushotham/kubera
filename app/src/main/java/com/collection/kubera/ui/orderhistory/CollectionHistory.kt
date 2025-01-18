@@ -1,4 +1,4 @@
-package com.collection.kubera.ui.shoplist
+package com.collection.kubera.ui.orderhistory
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -56,9 +56,9 @@ import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ShopListScreen(
+fun CollectionHistory(
     navController: NavHostController,
-    viewModel: ShopListViewModel = viewModel()
+    viewModel: CollectionViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -76,7 +76,7 @@ fun ShopListScreen(
 
     when (uiState) {
         is HomeUiState.Initial -> {
-            viewModel.getShops()
+            viewModel.getCollectionHistory()
             viewModel.getBalance()
         }
 
@@ -135,7 +135,7 @@ fun ShopListScreen(
                     value = shopName,
                     onValueChange = {
                         shopName = it
-                        viewModel.getShops(shopName)
+                        viewModel.getCollectionHistory(shopName)
                     },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.onSurface,
@@ -156,7 +156,7 @@ fun ShopListScreen(
                     trailingIcon = {
                         val icon = Icons.Filled.Search
                         IconButton(onClick = {
-                            viewModel.getShops(shopName)
+                            viewModel.getCollectionHistory(shopName)
                         }) {
                             Icon(
                                 imageVector = icon,

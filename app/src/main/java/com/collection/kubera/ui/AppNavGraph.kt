@@ -22,7 +22,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -30,6 +29,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.collection.kubera.ui.addnewshop.AddNewShopScreen
+import com.collection.kubera.ui.orderhistory.CollectionHistory
 import com.collection.kubera.ui.shopdetails.ShopDetailsScreen
 import com.collection.kubera.ui.shoplist.ShopListScreen
 import kotlinx.coroutines.CoroutineScope
@@ -56,6 +56,7 @@ fun AppNavGraph(
             AppDrawer(
                 route = currentRoute,
                 navigateToShopList = { navigationActions.navigateToShopList() },
+                navigateToCollectionHistory = { navigationActions.navigateToCollectionHistory() },
                 navigateToProfile = { navigationActions.navigateToProfile() },
                 navigateToAddNewShop = { navigationActions.navigateToAddNewShop() },
                 navigateToLogout = { navigationActions.navigateToLogOut() },
@@ -102,6 +103,9 @@ fun AppNavGraph(
                 composable(AllDestinations.SHOP_LIST) {
                     ShopListScreen(navController)
                 }
+                composable(AllDestinations.COLLECTION_HISTORY) {
+                    CollectionHistory(navController)
+                }
                 composable(AllDestinations.ADD_NEW_SHOP) {
                     AddNewShopScreen(navController)
                 }
@@ -127,6 +131,7 @@ fun getTitle(currentRoute: String): String {
     }
     return when (currentRoute) {
         AllDestinations.SHOP_LIST -> AllDestinations.SHOP_LIST
+        AllDestinations.COLLECTION_HISTORY -> AllDestinations.COLLECTION_HISTORY
         AllDestinations.PROFILE -> AllDestinations.PROFILE
         AllDestinations.ADD_NEW_SHOP -> AllDestinations.ADD_NEW_SHOP
         else -> AllDestinations.SHOP_LIST

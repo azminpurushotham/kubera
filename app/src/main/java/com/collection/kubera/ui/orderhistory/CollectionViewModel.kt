@@ -1,4 +1,4 @@
-package com.collection.kubera.ui.shoplist
+package com.collection.kubera.ui.orderhistory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
-class ShopListViewModel : ViewModel() {
+class CollectionViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> =
         MutableStateFlow(HomeUiState.Initial)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -26,8 +26,8 @@ class ShopListViewModel : ViewModel() {
     val balance: StateFlow<Double> get() = _balance
     private val firestore = FirebaseFirestore.getInstance()
 
-    fun getShops() {
-        Timber.v("getShops")
+    fun getCollectionHistory() {
+        Timber.v("getCollectionHistory")
         _uiState.value = HomeUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             val snapshot = firestore.collection("shop")
@@ -46,11 +46,11 @@ class ShopListViewModel : ViewModel() {
     fun getBalance() {
         Timber.v("getBalance")
         viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection("shop")
+              firestore.collection("shop")
                 .get()
-                .addOnSuccessListener { querySnapshot ->
+                .addOnSuccessListener {querySnapshot->
                     var total = 0.0
-                    val fieldValues = querySnapshot.documents.mapNotNull { it.getDouble("balance") }
+                    val fieldValues = querySnapshot.documents.mapNotNull{ it.getDouble("balance") }
                     println("TOTAL")
                     println(fieldValues)
                     fieldValues.forEach {
@@ -81,14 +81,14 @@ class ShopListViewModel : ViewModel() {
         }
     }
 
-    fun getShops(shopName: String) {
-        Timber.v("getShops ${shopName}")
+    fun getCollectionHistory(shopName: String) {
+        Timber.v("getCollectionHistory ${shopName}")
         if (shopName.length > 1) {
             _uiState.value = HomeUiState.Searching
             viewModelScope.launch(Dispatchers.IO) {
                 val q1 = firestore.collection("shop")
-                    .whereGreaterThanOrEqualTo("s_shopName", listOf(shopName.lowercase()))
-                    .whereLessThan("s_shopName", listOf(shopName.lowercase()))
+                    .whereGreaterThanOrEqualTo("s_shopName", listOf( shopName.lowercase()))
+                    .whereLessThan("s_shopName", listOf( shopName.lowercase()))
 //                    .whereEqualTo("s_shopName", listOf( shopName.lowercase()))
                     .get()
                 val q2 = firestore.collection("shop")
@@ -136,28 +136,6 @@ class ShopListViewModel : ViewModel() {
                         println("Error querying documents: $e")
                     }
 
-                /* firestore.collection("shop")
-                     .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
-                     .whereGreaterThanOrEqualTo("s_lastName", shopName.lowercase())
-                     .whereGreaterThanOrEqualTo("s_shopName", shopName.lowercase())
- //                    .whereArrayContains("s_firstname", shopName)
- //                    .whereLessThanOrEqualTo("s_firstname", shopName)
- //                    .whereLessThan(
- //                        "s_firstname",
- //                        shopName + "\uf8ff"
- //                    ) // "\uf8ff" ensures the range ends after the prefix
-                     .get()
-                     .addOnSuccessListener { result ->
-                         _shopList.value = result.documents.mapNotNull {
-                             it.toObject(Shop::class.java)
-                                 ?.apply {
-                                     id = it.id
-                                 }
-                         }
-                     }
-                     .addOnFailureListener { e ->
-                         println("Error querying documents: $e")
-                     }*/
                 _uiState.value = HomeUiState.HomeSuccess("Success")
             }
         }

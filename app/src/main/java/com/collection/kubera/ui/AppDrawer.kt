@@ -21,6 +21,7 @@ fun AppDrawer(
     route: String,
     modifier: Modifier = Modifier,
     navigateToShopList: () -> Unit = {},
+    navigateToCollectionHistory: () -> Unit = {},
     navigateToProfile: () -> Unit = {},
     navigateToAddNewShop: () -> Unit = {},
     navigateToLogout: () -> Unit = {},
@@ -43,6 +44,27 @@ fun AppDrawer(
             selected = route == AllDestinations.SHOP_LIST,
             onClick = {
                 navigateToShopList()
+                closeDrawer()
+            },
+            shape = MaterialTheme.shapes.small,
+            colors = NavigationDrawerItemDefaults.colors(
+                selectedContainerColor = MaterialTheme.colorScheme.tertiary, // Background color when selected
+                selectedTextColor = MaterialTheme.colorScheme.onSurface,    // Text color when selected
+                unselectedContainerColor = MaterialTheme.colorScheme.primary, // Background when not selected
+                unselectedTextColor = MaterialTheme.colorScheme.onPrimary    // Text color when not selected
+            )
+        )
+        NavigationDrawerItem(
+            label = {
+                Text(
+                    text = "Collection History",
+                    fontSize = 16.sp
+                )
+            },
+            modifier = Modifier.clip(shape = RoundedCornerShape(0.dp)),
+            selected = route == AllDestinations.COLLECTION_HISTORY,
+            onClick = {
+                navigateToCollectionHistory()
                 closeDrawer()
             },
             shape = MaterialTheme.shapes.small,

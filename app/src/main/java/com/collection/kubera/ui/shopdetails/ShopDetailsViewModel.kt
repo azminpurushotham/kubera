@@ -2,8 +2,11 @@ package com.collection.kubera.ui.shopdetails
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.collection.kubera.data.CollectionHistory
 import com.collection.kubera.data.Shop
+import com.collection.kubera.states.AddNewShopUiState
 import com.collection.kubera.states.ShopDetailUiState
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -14,8 +17,10 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class ShopDetailsViewModel : ViewModel() {
-    private val _uiState: MutableStateFlow<ShopDetailUiState> = MutableStateFlow(ShopDetailUiState.Initial)
-    val uiState: Flow<ShopDetailUiState> = _uiState.distinctUntilChanged{ old, new -> old == new } // Compare only `data` // Ensures only distinct values are emitted
+    private val _uiState: MutableStateFlow<ShopDetailUiState> =
+        MutableStateFlow(ShopDetailUiState.Initial)
+    val uiState: Flow<ShopDetailUiState> =
+        _uiState.distinctUntilChanged { old, new -> old == new } // Compare only `data` // Ensures only distinct values are emitted
     private val _shop = MutableStateFlow<Shop?>(null)
     val shop: StateFlow<Shop?> get() = _shop
     private val firestore = FirebaseFirestore.getInstance()
@@ -45,7 +50,7 @@ class ShopDetailsViewModel : ViewModel() {
                     }
                     updateState(ShopDetailUiState.ShopDetailSuccess("Success"))
                 }.addOnFailureListener {
-                    updateState( ShopDetailUiState.ShopDetailError("Error"))
+                    updateState(ShopDetailUiState.ShopDetailError("Error"))
                 }
         }
 
@@ -63,11 +68,51 @@ class ShopDetailsViewModel : ViewModel() {
                 .document(it)
                 .update("balance", balance.toLong())
                 .addOnSuccessListener {
+                    insertCollectionHistory(
+                        id,
+                        b = b,
+                        selectedOption = selectedOption
+                    )
                     updateState(ShopDetailUiState.ShopDetailToast("Successfully balance updated"))
                     updateState(ShopDetailUiState.ShopDetailsPopBack("Successfully balance updated"))
                 }.addOnFailureListener {
                     updateState(ShopDetailUiState.ShopDetailToast("Balance not updated"))
                 }
+        }
+    }
+
+    private fun insertCollectionHistory(id: String?, b: String, selectedOption: String) {
+        id?.let {
+            val balance = if (selectedOption == "Credit") {
+                b
+            } else {
+                "-${b}"
+            }
+            viewModelScope.launch(Dispatchers.IO) {
+                val shop = shop.value.fro
+                val prm = CollectionHistory().apply {
+                    if (shopName.isNotEmpty()) this.shopName = shopName
+                    if (shopName.isNotEmpty()) this.s_shopName = shopName.lowercase()
+                    if ((balance ?: "").isNotEmpty()) this.amount = (balance ?: "0").toLong()
+                    if (firstName.isNotEmpty()) this.firstName = firstName
+                    if (firstName.isNotEmpty()) this.s_firstName = firstName.lowercase()
+                    if ((lastName ?: "").isNotEmpty()) this.lastName = lastName!!
+                    if ((lastName ?: "").isNotEmpty()) this.s_lastName = (lastName ?: "").lowercase()
+                    if (phoneNumber.toString().isNotEmpty()) this.phoneNumber = phoneNumber
+                    if (secondPhoneNumber != null && secondPhoneNumber.toString()
+                            .isNotEmpty()
+                    ) this.secondPhoneNumber = secondPhoneNumber!!
+                    if ((mailId ?: "").isNotEmpty()) this.mailId = mailId!!
+                    this.timestamp = Timestamp.now()
+                    this.status = true
+                }
+                firestore.collection("collection_history")
+                    .add(prm).addOnSuccessListener {
+                        updateState(ShopDetailUiState.ShopDetailToast("Successfully collection history updated"))
+                    }.addOnFailureListener {
+                        updateState(ShopDetailUiState.ShopDetailToast("Collection history not updated"))
+                    }
+            }
         }
     }
 }
