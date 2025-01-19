@@ -89,22 +89,25 @@ class ShopDetailsViewModel : ViewModel() {
                 "-${b}"
             }
             viewModelScope.launch(Dispatchers.IO) {
-                val shop = shop.value.fro
+                val shop = shop.value
                 val prm = CollectionHistory().apply {
-                    if (shopName.isNotEmpty()) this.shopName = shopName
-                    if (shopName.isNotEmpty()) this.s_shopName = shopName.lowercase()
-                    if ((balance ?: "").isNotEmpty()) this.amount = (balance ?: "0").toLong()
-                    if (firstName.isNotEmpty()) this.firstName = firstName
-                    if (firstName.isNotEmpty()) this.s_firstName = firstName.lowercase()
-                    if ((lastName ?: "").isNotEmpty()) this.lastName = lastName!!
-                    if ((lastName ?: "").isNotEmpty()) this.s_lastName = (lastName ?: "").lowercase()
-                    if (phoneNumber.toString().isNotEmpty()) this.phoneNumber = phoneNumber
-                    if (secondPhoneNumber != null && secondPhoneNumber.toString()
+                    if (shop?.id?.isEmpty() != true) {
+                        this.shopId = shop?.id!!
+                    }
+                    if (shop.shopName.isEmpty() != true) this.shopName = shop.shopName
+                    if (shop.shopName.isEmpty() != true) this.s_shopName = shop.shopName.lowercase()
+                    if ((balance ?: "").isEmpty() != true) this.amount = (balance ?: "0").toLong()
+                    if (shop.firstName.isEmpty() != true) this.firstName = shop.firstName
+                    if (shop.firstName.isEmpty() != true) this.s_firstName = shop.firstName.lowercase()
+                    if ((shop.lastName ?: "").isNotEmpty()) this.lastName = shop.lastName
+                    if ((shop.lastName ?: "").isNotEmpty()) this.s_lastName = (shop.lastName ?: "").lowercase()
+                    if (shop.phoneNumber.toString().isNotEmpty()) this.phoneNumber = shop.phoneNumber
+                    if (shop.secondPhoneNumber != null && secondPhoneNumber.toString()
                             .isNotEmpty()
                     ) this.secondPhoneNumber = secondPhoneNumber!!
-                    if ((mailId ?: "").isNotEmpty()) this.mailId = mailId!!
+                    if ((shop.mailId ?: "").isNotEmpty()) this.mailId = shop.mailId
                     this.timestamp = Timestamp.now()
-                    this.status = true
+                    this.transactionType = selectedOption
                 }
                 firestore.collection("collection_history")
                     .add(prm).addOnSuccessListener {

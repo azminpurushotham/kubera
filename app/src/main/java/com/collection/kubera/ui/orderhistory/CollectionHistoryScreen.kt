@@ -129,44 +129,44 @@ fun CollectionHistory(
             verticalArrangement = Arrangement.Center, // Vertically center items
             horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
         ) {
-            Spacer(modifier = Modifier.height(15.dp))
-            Box {
-                OutlinedTextField(
-                    value = shopName,
-                    onValueChange = {
-                        shopName = it
-                        viewModel.getCollectionHistory(shopName)
-                    },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                        focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                        cursorColor = MaterialTheme.colorScheme.onPrimary,
-                        focusedTextColor = MaterialTheme.colorScheme.onSurface
-                    ),
-                    singleLine = true,
-                    label = { Text("Search shops here...") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                    shape = RoundedCornerShape(30.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(60.dp)
-                        .padding(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 0.dp),
-                    trailingIcon = {
-                        val icon = Icons.Filled.Search
-                        IconButton(onClick = {
-                            viewModel.getCollectionHistory(shopName)
-                        }) {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = "Toggle password visibility"
-                            )
-                        }
-                    },
-                )
-            }
-            Spacer(modifier = Modifier.height(20.dp))
+//            Spacer(modifier = Modifier.height(15.dp))
+//            Box {
+//                OutlinedTextField(
+//                    value = shopName,
+//                    onValueChange = {
+//                        shopName = it
+//                        viewModel.getCollectionHistory(shopName)
+//                    },
+//                    colors = OutlinedTextFieldDefaults.colors(
+//                        focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+//                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+//                        focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+//                        unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+//                        cursorColor = MaterialTheme.colorScheme.onPrimary,
+//                        focusedTextColor = MaterialTheme.colorScheme.onSurface
+//                    ),
+//                    singleLine = true,
+//                    label = { Text("Search shops here...") },
+//                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+//                    shape = RoundedCornerShape(30.dp),
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .height(60.dp)
+//                        .padding(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 0.dp),
+//                    trailingIcon = {
+//                        val icon = Icons.Filled.Search
+//                        IconButton(onClick = {
+//                            viewModel.getCollectionHistory(shopName)
+//                        }) {
+//                            Icon(
+//                                imageVector = icon,
+//                                contentDescription = "Toggle password visibility"
+//                            )
+//                        }
+//                    },
+//                )
+//            }
+//            Spacer(modifier = Modifier.height(20.dp))
             Card(
                 elevation = CardDefaults.cardElevation(20.dp),
                 shape = RoundedCornerShape(0.dp)
@@ -247,13 +247,22 @@ fun CollectionHistory(
                             )
                         }
                         Column {
-                            Text(
-                                (item.balance ?: 0.0).toString(),
-                                fontWeight = FontWeight(500),
-                                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                                color = if ((item.balance ?: 0) > 0) green else red,
-                                modifier = Modifier.align(Alignment.End)
-                            )
+                            Row(Modifier.align(Alignment.End)){
+                                Text(
+                                    item.transactionType?:"",
+                                    fontWeight = FontWeight(100),
+                                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                                    color = if (item.transactionType =="Credit") green else red,
+                                )
+                                Spacer(Modifier.width(20.dp))
+                                Text(
+                                    (item.amount ?: 0.0).toString(),
+                                    fontWeight = FontWeight(500),
+                                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                                    color = if (item.transactionType =="Credit") green else red,
+                                )
+                            }
+
                             Row(modifier = Modifier.align(Alignment.End)) {
                                 Text(
                                     item.datedmy,

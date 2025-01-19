@@ -2,7 +2,7 @@ package com.collection.kubera.ui.orderhistory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.Shop
+import com.collection.kubera.data.CollectionHistory
 import com.collection.kubera.states.HomeUiState
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
@@ -20,8 +20,8 @@ class CollectionViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> =
         MutableStateFlow(HomeUiState.Initial)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-    private val _shopList = MutableStateFlow<List<Shop>>(emptyList())
-    val shopList: StateFlow<List<Shop>> get() = _shopList
+    private val _shopList = MutableStateFlow<List<CollectionHistory>>(emptyList())
+    val shopList: StateFlow<List<CollectionHistory>> get() = _shopList
     private val _balance = MutableStateFlow<Double>(0.0)
     val balance: StateFlow<Double> get() = _balance
     private val firestore = FirebaseFirestore.getInstance()
@@ -30,11 +30,11 @@ class CollectionViewModel : ViewModel() {
         Timber.v("getCollectionHistory")
         _uiState.value = HomeUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            val snapshot = firestore.collection("shop")
+            val snapshot = firestore.collection("collection_history")
                 .orderBy("shopName", Query.Direction.ASCENDING)
                 .get().await()
             _shopList.value = snapshot.documents.mapNotNull {
-                it.toObject(Shop::class.java)
+                it.toObject(CollectionHistory::class.java)
                     ?.apply {
                         id = it.id
                     }
@@ -68,11 +68,11 @@ class CollectionViewModel : ViewModel() {
         Timber.v("getShops")
         _uiState.value = HomeUiState.Refreshing
         viewModelScope.launch(Dispatchers.IO) {
-            val snapshot = firestore.collection("shop")
+            val snapshot = firestore.collection("collection_history")
                 .orderBy("shopName", Query.Direction.ASCENDING)
                 .get().await()
             _shopList.value = snapshot.documents.mapNotNull {
-                it.toObject(Shop::class.java)
+                it.toObject(CollectionHistory::class.java)
                     ?.apply {
                         id = it.id
                     }
@@ -86,17 +86,17 @@ class CollectionViewModel : ViewModel() {
         if (shopName.length > 1) {
             _uiState.value = HomeUiState.Searching
             viewModelScope.launch(Dispatchers.IO) {
-                val q1 = firestore.collection("shop")
+                val q1 = firestore.collection("collection_history")
                     .whereGreaterThanOrEqualTo("s_shopName", listOf( shopName.lowercase()))
                     .whereLessThan("s_shopName", listOf( shopName.lowercase()))
 //                    .whereEqualTo("s_shopName", listOf( shopName.lowercase()))
                     .get()
-                val q2 = firestore.collection("shop")
+                val q2 = firestore.collection("collection_history")
 //                    .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
                     .whereLessThan("s_firstName", shopName.lowercase())
 //                    .whereEqualTo("s_firstName", listOf( shopName.lowercase()))
                     .get()
-                val q3 = firestore.collection("shop")
+                val q3 = firestore.collection("collection_history")
                     .whereGreaterThanOrEqualTo("s_lastName", shopName.lowercase())
                     .whereLessThan("s_lastName", shopName.lowercase())
 //                    .whereEqualTo("s_lastName", listOf( shopName.lowercase()))
@@ -119,14 +119,14 @@ class CollectionViewModel : ViewModel() {
                         // Process the results
 
                         _shopList.value = results.mapNotNull {
-                            it.toObject(Shop::class.java)
+                            it.toObject(CollectionHistory::class.java)
                                 ?.apply {
                                     id = it.id
                                 }
                         }
 //                        _shopList.value = combinedResults.mapNotNull {
-//                            Gson().fromJson(it.toString(),Shop::class.java)
-//                            it.toObject(Shop::class.java)
+//                            Gson().fromJson(it.toString(),CollectionHistory::class.java)
+//                            it.toObject(CollectionHistory::class.java)
 //                                ?.apply {
 //                                    id = it.id
 //                                }

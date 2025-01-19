@@ -8,6 +8,7 @@ import java.util.Locale
 
 data class CollectionHistory(
     var id: String = "",
+    var shopId: String = "",
     var shopName: String = "",
     var s_shopName: String = "",
     var firstName: String = "",
@@ -18,8 +19,8 @@ data class CollectionHistory(
     var secondPhoneNumber: String? = null,
     var mailId: String = "",
     var amount: Long? = null,
+    var transactionType: String? = null,
     var timestamp: Timestamp? = null,
-    var status: Boolean = true
 ): Parcelable {
     constructor() : this(
         "",
@@ -32,9 +33,10 @@ data class CollectionHistory(
         "",
         "",
         "",
+        "",
         null,
-        Timestamp.now(),
-        false)
+        null,
+        Timestamp.now())
 
     val datedmy: String
         get() {
@@ -57,12 +59,13 @@ data class CollectionHistory(
         parcel.readString()?:"",
         parcel.readString()?:"",
         parcel.readString()?:"",
+        parcel.readString()?:"",
         parcel.readString(),
         parcel.readString(),
         parcel.readString()?:"",
         parcel.readValue(Long::class.java.classLoader) as? Long,
-        parcel.readParcelable(Timestamp::class.java.classLoader),
-        parcel.readByte() != 0.toByte()
+        parcel.readString()?:"",
+        parcel.readParcelable(Timestamp::class.java.classLoader)
     ) {
     }
 

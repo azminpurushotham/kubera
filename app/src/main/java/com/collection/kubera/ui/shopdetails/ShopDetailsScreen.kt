@@ -46,6 +46,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.collection.kubera.states.ShopDetailUiState
+import com.collection.kubera.ui.AllDestinations.COLLECTION_HISTORY
+import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
+import com.collection.kubera.ui.AllDestinations.SHOP_LIST
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.headingLabelD
@@ -482,7 +485,23 @@ fun ShopDetailsScreen(
         ) {
             Text("Save")
         }
-
+        Button(
+            onClick = {
+                navController.navigate(COLLECTION_HISTORY) {
+                    popUpTo(SHOP_DETAILS){inclusive = false}
+                }
+            },
+            shape = RoundedCornerShape(5.dp),
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(1.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor =  MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
+            Text("Show Collection History")
+        }
         Spacer(modifier = Modifier.height(60.dp))
     }
 }
