@@ -120,6 +120,7 @@ fun ShopDetailsScreen(
 
     if (showBottomSheet) {
         ModalBottomSheet(
+            shape = RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp),
             sheetState = sheetState,
             containerColor = boxColorD,
             content = {
