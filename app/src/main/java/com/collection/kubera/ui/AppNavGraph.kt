@@ -135,7 +135,7 @@ fun AppNavGraph(
                         )
                         BottomAppBarItem(
                             iconResId = Icons.Default.Add,
-                            label = "Orders",
+                            label = "New Shop",
                             onClick = {
                                 navigationActions.navigateToAddNewShop()
                             }
@@ -149,7 +149,7 @@ fun AppNavGraph(
                         )
                         BottomAppBarItem(
                             iconResId = Icons.Default.Logout,
-                            label = "Profile",
+                            label = "Logout",
                             onClick = {
                             }
                         )
@@ -179,7 +179,6 @@ fun AppNavGraph(
             }
         }
     }
-
 
 }
 
