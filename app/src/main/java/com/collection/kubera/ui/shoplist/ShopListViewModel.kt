@@ -93,7 +93,7 @@ class ShopListViewModel : ViewModel() {
                     .get()
                 val q2 = firestore.collection("shop")
 //                    .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
-                    .whereLessThan("s_firstName", shopName.lowercase())
+                    .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
 //                    .whereEqualTo("s_firstName", listOf( shopName.lowercase()))
                     .get()
                 val q3 = firestore.collection("shop")
