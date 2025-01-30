@@ -51,6 +51,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.collection.kubera.R
 import com.collection.kubera.states.HomeUiState
+import com.collection.kubera.ui.AllDestinations.SHOP_COLLECTION_HISTORY
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
 import com.collection.kubera.ui.AllDestinations.SHOP_LIST
 import com.collection.kubera.ui.theme.backgroundD
@@ -62,13 +63,15 @@ import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CollectionHistoryScreen(
+fun ShopCollectionHistoryScreen(
+    id: String? = null,
     navController: NavHostController,
-    viewModel: CollectionViewModel = viewModel()
+    viewModel: ShopCollectionViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val shopList by viewModel.shopList.collectAsState()
+    val shop by viewModel.shop.collectAsState()
     val balance by viewModel.balance.collectAsState()
 
     val sheetState = rememberModalBottomSheetState()
@@ -78,14 +81,16 @@ fun CollectionHistoryScreen(
     var isRefreshing by remember { mutableStateOf(false) }
     val onRefresh: () -> Unit = {
         isRefreshing = true
-        viewModel.getSwipeShopsCollectionHistory()
-        viewModel.companyBalance()
+        viewModel.getSwipeShopsCollectionHistory(id)
+        if (id != null) {
+            viewModel.getShopDetails(id)
+        }
     }
 
     when (uiState) {
         is HomeUiState.Initial -> {
-            viewModel.getSwipeShopsCollectionHistory()
-            viewModel.companyBalance()
+            viewModel.getCollectionHistory(id)
+            viewModel.getBalance(id)
         }
 
         HomeUiState.Loading -> {
@@ -242,44 +247,6 @@ fun CollectionHistoryScreen(
             verticalArrangement = Arrangement.Center, // Vertically center items
             horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
         ) {
-//            Spacer(modifier = Modifier.height(15.dp))
-//            Box {
-//                OutlinedTextField(
-//                    value = shopName,
-//                    onValueChange = {
-//                        shopName = it
-//                        viewModel.getCollectionHistory(shopName)
-//                    },
-//                    colors = OutlinedTextFieldDefaults.colors(
-//                        focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-//                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-//                        focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-//                        unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
-//                        cursorColor = MaterialTheme.colorScheme.onPrimary,
-//                        focusedTextColor = MaterialTheme.colorScheme.onSurface
-//                    ),
-//                    singleLine = true,
-//                    label = { Text("Search shops here...") },
-//                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-//                    shape = RoundedCornerShape(30.dp),
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(60.dp)
-//                        .padding(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 0.dp),
-//                    trailingIcon = {
-//                        val icon = Icons.Filled.Search
-//                        IconButton(onClick = {
-//                            viewModel.getCollectionHistory(shopName)
-//                        }) {
-//                            Icon(
-//                                imageVector = icon,
-//                                contentDescription = "Toggle password visibility"
-//                            )
-//                        }
-//                    },
-//                )
-//            }
-//            Spacer(modifier = Modifier.height(20.dp))
             Button(
                 colors = ButtonDefaults.buttonColors(backgroundD),
                 onClick = {
@@ -315,13 +282,13 @@ fun CollectionHistoryScreen(
                 ) {
                     Column {
                         Text(
-                            "9:00 am",
+                            "${shop?.firstName} ${shop?.lastName}",
                             fontWeight = FontWeight(600),
                             fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                         Text(
-                            "1-Dec-2024",
+                            "${shop?.shopName}",
                             fontWeight = FontWeight(400),
                             fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             color = MaterialTheme.colorScheme.onPrimary
@@ -345,8 +312,8 @@ fun CollectionHistoryScreen(
                     ),
                     onClick = {
                         Timber.v("SHOP_DETAILS")
-                        navController.navigate("${SHOP_DETAILS}/${item.id}") {
-                            popUpTo(SHOP_LIST) {
+                        navController.navigate("${SHOP_DETAILS}/${item.shopId}") {
+                            popUpTo(SHOP_COLLECTION_HISTORY) {
                                 inclusive = false
                             }
                         }
@@ -358,57 +325,43 @@ fun CollectionHistoryScreen(
                                 end = 16.dp,
                                 top = 16.dp,
                                 bottom = 16.dp
-                            )
+                            ).align(Alignment.Start)
                             .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Start,
                     ) {
-                        Column {
-                            Text(
-                                "${item.firstName} ${item.lastName}",
-                                fontWeight = FontWeight(500),
-                                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                item.shopName,
-                                fontWeight = FontWeight(1),
-                                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                                color = MaterialTheme.colorScheme.onPrimary
-                            )
-                        }
-                        Column {
-                            Row(Modifier.align(Alignment.End)) {
-                                Text(
-                                    item.transactionType ?: "",
-                                    fontWeight = FontWeight(100),
-                                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                                    color = if (item.transactionType == "Credit") green else red,
-                                )
-                                Spacer(Modifier.width(20.dp))
-                                Text(
-                                    (item.amount ?: 0.0).toString(),
-                                    fontWeight = FontWeight(500),
-                                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                                    color = if (item.transactionType == "Credit") green else red,
-                                )
-                            }
+                        Text(
+                            item.datedmy,
+                            fontWeight = FontWeight(100),
+                            modifier = Modifier.width(100.dp),
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(20.dp))
+                        Text(
+                            item.time,
+                            fontWeight = FontWeight(100),
+                            modifier = Modifier.width(100.dp),
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            item.transactionType ?: "",
+                            fontWeight = FontWeight(100),
+                            modifier = Modifier.width(100.dp),
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                            color = if (item.transactionType == "Credit") green else red,
+                        )
 
-                            Row(modifier = Modifier.align(Alignment.End)) {
-                                Text(
-                                    item.datedmy,
-                                    fontWeight = FontWeight(400),
-                                    fontSize = MaterialTheme.typography.labelMedium.fontSize,
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                                Spacer(Modifier.width(10.dp))
-                                Text(
-                                    item.time,
-                                    fontWeight = FontWeight(900),
-                                    fontSize = MaterialTheme.typography.labelSmall.fontSize,
-                                    color = MaterialTheme.colorScheme.onPrimary
-                                )
-                            }
-                        }
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        Text(
+                            (item.amount ?: 0.0).toString(),
+                            fontWeight = FontWeight(500),
+                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                            color = if (item.transactionType == "Credit") green else red,
+                        )
                     }
                 }
                 Spacer(modifier = Modifier.height(2.dp))

@@ -81,6 +81,21 @@ class ShopListViewModel : ViewModel() {
         }
     }
 
+    fun getSwipeShopsOnResume() {
+        Timber.v("getSwipeShopsOnResume")
+        viewModelScope.launch(Dispatchers.IO) {
+            val snapshot = firestore.collection("shop")
+                .orderBy("shopName", Query.Direction.ASCENDING)
+                .get().await()
+            _shopList.value = snapshot.documents.mapNotNull {
+                it.toObject(Shop::class.java)
+                    ?.apply {
+                        id = it.id
+                    }
+            }
+        }
+    }
+
     fun getShops(shopName: String) {
         Timber.v("getShops ${shopName}")
         if (shopName.length > 1) {

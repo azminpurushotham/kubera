@@ -22,7 +22,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -44,8 +43,10 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.collection.kubera.data.CollectionHistory
 import com.collection.kubera.ui.addnewshop.AddNewShopScreen
-import com.collection.kubera.ui.orderhistory.CollectionHistory
+import com.collection.kubera.ui.orderhistory.CollectionHistoryScreen
+import com.collection.kubera.ui.orderhistory.ShopCollectionHistoryScreen
 import com.collection.kubera.ui.shopdetails.ShopDetailsScreen
 import com.collection.kubera.ui.shoplist.ShopListScreen
 import kotlinx.coroutines.CoroutineScope
@@ -66,116 +67,105 @@ fun AppNavGraph(
         AppNavigationActions(navController)
     }
 
-
-    ModalNavigationDrawer(
-        drawerContent = {
-            AppDrawer(
-                route = currentRoute,
-                navigateToShopList = { navigationActions.navigateToShopList() },
-                navigateToCollectionHistory = { navigationActions.navigateToCollectionHistory() },
-                navigateToProfile = { navigationActions.navigateToProfile() },
-                navigateToAddNewShop = { navigationActions.navigateToAddNewShop() },
-                navigateToLogout = { navigationActions.navigateToLogOut() },
-                closeDrawer = { coroutineScope.launch { drawerState.close() } },
-                modifier = Modifier
-            )
-        },
-        drawerState = drawerState
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text(text = getTitle(currentRoute)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            when (currentRoute) {
-                                AllDestinations.SHOP_LIST -> {
-                                    coroutineScope.launch { drawerState.open() }
-                                }
-
-                                else -> coroutineScope.launch {
-                                    navController.popBackStack()
-                                }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = getTitle(currentRoute)) },
+                modifier = Modifier.fillMaxWidth(),
+                navigationIcon = {
+                    IconButton(onClick = {
+                        when (currentRoute) {
+                            AllDestinations.SHOP_LIST -> {
+                                coroutineScope.launch { drawerState.open() }
                             }
-                        }, content = {
+
+                            else -> coroutineScope.launch {
+                                navController.popBackStack()
+                            }
+                        }
+                    }, content = {
+                        if(currentRoute != AllDestinations.SHOP_LIST){
                             Icon(
                                 imageVector = getIcon(currentRoute),
                                 contentDescription = null
                             )
-                        })
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primary
-                    )
+                        }
+                    })
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
-            },
-            bottomBar = {
-                BottomAppBar(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        BottomAppBarItem(
-                            iconResId = Icons.Default.Home,
-                            label = "Home",
-                            onClick = {
-                                navigationActions.navigateToShopList()
-                            }
-                        )
-                        BottomAppBarItem(
-                            iconResId = Icons.Default.History,
-                            label = "Orders",
-                            onClick = {
-                                navigationActions.navigateToCollectionHistory()
-                            }
-                        )
-                        BottomAppBarItem(
-                            iconResId = Icons.Default.Add,
-                            label = "New Shop",
-                            onClick = {
-                                navigationActions.navigateToAddNewShop()
-                            }
-                        )
-                        BottomAppBarItem(
-                            iconResId = Icons.Default.Person,
-                            label = "Profile",
-                            onClick = {
-                                navigationActions.navigateToProfile()
-                            }
-                        )
-                        BottomAppBarItem(
-                            iconResId = Icons.Default.Logout,
-                            label = "Logout",
-                            onClick = {
-                            }
-                        )
-                    }
-                }
-            },
-            modifier = Modifier
-        ) {
-            NavHost(
-                navController = navController,
-                startDestination = AllDestinations.SHOP_LIST,
-                modifier = modifier.padding(it)
+            )
+        },
+        bottomBar = {
+            BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
             ) {
-                composable(AllDestinations.SHOP_LIST) {
-                    ShopListScreen(navController)
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    BottomAppBarItem(
+                        iconResId = Icons.Default.Home,
+                        label = "Home",
+                        onClick = {
+                            navigationActions.navigateToShopList()
+                        }
+                    )
+                    BottomAppBarItem(
+                        iconResId = Icons.Default.History,
+                        label = "Orders",
+                        onClick = {
+                            navigationActions.navigateToCollectionHistory()
+                        }
+                    )
+                    BottomAppBarItem(
+                        iconResId = Icons.Default.Add,
+                        label = "New Shop",
+                        onClick = {
+                            navigationActions.navigateToAddNewShop()
+                        }
+                    )
+                    BottomAppBarItem(
+                        iconResId = Icons.Default.Person,
+                        label = "Profile",
+                        onClick = {
+                            navigationActions.navigateToProfile()
+                        }
+                    )
+                    BottomAppBarItem(
+                        iconResId = Icons.Default.Logout,
+                        label = "Logout",
+                        onClick = {
+                        }
+                    )
                 }
-                composable(AllDestinations.COLLECTION_HISTORY) {
-                    CollectionHistory(navController)
-                }
-                composable(AllDestinations.ADD_NEW_SHOP) {
-                    AddNewShopScreen(navController)
-                }
-                composable("${AllDestinations.SHOP_DETAILS}/{shopId}") { backStackEntry ->
-                    val shopId = backStackEntry.arguments?.getString("shopId")
-                    ShopDetailsScreen(shopId, navController)
-                }
+            }
+        },
+        modifier = Modifier
+    ) {
+        NavHost(
+            navController = navController,
+            startDestination = AllDestinations.SHOP_LIST,
+            modifier = modifier.padding(it)
+        ) {
+            composable(AllDestinations.SHOP_LIST) {
+                ShopListScreen(navController)
+            }
+            composable(AllDestinations.COLLECTION_HISTORY) {
+                CollectionHistoryScreen(navController)
+            }
+            composable("${AllDestinations.SHOP_COLLECTION_HISTORY}/{shopId}") {backStackEntry ->
+                val shopId = backStackEntry.arguments?.getString("shopId")
+                ShopCollectionHistoryScreen(shopId,navController)
+            }
+            composable(AllDestinations.ADD_NEW_SHOP) {
+                AddNewShopScreen(navController)
+            }
+            composable("${AllDestinations.SHOP_DETAILS}/{shopId}") { backStackEntry ->
+                val shopId = backStackEntry.arguments?.getString("shopId")
+                ShopDetailsScreen(shopId, navController)
             }
         }
     }
@@ -220,9 +210,13 @@ fun getTitle(currentRoute: String): String {
     if (currentRoute.contains(AllDestinations.SHOP_DETAILS)) {
         return "Details"
     }
+    if (currentRoute.contains(AllDestinations.COLLECTION_HISTORY)) {
+        return "Collection History"
+    }
     return when (currentRoute) {
         AllDestinations.SHOP_LIST -> AllDestinations.SHOP_LIST
         AllDestinations.COLLECTION_HISTORY -> AllDestinations.COLLECTION_HISTORY
+        AllDestinations.SHOP_COLLECTION_HISTORY -> AllDestinations.SHOP_COLLECTION_HISTORY
         AllDestinations.PROFILE -> AllDestinations.PROFILE
         AllDestinations.ADD_NEW_SHOP -> AllDestinations.ADD_NEW_SHOP
         else -> AllDestinations.SHOP_LIST

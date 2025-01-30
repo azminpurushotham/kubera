@@ -6,11 +6,13 @@ import com.collection.kubera.ui.AllDestinations.SHOP_LIST
 import com.collection.kubera.ui.AllDestinations.ADD_NEW_SHOP
 import com.collection.kubera.ui.AllDestinations.COLLECTION_HISTORY
 import com.collection.kubera.ui.AllDestinations.LOGOUT
+import com.collection.kubera.ui.AllDestinations.SHOP_COLLECTION_HISTORY
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
 
 object AllDestinations {
     const val SHOP_LIST = "Shop List"
     const val COLLECTION_HISTORY = "Collection History"
+    const val SHOP_COLLECTION_HISTORY = "Shop Collection History"
     const val PROFILE = "Profile"
     const val ADD_NEW_SHOP = "Add New Shop"
     const val SHOP_DETAILS = "Shop Details"
@@ -28,6 +30,13 @@ class AppNavigationActions(private val navController: NavHostController) {
             popUpTo(COLLECTION_HISTORY){inclusive = false}
         }
     }
+
+    fun navigateToShopCollectionHistory() {
+        navController.navigate(SHOP_COLLECTION_HISTORY) {
+            popUpTo(SHOP_COLLECTION_HISTORY){inclusive = false}
+        }
+    }
+
     fun navigateToProfile() {
         navController.navigate(PROFILE) {
             popUpTo(SHOP_LIST){inclusive = false}

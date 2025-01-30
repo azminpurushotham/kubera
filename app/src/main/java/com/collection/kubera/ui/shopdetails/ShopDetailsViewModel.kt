@@ -60,13 +60,13 @@ class ShopDetailsViewModel : ViewModel() {
         id?.let {
             _uiState.value = ShopDetailUiState.Loading
             val balance = if (selectedOption == "Credit") {
-                "$b"
+              (shop.value?.balance?:0L) + (b.toLong())
             } else {
-                "-${b}"
+                (shop.value?.balance?:0L) - (b.toLong())
             }
             firestore.collection("shop")
                 .document(it)
-                .update("balance", balance.toLong())
+                .update("balance", balance)
                 .addOnSuccessListener {
                     insertCollectionHistory(
                         id,

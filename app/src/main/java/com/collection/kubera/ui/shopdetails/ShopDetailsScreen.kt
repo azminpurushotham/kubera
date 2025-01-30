@@ -47,6 +47,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.collection.kubera.states.ShopDetailUiState
 import com.collection.kubera.ui.AllDestinations.COLLECTION_HISTORY
+import com.collection.kubera.ui.AllDestinations.SHOP_COLLECTION_HISTORY
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
 import com.collection.kubera.ui.AllDestinations.SHOP_LIST
 import com.collection.kubera.ui.theme.boxColorD
@@ -488,7 +489,7 @@ fun ShopDetailsScreen(
         }
         Button(
             onClick = {
-                navController.navigate(COLLECTION_HISTORY) {
+                navController.navigate("${SHOP_COLLECTION_HISTORY}/${shop?.id}") {
                     popUpTo(SHOP_DETAILS){inclusive = false}
                 }
             },

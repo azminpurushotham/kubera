@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
-class CollectionViewModel : ViewModel() {
+class ShopCollectionViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> =
         MutableStateFlow(HomeUiState.Initial)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -46,8 +46,16 @@ class CollectionViewModel : ViewModel() {
         }
     }
 
+    fun getBalance(id: String?) {
+        Timber.v("getBalance")
+        if (id != null) {
+            getShopDetails(id)
+        }else{
+            companyBalance()
+        }
+    }
 
-    internal fun companyBalance() {
+    private fun companyBalance() {
         Timber.v("companyBalance")
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection("shop")
@@ -68,11 +76,13 @@ class CollectionViewModel : ViewModel() {
         }
     }
 
-    fun getShopDetails() {
+    fun getShopDetails(
+        id: String
+    ) {
         Timber.v("getShopDetails")
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection("shop")
-                .document()
+                .document(id)
                 .get()
                 .addOnSuccessListener { result ->
                     if (result.data?.isNotEmpty() == true) {
@@ -88,40 +98,46 @@ class CollectionViewModel : ViewModel() {
 
     }
 
-    fun getSwipeShopsCollectionHistory() {
-        Timber.v("getSwipeShopsCollectionHistory")
-        _uiState.value = HomeUiState.Refreshing
-        viewModelScope.launch(Dispatchers.IO) {
-            val q1 = firestore.collection("collection_history")
-                .get()
+    fun getSwipeShopsCollectionHistory(id: String?) {
+        Timber.v("getShops")
+        if (id != null) {
+            _uiState.value = HomeUiState.Refreshing
+            if (id.length > 1) {
+                _uiState.value = HomeUiState.Searching
+                viewModelScope.launch(Dispatchers.IO) {
+                    val q1 = firestore.collection("collection_history")
+                        .whereEqualTo("shopId", id)
+                        .get()
 
-            Tasks.whenAllComplete(q1)
-                .addOnSuccessListener { tasks ->
-                    val combinedResults = mutableListOf<Map<String, Any>>()
-                    tasks.forEach { snapshot ->
-                        (snapshot.result as QuerySnapshot).forEach { document ->
-                            combinedResults.add(document.data ?: emptyMap())
-                            Timber.tag("SEARCH").i("${document.data}")
-                        }
-                    }
-                    val results = tasks.flatMap { task ->
-                        val snapshot = task.result as QuerySnapshot
-                        snapshot.documents
-                    }.distinct() // To remove duplicates if the value matches both fields
-                    // Process the results
-
-                    _shopList.value = results.mapNotNull {
-                        it.toObject(CollectionHistory::class.java)
-                            ?.apply {
-                                this.shopId = it.data?.get("shopId").toString()
+                    Tasks.whenAllComplete(q1)
+                        .addOnSuccessListener { tasks ->
+                            val combinedResults = mutableListOf<Map<String, Any>>()
+                            tasks.forEach { snapshot ->
+                                (snapshot.result as QuerySnapshot).forEach { document ->
+                                    combinedResults.add(document.data ?: emptyMap())
+                                    Timber.tag("SEARCH").i("${document.data}")
+                                }
                             }
-                    }
-                }
-                .addOnFailureListener { e ->
-                    println("Error querying documents: $e")
-                }
+                            val results = tasks.flatMap { task ->
+                                val snapshot = task.result as QuerySnapshot
+                                snapshot.documents
+                            }.distinct() // To remove duplicates if the value matches both fields
+                            // Process the results
 
-            _uiState.value = HomeUiState.HomeSuccess("Success")
+                            _shopList.value = results.mapNotNull {
+                                it.toObject(CollectionHistory::class.java)
+                                    ?.apply {
+                                        this.shopId = it.data?.get("shopId").toString()
+                                    }
+                            }
+                        }
+                        .addOnFailureListener { e ->
+                            println("Error querying documents: $e")
+                        }
+
+                    _uiState.value = HomeUiState.HomeSuccess("Success")
+                }
+            }
         }
     }
 

@@ -32,6 +32,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +46,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.collection.kubera.states.HomeUiState
@@ -60,6 +65,8 @@ fun ShopListScreen(
     navController: NavHostController,
     viewModel: ShopListViewModel = viewModel()
 ) {
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleState = remember { mutableStateOf(Lifecycle.Event.ON_CREATE) } // Initialize
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val shopList by viewModel.shopList.collectAsState()
@@ -68,6 +75,37 @@ fun ShopListScreen(
 
     val refreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
+
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            lifecycleState.value = event // Update lifecycle state
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    val isResumed = lifecycleState.value == Lifecycle.Event.ON_RESUME
+    // Now you can use 'isResumed' to perform actions conditionally:
+    if (isResumed) {
+        // Code to execute only when the Composable is resumed
+        LaunchedEffect(Unit) { // Use LaunchedEffect for side effects
+            Timber.i("Composable is resumed!")
+            viewModel.getSwipeShopsOnResume()
+            // ... your logic here ...
+        }
+    } else if (lifecycleState.value == Lifecycle.Event.ON_PAUSE) {
+        // Code to execute when paused
+        Timber.i("Composable is paused!")
+    } else if (lifecycleState.value == Lifecycle.Event.ON_DESTROY) {
+        Timber.i("Composable is destroyed!")
+    }
+
+
     val onRefresh: () -> Unit = {
         isRefreshing = true
         viewModel.getSwipeShops()
