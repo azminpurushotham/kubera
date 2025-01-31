@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
 class ShopCollectionViewModel : ViewModel() {
@@ -29,52 +28,6 @@ class ShopCollectionViewModel : ViewModel() {
     private val _shop = MutableStateFlow<Shop?>(null)
     val shop: StateFlow<Shop?> get() = _shop
 
-    fun getCollectionHistory() {
-        Timber.v("getCollectionHistory")
-        _uiState.value = HomeUiState.Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            val snapshot = firestore.collection("collection_history")
-                .orderBy("shopName", Query.Direction.ASCENDING)
-                .get().await()
-            _shopList.value = snapshot.documents.mapNotNull {
-                it.toObject(CollectionHistory::class.java)
-                    ?.apply {
-                        id = it.id
-                    }
-            }
-            _uiState.value = HomeUiState.HomeSuccess("Success")
-        }
-    }
-
-    fun getBalance(id: String?) {
-        Timber.v("getBalance")
-        if (id != null) {
-            getShopDetails(id)
-        }else{
-            companyBalance()
-        }
-    }
-
-    private fun companyBalance() {
-        Timber.v("companyBalance")
-        viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection("shop")
-                .get()
-                .addOnSuccessListener { querySnapshot ->
-                    var total = 0.0
-                    val fieldValues = querySnapshot.documents.mapNotNull { it.getDouble("balance") }
-                    println("TOTAL")
-                    println(fieldValues)
-                    fieldValues.forEach {
-                        total += it
-                    }
-                    _balance.value = total.toLong()
-                }
-                .addOnFailureListener {
-                    _balance.value = 0
-                }
-        }
-    }
 
     fun getShopDetails(
         id: String
@@ -90,9 +43,10 @@ class ShopCollectionViewModel : ViewModel() {
                             ?.apply {
                                 this.id = id
                             }
-                        _balance.value = shop.value?.balance?:0
+                        _balance.value = shop.value?.balance ?: 0
                     }
-                }.addOnFailureListener {
+                }.addOnFailureListener {e->
+                    _uiState.value = HomeUiState.HomeError("Error querying documents: $e")
                 }
         }
 
@@ -101,85 +55,50 @@ class ShopCollectionViewModel : ViewModel() {
     fun getSwipeShopsCollectionHistory(id: String?) {
         Timber.v("getShops")
         if (id != null) {
-            _uiState.value = HomeUiState.Refreshing
+            _uiState.value = HomeUiState.Loading
             if (id.length > 1) {
-                _uiState.value = HomeUiState.Searching
-                viewModelScope.launch(Dispatchers.IO) {
-                    val q1 = firestore.collection("collection_history")
-                        .whereEqualTo("shopId", id)
-                        .get()
-
-                    Tasks.whenAllComplete(q1)
-                        .addOnSuccessListener { tasks ->
-                            val combinedResults = mutableListOf<Map<String, Any>>()
-                            tasks.forEach { snapshot ->
-                                (snapshot.result as QuerySnapshot).forEach { document ->
-                                    combinedResults.add(document.data ?: emptyMap())
-                                    Timber.tag("SEARCH").i("${document.data}")
+                firestore.collection("collection_history")
+                    .whereEqualTo("shopId", id)
+                    .orderBy("timestamp", Query.Direction.DESCENDING) // Newest first
+                    .get()
+                    .addOnSuccessListener { snapshot ->
+                        _shopList.value = snapshot.mapNotNull {
+                            it.toObject(CollectionHistory::class.java)
+                                .apply {
+                                    this.shopId = it.data.get("shopId").toString()
                                 }
-                            }
-                            val results = tasks.flatMap { task ->
-                                val snapshot = task.result as QuerySnapshot
-                                snapshot.documents
-                            }.distinct() // To remove duplicates if the value matches both fields
-                            // Process the results
-
-                            _shopList.value = results.mapNotNull {
-                                it.toObject(CollectionHistory::class.java)
-                                    ?.apply {
-                                        this.shopId = it.data?.get("shopId").toString()
-                                    }
-                            }
                         }
-                        .addOnFailureListener { e ->
-                            println("Error querying documents: $e")
-                        }
-
-                    _uiState.value = HomeUiState.HomeSuccess("Success")
-                }
+                        _uiState.value = HomeUiState.HomeSuccess("Success")
+                    }
+                    .addOnFailureListener { e ->
+                        Timber.e(e)
+                        _uiState.value = HomeUiState.HomeError("Error querying documents: $e")
+                    }
             }
         }
     }
 
-    fun getCollectionHistory(id: String?) {
-        Timber.v("getCollectionHistory ${id?:"NONE"}")
-        if (id != null) {
-            if (id.length > 1) {
-                _uiState.value = HomeUiState.Searching
-                viewModelScope.launch(Dispatchers.IO) {
-                    val q1 = firestore.collection("collection_history")
-                        .whereEqualTo("shopId", id)
-                        .get()
-
-                    Tasks.whenAllComplete(q1)
-                        .addOnSuccessListener { tasks ->
-                            val combinedResults = mutableListOf<Map<String, Any>>()
-                            tasks.forEach { snapshot ->
-                                (snapshot.result as QuerySnapshot).forEach { document ->
-                                    combinedResults.add(document.data ?: emptyMap())
-                                    Timber.tag("SEARCH").i("${document.data}")
-                                }
+    fun getCollectionHistory(id: String) {
+        Timber.v("getCollectionHistory ${id ?: "NONE"}")
+        _uiState.value = HomeUiState.Loading
+        viewModelScope.launch(Dispatchers.IO) {
+            firestore.collection("collection_history")
+                .orderBy("timestamp", Query.Direction.DESCENDING) // Newest first
+                .whereEqualTo("shopId", id)
+                .get()
+                .addOnSuccessListener { snapshot ->
+                    _shopList.value = snapshot.mapNotNull {
+                        it.toObject(CollectionHistory::class.java)
+                            .apply {
+                                this.shopId = it.data.get("shopId").toString()
                             }
-                            val results = tasks.flatMap { task ->
-                                val snapshot = task.result as QuerySnapshot
-                                snapshot.documents
-                            }.distinct() // To remove duplicates if the value matches both fields
-                            // Process the results
-
-                            _shopList.value = results.mapNotNull {
-                                it.toObject(CollectionHistory::class.java)
-                                    ?.apply {
-                                        this.shopId = it.data?.get("shopId").toString()
-                                    }
-                            }
-                        }
-                        .addOnFailureListener { e ->
-                            println("Error querying documents: $e")
-                        }
-
+                    }
                     _uiState.value = HomeUiState.HomeSuccess("Success")
                 }
-            }
+                .addOnFailureListener { e ->
+                    Timber.e(e)
+                    _uiState.value = HomeUiState.HomeError("Error querying documents: $e")
+                }
         }
     }
 }

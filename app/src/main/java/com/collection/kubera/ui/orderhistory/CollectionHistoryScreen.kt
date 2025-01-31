@@ -84,7 +84,7 @@ fun CollectionHistoryScreen(
 
     when (uiState) {
         is HomeUiState.Initial -> {
-            viewModel.getSwipeShopsCollectionHistory()
+            viewModel.getCollectionHistory()
             viewModel.companyBalance()
         }
 
@@ -345,7 +345,7 @@ fun CollectionHistoryScreen(
                     ),
                     onClick = {
                         Timber.v("SHOP_DETAILS")
-                        navController.navigate("${SHOP_DETAILS}/${item.id}") {
+                        navController.navigate("${SHOP_DETAILS}/${item.shopId}") {
                             popUpTo(SHOP_LIST) {
                                 inclusive = false
                             }

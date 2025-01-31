@@ -53,7 +53,6 @@ import com.collection.kubera.R
 import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.ui.AllDestinations.SHOP_COLLECTION_HISTORY
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
-import com.collection.kubera.ui.AllDestinations.SHOP_LIST
 import com.collection.kubera.ui.theme.backgroundD
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
@@ -89,8 +88,10 @@ fun ShopCollectionHistoryScreen(
 
     when (uiState) {
         is HomeUiState.Initial -> {
-            viewModel.getCollectionHistory(id)
-            viewModel.getBalance(id)
+            if (id != null) {
+                viewModel.getCollectionHistory(id)
+                viewModel.getShopDetails(id)
+            }
         }
 
         HomeUiState.Loading -> {

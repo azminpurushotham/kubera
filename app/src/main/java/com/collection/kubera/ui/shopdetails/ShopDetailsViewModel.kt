@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.CollectionHistory
 import com.collection.kubera.data.Shop
-import com.collection.kubera.states.AddNewShopUiState
 import com.collection.kubera.states.ShopDetailUiState
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -36,7 +35,6 @@ class ShopDetailsViewModel : ViewModel() {
         id: String
     ) {
         Timber.v("getShopDetails")
-        _uiState.value = ShopDetailUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection("shop")
                 .document(id)
