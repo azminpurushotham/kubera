@@ -5,10 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.CollectionHistory
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.HomeUiState
-import com.google.android.gms.tasks.Tasks
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
