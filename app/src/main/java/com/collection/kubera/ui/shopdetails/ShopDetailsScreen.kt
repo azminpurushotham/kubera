@@ -216,6 +216,7 @@ fun ShopDetailsScreen(
             )
             Text(
                 text = label,
+                color = selectedColor,
                 modifier = Modifier.clickable(onClick = onClick) // Allow clicking the label
             )
         }
