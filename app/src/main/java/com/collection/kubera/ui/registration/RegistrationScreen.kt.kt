@@ -55,6 +55,7 @@ import com.collection.kubera.data.User
 import com.collection.kubera.states.RegistrationUiState
 import com.collection.kubera.ui.login.LoginActivity
 import com.collection.kubera.ui.theme.KuberaTheme
+import com.collection.kubera.ui.theme.onHintD
 import com.collection.kubera.ui.updatecredentials.UpdateCredentialActivity
 
 @Preview
@@ -192,7 +193,7 @@ fun RegistrationScreen(
                             focusedBorderColor = MaterialTheme.colorScheme.onSurface,
                             unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
                             focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            unfocusedLabelColor = onHintD,
                             cursorColor = MaterialTheme.colorScheme.onPrimary,
                         ),
                         singleLine = true,

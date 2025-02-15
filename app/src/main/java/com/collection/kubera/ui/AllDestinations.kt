@@ -8,6 +8,7 @@ import com.collection.kubera.ui.AllDestinations.COLLECTION_HISTORY
 import com.collection.kubera.ui.AllDestinations.LOGOUT
 import com.collection.kubera.ui.AllDestinations.SHOP_COLLECTION_HISTORY
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
+import com.collection.kubera.ui.AllDestinations.UPDATE_SHOP
 
 object AllDestinations {
     const val SHOP_LIST = "Shop List"
@@ -15,6 +16,7 @@ object AllDestinations {
     const val SHOP_COLLECTION_HISTORY = "Shop Collection History"
     const val PROFILE = "Profile"
     const val ADD_NEW_SHOP = "Add New Shop"
+    const val UPDATE_SHOP = "Update Shop Details"
     const val SHOP_DETAILS = "Shop Details"
     const val LOGOUT = "Logout"
 }
@@ -48,6 +50,14 @@ class AppNavigationActions(private val navController: NavHostController) {
             popUpTo(SHOP_LIST)
         }
     }
+
+    fun navigateToUpdateShop(shopId: String?) {
+        navController.navigate("${UPDATE_SHOP}/$shopId") {
+            launchSingleTop = true
+            popUpTo(SHOP_DETAILS)
+        }
+    }
+
     fun navigateToLogOut() {
         navController.navigate(LOGOUT) {
             popUpTo(LOGOUT)

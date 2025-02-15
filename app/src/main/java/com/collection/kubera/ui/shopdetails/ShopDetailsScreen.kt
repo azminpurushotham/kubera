@@ -55,6 +55,7 @@ import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.headingLabelD
 import com.collection.kubera.ui.theme.labelBackgroundD
 import com.collection.kubera.ui.theme.labelD
+import com.collection.kubera.ui.theme.onHintD
 import com.collection.kubera.ui.theme.red
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -229,7 +230,6 @@ fun ShopDetailsScreen(
         verticalArrangement = Arrangement.Center, // Vertically center items
         horizontalAlignment = Alignment.Start // Horizontally center items
     ) {
-
         if (uiState == ShopDetailUiState.Loading) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -461,7 +461,7 @@ fun ShopDetailsScreen(
                 focusedBorderColor = MaterialTheme.colorScheme.onSurface,
                 unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
                 focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                unfocusedLabelColor = onHintD,
                 cursorColor = MaterialTheme.colorScheme.onPrimary,
             ),
             singleLine = true,

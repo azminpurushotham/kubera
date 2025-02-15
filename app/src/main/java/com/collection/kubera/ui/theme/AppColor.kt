@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 val primaryD = Color(0xFF344767)
 val secondaryD = Color(0xFFCCC2DC)
 val onSurfaceD = Color(0xFFe8e9e9)
+val onHintD = Color(0xFF9EA2A2)
 val backgroundD = Color(0xFF1b1e20)
 val backgroundDarkD = Color(0xFF1a1d20)
 val onprimaryD = Color(0xFFD2D3D4)

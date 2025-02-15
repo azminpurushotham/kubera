@@ -47,6 +47,7 @@ import com.collection.kubera.states.LoginUiState
 import com.collection.kubera.ui.main.MainActivity
 import com.collection.kubera.ui.registration.RegistrationActivity
 import com.collection.kubera.ui.theme.KuberaTheme
+import com.collection.kubera.ui.theme.onHintD
 import com.collection.kubera.utils.ISLOGGEDIN
 import com.collection.kubera.utils.PASSWORD
 import com.collection.kubera.utils.PreferenceHelper
@@ -164,7 +165,7 @@ fun LoginScreen(
                         focusedBorderColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
                         focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedLabelColor = onHintD,
                         cursorColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     singleLine = true,
@@ -196,7 +197,7 @@ fun LoginScreen(
                         focusedBorderColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
                         focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedLabelColor = onHintD,
                         cursorColor = MaterialTheme.colorScheme.onPrimary,
                     ),
                     singleLine = true,

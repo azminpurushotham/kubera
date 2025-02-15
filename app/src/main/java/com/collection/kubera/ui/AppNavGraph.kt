@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Logout
@@ -43,12 +44,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.collection.kubera.data.CollectionHistory
 import com.collection.kubera.ui.addnewshop.AddNewShopScreen
 import com.collection.kubera.ui.orderhistory.CollectionHistoryScreen
 import com.collection.kubera.ui.orderhistory.ShopCollectionHistoryScreen
 import com.collection.kubera.ui.shopdetails.ShopDetailsScreen
 import com.collection.kubera.ui.shoplist.ShopListScreen
+import com.collection.kubera.ui.updateshop.UpdateShopScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -84,13 +85,31 @@ fun AppNavGraph(
                             }
                         }
                     }, content = {
-                        if(currentRoute != AllDestinations.SHOP_LIST){
+                        if (currentRoute != AllDestinations.SHOP_LIST) {
                             Icon(
                                 imageVector = getIcon(currentRoute),
                                 contentDescription = null
                             )
                         }
                     })
+                },
+                actions = {
+                    if (currentRoute.contains(AllDestinations.SHOP_DETAILS)) {
+                        IconButton(
+                            onClick = {
+                                navigationActions.navigateToUpdateShop(
+                                    currentNavBackStackEntry?.arguments?.getString("shopId")
+                                )
+                            },
+                            content = {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = null
+                                )
+                            }
+
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary
@@ -156,9 +175,9 @@ fun AppNavGraph(
             composable(AllDestinations.COLLECTION_HISTORY) {
                 CollectionHistoryScreen(navController)
             }
-            composable("${AllDestinations.SHOP_COLLECTION_HISTORY}/{shopId}") {backStackEntry ->
+            composable("${AllDestinations.SHOP_COLLECTION_HISTORY}/{shopId}") { backStackEntry ->
                 val shopId = backStackEntry.arguments?.getString("shopId")
-                ShopCollectionHistoryScreen(shopId,navController)
+                ShopCollectionHistoryScreen(shopId, navController)
             }
             composable(AllDestinations.ADD_NEW_SHOP) {
                 AddNewShopScreen(navController)
@@ -166,6 +185,10 @@ fun AppNavGraph(
             composable("${AllDestinations.SHOP_DETAILS}/{shopId}") { backStackEntry ->
                 val shopId = backStackEntry.arguments?.getString("shopId")
                 ShopDetailsScreen(shopId, navController)
+            }
+            composable("${AllDestinations.UPDATE_SHOP}/{shopId}") { backStackEntry ->
+                val shopId = backStackEntry.arguments?.getString("shopId")
+                UpdateShopScreen(shopId, navController)
             }
         }
     }
@@ -219,6 +242,7 @@ fun getTitle(currentRoute: String): String {
         AllDestinations.SHOP_COLLECTION_HISTORY -> AllDestinations.SHOP_COLLECTION_HISTORY
         AllDestinations.PROFILE -> AllDestinations.PROFILE
         AllDestinations.ADD_NEW_SHOP -> AllDestinations.ADD_NEW_SHOP
+        AllDestinations.UPDATE_SHOP -> AllDestinations.UPDATE_SHOP
         else -> AllDestinations.SHOP_LIST
     }
 

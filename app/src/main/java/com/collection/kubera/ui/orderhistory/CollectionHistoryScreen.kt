@@ -254,7 +254,7 @@ fun CollectionHistoryScreen(
 //                        focusedBorderColor = MaterialTheme.colorScheme.onSurface,
 //                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
 //                        focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-//                        unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+//                        unfocusedLabelColor = onHintD,
 //                        cursorColor = MaterialTheme.colorScheme.onPrimary,
 //                        focusedTextColor = MaterialTheme.colorScheme.onSurface
 //                    ),

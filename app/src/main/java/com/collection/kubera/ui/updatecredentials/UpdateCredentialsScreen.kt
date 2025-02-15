@@ -45,6 +45,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.collection.kubera.states.UpdateCredentialsUiState
 import com.collection.kubera.ui.login.LoginActivity
 import com.collection.kubera.ui.theme.KuberaTheme
+import com.collection.kubera.ui.theme.onHintD
 
 @Preview
 @Composable
@@ -159,7 +160,7 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
                             focusedBorderColor = MaterialTheme.colorScheme.onSurface,
                             unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
                             focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            unfocusedLabelColor = onHintD,
                             cursorColor = MaterialTheme.colorScheme.onPrimary
                         ),
                         singleLine = true,
@@ -191,7 +192,7 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
                             focusedBorderColor = MaterialTheme.colorScheme.onSurface,
                             unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
                             focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            unfocusedLabelColor = onHintD,
                             cursorColor = MaterialTheme.colorScheme.onPrimary,
                         ),
                         singleLine = true,
@@ -234,7 +235,7 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
                             focusedBorderColor = MaterialTheme.colorScheme.onSurface,
                             unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
                             focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                            unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            unfocusedLabelColor = onHintD,
                             cursorColor = MaterialTheme.colorScheme.onPrimary,
                         ),
                         singleLine = true,

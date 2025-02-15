@@ -1,4 +1,4 @@
-package com.collection.kubera.ui.addnewshop
+package com.collection.kubera.ui.updateshop
 
 import android.util.Patterns
 import android.widget.Toast
@@ -30,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -38,16 +39,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.collection.kubera.states.AddNewShopUiState
+import com.collection.kubera.states.UpdateShopUiState
 import com.collection.kubera.ui.AllDestinations
 import com.collection.kubera.ui.theme.headingLabelD
 import com.collection.kubera.ui.theme.onHintD
 
 @Preview
 @Composable
-fun AddNewShopScreen(
+fun UpdateShopScreen(
+    id: String? = null,
     navController: NavHostController? = null,
-    viewModel: AddNewShopViewModel = viewModel()
+    viewModel: UpdateShopViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -55,24 +57,25 @@ fun AddNewShopScreen(
     val characterLimit = 3
     val phoneNumberLimit = 10
     val nameLimit = 30
-    var firstName by remember { mutableStateOf("") }
+    var firstName by remember { mutableStateOf<String?>(null) }
     var isFirstNameError by rememberSaveable { mutableStateOf(false) }
-    var lastName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf<String?>(null) }
     var isLastNameError by rememberSaveable { mutableStateOf(false) }
-    var shopName by remember { mutableStateOf("") }
+    var shopName by remember { mutableStateOf<String?>(null) }
     var isShopNameError by rememberSaveable { mutableStateOf(false) }
     var location by remember { mutableStateOf("") }
     var isLocationError by rememberSaveable { mutableStateOf(false) }
     var landmark by remember { mutableStateOf("") }
-    var balance by remember { mutableStateOf("") }
+    var balance by remember { mutableStateOf<String?>(null) }
     var isLandmarkError by rememberSaveable { mutableStateOf(false) }
-    var phoneNumber by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf<String?>(null) }
     var isPhoneNumberError by rememberSaveable { mutableStateOf(false) }
-    var secondPhoneNumber by remember { mutableStateOf("") }
+    var secondPhoneNumber by remember { mutableStateOf<String?>(null) }
     var isSecondPhoneNumberError by rememberSaveable { mutableStateOf(false) }
     var mailId by remember { mutableStateOf("") }
     var isMailIdError by rememberSaveable { mutableStateOf(false) }
     var isMailIdFormateError by rememberSaveable { mutableStateOf(false) }
+    val shop by viewModel.shop.collectAsState()
 
 
     fun validateShopName(shopName: String) {
@@ -110,21 +113,25 @@ fun AddNewShopScreen(
     }
 
     fun enableButton() {
-        isEnabled = !isShopNameError && shopName.isNotEmpty()
-                && !isFirstNameError && firstName.isNotEmpty()
+        isEnabled = (
+                !isShopNameError && (shopName?:"").isNotEmpty() && (shopName?:"")!=shop?.shopName)
+                ||(!isFirstNameError && (firstName?:"").isNotEmpty() && (firstName?:"")!=shop?.firstName)
+                ||(!isLastNameError && (lastName?:"").isNotEmpty() && (lastName?:"")!=shop?.lastName)
+                ||((balance?:"0").toLong() != (shop?.balance?:0))
 //                && !isLastNameError
 //                && !isLocationError && location.isNotEmpty()
 //                && !isLandmarkError
-                && !isPhoneNumberError && phoneNumber.isNotEmpty()
+                || (!isPhoneNumberError && (phoneNumber?:"").isNotEmpty()  && phoneNumber != shop?.phoneNumber)
+                || (!isSecondPhoneNumberError && (secondPhoneNumber?:"").isNotEmpty()  && secondPhoneNumber != shop?.secondPhoneNumber)
 //                && !isSecondPhoneNumberError
 //                && !isMailIdError
     }
     when (uiState) {
-        is AddNewShopUiState.Initial -> {
-
+        is UpdateShopUiState.Initial -> {
+            id?.let { viewModel.getShopDetails(it) }
         }
 
-        AddNewShopUiState.Loading -> {
+        UpdateShopUiState.Loading -> {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
@@ -135,23 +142,30 @@ fun AddNewShopScreen(
             }
         }
 
-        is AddNewShopUiState.AddNewShopInit -> {
+        is UpdateShopUiState.UpdateShopInit -> {
 
         }
 
-        is AddNewShopUiState.AddNewShopSuccess -> {
+        is UpdateShopUiState.UpdateShopSuccess -> {
             isEnabled = false
-            Toast.makeText(context, (uiState as AddNewShopUiState.AddNewShopSuccess).outputText, Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, (uiState as UpdateShopUiState.UpdateShopSuccess).outputText, Toast.LENGTH_SHORT).show()
             navController?.popBackStack(
                 route = AllDestinations.SHOP_LIST,
                 inclusive = false)
         }
 
-        is AddNewShopUiState.AddNewShopError -> {
-            Toast.makeText(context, (uiState as AddNewShopUiState.AddNewShopError).errorMessage, Toast.LENGTH_SHORT).show()
+        is UpdateShopUiState.UpdateShopError -> {
+            Toast.makeText(context, (uiState as UpdateShopUiState.UpdateShopError).errorMessage, Toast.LENGTH_SHORT).show()
         }
 
-        is AddNewShopUiState.AddNewShopCompleted ->{
+        is UpdateShopUiState.UpdateShopCompleted ->{
+
+        }
+
+        is UpdateShopUiState.ShopDetailError -> {
+
+        }
+        is UpdateShopUiState.ShopDetailSuccess -> {
 
         }
     }
@@ -165,22 +179,20 @@ fun AddNewShopScreen(
         horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
     ) {
 
-
-
         Text(
-            "Enter Shop Details",
+            "Update Shop Details",
             fontSize = 18.sp,
             fontWeight = FontWeight(1),
             color = headingLabelD,
             modifier = Modifier.align(Alignment.Start)
         )
         OutlinedTextField(
-            value = shopName,
+            value =  shopName?:shop?.shopName?:"",
             onValueChange = {
-                if (shopName.length <= nameLimit) {
+                if ((shopName?.length?:0) <= nameLimit) {
                     shopName = it
-                    shopName = shopName.replaceFirstChar { word -> word.uppercaseChar() }
-                    validateShopName(shopName)
+                    shopName = shopName?:"".replaceFirstChar { word -> word.uppercaseChar() }
+                    validateShopName(shopName?:"")
                 }
                 enableButton()
             },
@@ -200,7 +212,7 @@ fun AddNewShopScreen(
                 if (isShopNameError) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = "Limit: ${shopName.length}/$characterLimit",
+                        text = "Limit: ${shopName?:"".length}/$characterLimit",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -272,41 +284,44 @@ fun AddNewShopScreen(
 //            },
 //        )
 
-        OutlinedTextField(
-            value = balance,
-            onValueChange = {
-                if (it.length <= 10) {
-                    balance = it
-                }
-            },
-            label = { Text("Balance Amount (optional)") },
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedLabelColor = onHintD,
-                cursorColor = MaterialTheme.colorScheme.onPrimary,
-            ),
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            modifier = Modifier.fillMaxWidth(),
-        )
+        (if(balance!=null){balance}else if(shop?.balance!=null){shop?.balance.toString()}else{""})?.let {
+            OutlinedTextField(
+                value = it,
+                onValueChange = { value->
+                    if (value.length <= 10) {
+                        balance = value
+                    }
+                    enableButton()
+                },
+                label = { Text("Balance Amount (optional)") },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                    focusedLabelColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedLabelColor = onHintD,
+                    cursorColor = MaterialTheme.colorScheme.onPrimary,
+                ),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
         Spacer(Modifier.height(60.dp))
         Text(
-            "Enter Owner Details",
+            "Update Owner Details",
             fontSize = 18.sp,
             fontWeight = FontWeight(1),
             color = headingLabelD,
             modifier = Modifier.align(Alignment.Start)
         )
         OutlinedTextField(
-            value = firstName,
+            value = firstName?:shop?.firstName?:"",
             onValueChange = {
                 if (it.length <= nameLimit) {
                     firstName = it.trim()
-                    firstName = firstName.replaceFirstChar { word -> word.uppercaseChar() }
-                    validateFirstName(firstName)
+                    firstName = (firstName?:"").replaceFirstChar { word -> word.uppercaseChar() }
+                    validateFirstName(firstName?:"")
                 }
                 enableButton()
             },
@@ -326,7 +341,7 @@ fun AddNewShopScreen(
                 if (isFirstNameError) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = "Limit: ${firstName.length}/$characterLimit",
+                        text = "Limit: ${firstName?.length}/$characterLimit",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -334,12 +349,12 @@ fun AddNewShopScreen(
         )
 
         OutlinedTextField(
-            value = lastName,
+            value = lastName?:shop?.lastName?:"",
             onValueChange = {
                 if (it.length <= nameLimit) {
                     lastName = it.trim()
-                    lastName = lastName.replaceFirstChar { word -> word.uppercaseChar() }
-                    validateLastName(lastName)
+                    lastName = lastName?.replaceFirstChar { word -> word.uppercaseChar() }
+                    validateLastName(lastName!!)
                 }
                 enableButton()
             },
@@ -359,7 +374,7 @@ fun AddNewShopScreen(
                 if (isLastNameError) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = "Limit: ${lastName.length}/$characterLimit",
+                        text = "Limit: ${lastName?.length}/$characterLimit",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -368,12 +383,12 @@ fun AddNewShopScreen(
 
 
         OutlinedTextField(
-            value = phoneNumber,
+            value = phoneNumber?:shop?.phoneNumber?:"",
             onValueChange = {
                 if (it.length <= phoneNumberLimit) {
                     phoneNumber = it.trim()
-                    if (phoneNumber.isNotEmpty()) {
-                        validatePhoneNumber(phoneNumber.toLong())
+                    if ((phoneNumber?:"").isNotEmpty()) {
+                        validatePhoneNumber(phoneNumber!!.toLong())
                     }
                 }
                 enableButton()
@@ -402,12 +417,12 @@ fun AddNewShopScreen(
         )
 
         OutlinedTextField(
-            value = secondPhoneNumber,
+            value = secondPhoneNumber?:shop?.secondPhoneNumber?:"",
             onValueChange = {
                 if (it.length <= phoneNumberLimit) {
                     secondPhoneNumber = it.trim()
-                    if (secondPhoneNumber.isNotEmpty()) {
-                        validateSecondPhoneNumber(secondPhoneNumber.toLong())
+                    if ((secondPhoneNumber?:"").isNotEmpty()) {
+                        validateSecondPhoneNumber(secondPhoneNumber!!.toLong())
                     }
                 }
                 enableButton()
@@ -483,7 +498,7 @@ fun AddNewShopScreen(
                     firstName,
                     lastName,
                     phoneNumber,
-                    if(secondPhoneNumber.isNotEmpty()) secondPhoneNumber else null,
+                    if((secondPhoneNumber?:"").isNotEmpty()) secondPhoneNumber else null,
                     mailId
                 )
             },

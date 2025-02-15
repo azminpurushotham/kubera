@@ -56,6 +56,7 @@ import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
 import com.collection.kubera.ui.AllDestinations.SHOP_LIST
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
+import com.collection.kubera.ui.theme.onHintD
 import com.collection.kubera.ui.theme.red
 import timber.log.Timber
 
@@ -179,7 +180,7 @@ fun ShopListScreen(
                         focusedBorderColor = MaterialTheme.colorScheme.onSurface,
                         unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
                         focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-                        unfocusedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedLabelColor = onHintD,
                         cursorColor = MaterialTheme.colorScheme.onPrimary,
                         focusedTextColor = MaterialTheme.colorScheme.onSurface
                     ),
