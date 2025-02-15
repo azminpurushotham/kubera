@@ -18,6 +18,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.collection.kubera.ui.theme.KuberaTheme
 
 class LoginActivity : ComponentActivity() {
+    @Preview
     @Composable
     fun StatusBarWithPlatformApi() {
         val activity = LocalContext.current as Activity
