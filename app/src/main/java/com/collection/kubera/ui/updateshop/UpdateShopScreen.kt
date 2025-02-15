@@ -289,7 +289,11 @@ fun UpdateShopScreen(
                 value = it,
                 onValueChange = { value->
                     if (value.length <= 10) {
-                        balance = value
+                        if (value.isEmpty()) {
+                            balance = 0.toString()
+                        }else{
+                            balance = value
+                        }
                     }
                     enableButton()
                 },

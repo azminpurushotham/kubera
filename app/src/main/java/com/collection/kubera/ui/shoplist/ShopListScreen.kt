@@ -72,6 +72,7 @@ fun ShopListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val shopList by viewModel.shopList.collectAsState()
     val balance by viewModel.balance.collectAsState()
+    val todaysCollection by viewModel.todaysCollection.collectAsState()
     var shopName by remember { mutableStateOf("") }
 
     val refreshState = rememberPullToRefreshState()
@@ -111,12 +112,14 @@ fun ShopListScreen(
         isRefreshing = true
         viewModel.getSwipeShops()
         viewModel.getBalance()
+        viewModel.getTodaysCollection()
     }
 
     when (uiState) {
         is HomeUiState.Initial -> {
             viewModel.getShops()
             viewModel.getBalance()
+            viewModel.getTodaysCollection()
         }
 
         HomeUiState.Loading -> {
@@ -224,23 +227,23 @@ fun ShopListScreen(
                 ) {
                     Column {
                         Text(
-                            "9:00 am",
+                            "Today's Collection",
                             fontWeight = FontWeight(600),
                             fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                         Text(
-                            "1-Dec-2024",
+                            todaysCollection.toString(),
                             fontWeight = FontWeight(400),
                             fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                            color = MaterialTheme.colorScheme.onPrimary
+                            color = if (todaysCollection>0) green else red,
                         )
                     }
                     Text(
                         balance.toString(),
                         fontWeight = FontWeight(400),
                         fontSize = 30.sp,
-                        color = green,
+                        color = if (balance>0) green else red,
                     )
                 }
             }
