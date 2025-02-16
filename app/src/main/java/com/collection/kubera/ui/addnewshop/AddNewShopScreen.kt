@@ -65,11 +65,15 @@ fun AddNewShopScreen(
     var isLocationError by rememberSaveable { mutableStateOf(false) }
     var landmark by remember { mutableStateOf("") }
     var balance by remember { mutableStateOf("") }
+    var isBalanceError by rememberSaveable { mutableStateOf(false) }
+    var balanceError by rememberSaveable { mutableStateOf("") }
     var isLandmarkError by rememberSaveable { mutableStateOf(false) }
     var phoneNumber by remember { mutableStateOf("") }
     var isPhoneNumberError by rememberSaveable { mutableStateOf(false) }
+    var isPhoneNumberFormatError by rememberSaveable { mutableStateOf(false) }
     var secondPhoneNumber by remember { mutableStateOf("") }
     var isSecondPhoneNumberError by rememberSaveable { mutableStateOf(false) }
+    var isSecondaryPhoneNumberFormatError by rememberSaveable { mutableStateOf(false) }
     var mailId by remember { mutableStateOf("") }
     var isMailIdError by rememberSaveable { mutableStateOf(false) }
     var isMailIdFormateError by rememberSaveable { mutableStateOf(false) }
@@ -95,15 +99,42 @@ fun AddNewShopScreen(
         isLandmarkError = landmark.length < characterLimit
     }
 
-    fun validatePhoneNumber(phoneNumber: Long?) {
-        isPhoneNumberError = phoneNumber != null
-        isPhoneNumberError = ((phoneNumber ?: 0).toString().length) != phoneNumberLimit
+    fun validatePhoneNumber() {
+        isPhoneNumberError = (phoneNumber.length) != phoneNumberLimit
+        try {
+            phoneNumber.toLong()
+            isPhoneNumberFormatError = false
+        } catch (e: Exception) {
+            isPhoneNumberFormatError = true
+        }
     }
 
-    fun validateSecondPhoneNumber(secondPhoneNumber: Long?) {
-        isSecondPhoneNumberError = secondPhoneNumber != null
-        isSecondPhoneNumberError = (secondPhoneNumber ?: 0).toString().length != phoneNumberLimit
+    fun validateSecondPhoneNumber() {
+        if(secondPhoneNumber.isEmpty()){
+            isSecondPhoneNumberError = false
+            isSecondaryPhoneNumberFormatError = false
+            return
+        }
+        isSecondPhoneNumberError = (secondPhoneNumber.length) != phoneNumberLimit
+        try {
+            secondPhoneNumber.toLong()
+            isSecondaryPhoneNumberFormatError = false
+        } catch (e: Exception) {
+            isSecondaryPhoneNumberFormatError = true
+        }
     }
+
+    fun validateBalance() {
+        try {
+            balance.toLong()
+            balanceError = ""
+            isBalanceError = false
+        } catch (e: Exception) {
+            balanceError = "Enter valid amount"
+            isBalanceError = true
+        }
+    }
+
 
     fun validateEmail(mailId: String) {
         isMailIdFormateError = !Patterns.EMAIL_ADDRESS.matcher(mailId).matches()
@@ -115,7 +146,7 @@ fun AddNewShopScreen(
 //                && !isLastNameError
 //                && !isLocationError && location.isNotEmpty()
 //                && !isLandmarkError
-                && !isPhoneNumberError && phoneNumber.isNotEmpty()
+                && !isPhoneNumberError &&!isPhoneNumberFormatError && phoneNumber.isNotEmpty()
 //                && !isSecondPhoneNumberError
 //                && !isMailIdError
     }
@@ -200,7 +231,7 @@ fun AddNewShopScreen(
                 if (isShopNameError) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = "Limit: ${shopName.length}/$characterLimit",
+                        text = "Min: ${shopName.length}/$characterLimit",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -278,6 +309,7 @@ fun AddNewShopScreen(
                 if (it.length <= 10) {
                     balance = it
                 }
+                validateBalance()
             },
             label = { Text("Balance Amount (optional)") },
             colors = OutlinedTextFieldDefaults.colors(
@@ -288,8 +320,18 @@ fun AddNewShopScreen(
                 cursorColor = MaterialTheme.colorScheme.onPrimary,
             ),
             singleLine = true,
+            isError = isBalanceError,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth(),
+            supportingText = {
+                if (isBalanceError) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = balanceError,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
         )
 
         Spacer(Modifier.height(60.dp))
@@ -326,7 +368,7 @@ fun AddNewShopScreen(
                 if (isFirstNameError) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = "Limit: ${firstName.length}/$characterLimit",
+                        text = "Min: ${firstName.length}/$characterLimit",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -359,7 +401,7 @@ fun AddNewShopScreen(
                 if (isLastNameError) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = "Limit: ${lastName.length}/$characterLimit",
+                        text = "Min: ${lastName.length}/$characterLimit",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -373,7 +415,7 @@ fun AddNewShopScreen(
                 if (it.length <= phoneNumberLimit) {
                     phoneNumber = it.trim()
                     if (phoneNumber.isNotEmpty()) {
-                        validatePhoneNumber(phoneNumber.toLong())
+                        validatePhoneNumber()
                     }
                 }
                 enableButton()
@@ -388,13 +430,13 @@ fun AddNewShopScreen(
             ),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            isError = isPhoneNumberError,
+            isError = isPhoneNumberError || isPhoneNumberFormatError,
             modifier = Modifier.fillMaxWidth(),
             supportingText = {
-                if (isPhoneNumberError) {
+                if (isPhoneNumberError || isPhoneNumberFormatError) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = "Limit: ${(phoneNumber ?: 0).toString().length}/$phoneNumberLimit",
+                        text =  if(isPhoneNumberFormatError) "Invalid phone number" else if(isPhoneNumberError) "Min: ${phoneNumber.length}/$phoneNumberLimit" else "",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
@@ -405,10 +447,8 @@ fun AddNewShopScreen(
             value = secondPhoneNumber,
             onValueChange = {
                 if (it.length <= phoneNumberLimit) {
-                    secondPhoneNumber = it.trim()
-                    if (secondPhoneNumber.isNotEmpty()) {
-                        validateSecondPhoneNumber(secondPhoneNumber.toLong())
-                    }
+                    secondPhoneNumber = it
+                    validateSecondPhoneNumber()
                 }
                 enableButton()
             },
@@ -422,13 +462,13 @@ fun AddNewShopScreen(
             ),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            isError = isSecondPhoneNumberError,
+            isError = isSecondPhoneNumberError || isSecondaryPhoneNumberFormatError,
             modifier = Modifier.fillMaxWidth(),
             supportingText = {
                 if (isSecondPhoneNumberError) {
                     Text(
                         modifier = Modifier.fillMaxWidth(),
-                        text = "Limit: ${(secondPhoneNumber ?: 0).toString().length}/$phoneNumberLimit",
+                        text =  if(isSecondaryPhoneNumberFormatError) "Invalid phone number" else if(isSecondPhoneNumberError) "Min: ${secondPhoneNumber.length}/$phoneNumberLimit" else "",
                         color = MaterialTheme.colorScheme.error
                     )
                 }
