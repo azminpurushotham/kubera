@@ -70,22 +70,26 @@ fun CollectionHistoryScreen(
     val uiState by viewModel.uiState.collectAsState()
     val shopList by viewModel.shopList.collectAsState()
     val balance by viewModel.balance.collectAsState()
+    val todaysCollection by viewModel.todaysCollection.collectAsState()
 
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
 
     val refreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
+
     val onRefresh: () -> Unit = {
         isRefreshing = true
         viewModel.getSwipeShopsCollectionHistory()
         viewModel.companyBalance()
+        viewModel.getTodaysCollection()
     }
 
     when (uiState) {
         is HomeUiState.Initial -> {
             viewModel.getCollectionHistory()
             viewModel.companyBalance()
+            viewModel.getTodaysCollection()
         }
 
         HomeUiState.Loading -> {
@@ -152,16 +156,15 @@ fun CollectionHistoryScreen(
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
                         Text(
-                            "Alphabetically",
+                            "User Name",
                             color = MaterialTheme.colorScheme.onPrimary,
                             fontSize = MaterialTheme.typography.titleMedium.fontSize,
                         )
 
                         Spacer(modifier = Modifier.weight(1f)) // Spacer to fill the space
-
                         Row{
                             Button(onClick = {
-
+                                viewModel.getCollectionHistory("UAZ")
                             }) {
                                 Text(
                                     "A - Z",
@@ -172,7 +175,7 @@ fun CollectionHistoryScreen(
                             Spacer(modifier = Modifier.width(60.dp))
                             Button(
                                 onClick = {
-
+                                    viewModel.getCollectionHistory("UZA")
                                 }) {
                                 Text(
                                     "Z - A",
@@ -180,6 +183,35 @@ fun CollectionHistoryScreen(
                                     fontSize = MaterialTheme.typography.titleSmall.fontSize,
                                 )
                             }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row{
+                        Text(
+                            "Shop Name",
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            fontSize = MaterialTheme.typography.titleMedium.fontSize,
+                        )
+                        Spacer(modifier = Modifier.weight(1f)) // Spacer to fill the space
+                        Button(onClick = {
+                            viewModel.getCollectionHistory("SAZ")
+                        }) {
+                            Text(
+                                "A - Z",
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontSize = MaterialTheme.typography.titleSmall.fontSize,
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(60.dp))
+                        Button(
+                            onClick = {
+                                viewModel.getCollectionHistory("SZA")
+                            }) {
+                            Text(
+                                "Z - A",
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontSize = MaterialTheme.typography.titleSmall.fontSize,
+                            )
                         }
                     }
                     Spacer(modifier = Modifier.height(20.dp))
@@ -198,7 +230,7 @@ fun CollectionHistoryScreen(
                         Spacer(modifier = Modifier.weight(1f)) // Spacer to fill the space
                         Button(
                             onClick = {
-
+                                viewModel.getCollectionHistory("ASC")
                             }) {
                             Image(
                                 painter = painterResource(id = R.drawable.baseline_arrow_upward_24), // Replace with your drawable
@@ -210,7 +242,7 @@ fun CollectionHistoryScreen(
                         }
                         Spacer(modifier = Modifier.width(60.dp))
                         Button(onClick = {
-
+                            viewModel.getCollectionHistory("DSC")
                         }) {
                             Image(
                                 modifier = Modifier.rotate(180f),
@@ -315,16 +347,16 @@ fun CollectionHistoryScreen(
                 ) {
                     Column {
                         Text(
-                            "9:00 am",
+                            "Today's Collection",
                             fontWeight = FontWeight(600),
                             fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                         Text(
-                            "1-Dec-2024",
+                            todaysCollection.toString(),
                             fontWeight = FontWeight(400),
                             fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                            color = MaterialTheme.colorScheme.onPrimary
+                            color = if (todaysCollection>0) green else red,
                         )
                     }
                     Text(

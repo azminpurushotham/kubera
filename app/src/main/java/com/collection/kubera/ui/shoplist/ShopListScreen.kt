@@ -1,5 +1,6 @@
 package com.collection.kubera.ui.shoplist
 
+import android.os.Build
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -112,14 +113,18 @@ fun ShopListScreen(
         isRefreshing = true
         viewModel.getSwipeShops()
         viewModel.getBalance()
-        viewModel.getTodaysCollection()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            viewModel.getTodaysCollection()
+        }
     }
 
     when (uiState) {
         is HomeUiState.Initial -> {
             viewModel.getShops()
             viewModel.getBalance()
-            viewModel.getTodaysCollection()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                viewModel.getTodaysCollection()
+            }
         }
 
         HomeUiState.Loading -> {

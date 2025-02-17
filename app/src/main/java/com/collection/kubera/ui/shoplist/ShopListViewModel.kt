@@ -1,10 +1,13 @@
 package com.collection.kubera.ui.shoplist
 
 import android.icu.text.SimpleDateFormat
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.HomeUiState
+import com.collection.kubera.utils.getTodayStartAndEndTime
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -17,12 +20,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.util.Date
-import java.util.Locale
 
 class ShopListViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> =
@@ -74,6 +71,7 @@ class ShopListViewModel : ViewModel() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun getTodaysCollection() {
         Timber.v("getTodaysBalance")
         viewModelScope.launch(Dispatchers.IO) {
@@ -95,34 +93,6 @@ class ShopListViewModel : ViewModel() {
                     _todaysCollection.value = 0.0
                 }
         }
-    }
-
-    private fun getTodayStartAndEndTime(zoneId: ZoneId = ZoneId.systemDefault()): Pair<Timestamp, Timestamp> {
-        // 1. Get Today's Date in the specified Time Zone
-        val todayLocalDate = LocalDate.now(zoneId)
-
-        // 2. Start of Day (00:00:00)
-        val startOfDayLocalTime = LocalTime.MIN // 00:00:00
-        val startOfDayZonedDateTime = ZonedDateTime.of(todayLocalDate, startOfDayLocalTime, zoneId)
-
-        // 3. End of Day (23:59:59.999)
-        val endOfDayLocalTime = LocalTime.MAX // 23:59:59.999999999
-        val endOfDayZonedDateTime = ZonedDateTime.of(todayLocalDate, endOfDayLocalTime, zoneId)
-
-
-        // 4. Convert to Firestore Timestamps
-        val startTimestamp = convertZonedDateTimeToTimestamp(startOfDayZonedDateTime)
-        val endTimestamp = convertZonedDateTimeToTimestamp(endOfDayZonedDateTime)
-
-        Timber.tag("START").v(startOfDayZonedDateTime.toString())
-        Timber.tag("END").v(endOfDayZonedDateTime.toString())
-
-        return Pair(startTimestamp, endTimestamp)
-    }
-
-    private fun convertZonedDateTimeToTimestamp(zonedDateTime: ZonedDateTime): Timestamp {
-        val instant = zonedDateTime.toInstant()
-        return Timestamp(Date.from(instant))
     }
 
     fun getSwipeShops() {
