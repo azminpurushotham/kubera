@@ -334,7 +334,7 @@ fun AddNewShopScreen(
             },
         )
 
-        Spacer(Modifier.height(60.dp))
+        Spacer(Modifier.height(30.dp))
         Text(
             "Enter Owner Details",
             fontSize = 18.sp,

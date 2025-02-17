@@ -1,5 +1,4 @@
 package com.collection.kubera
-
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.hasClickAction
@@ -42,6 +41,7 @@ class AddNewShopTest {
     private val balanceError = "valid amount"
     private val phoneError1 = "Invalid"
     private val phoneError2 = "Invalid"
+
 
     @get:Rule
     val rule = createComposeRule()
@@ -103,9 +103,9 @@ class AddNewShopTest {
     fun testNegativeEntries(){
         rule.setContent { AddNewShopScreen() }
         rule.onNode(shopnameN).performTextInput(shopname)
-        rule.onNode(
+            rule.onNode(
             hasText(shopname)
-        ).assertIsDisplayed()
+        ).assertIsError()
         rule.onNode(balanceN).performTextInput(balance)
         rule.onNode(
             hasText(balance)
