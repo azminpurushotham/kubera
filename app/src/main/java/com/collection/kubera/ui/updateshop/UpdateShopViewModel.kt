@@ -1,6 +1,4 @@
 package com.collection.kubera.ui.updateshop
-
-import androidx.compose.ui.text.toLowerCase
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.Shop
@@ -117,5 +115,9 @@ class UpdateShopViewModel : ViewModel() {
                 }
         }
 
+    }
+
+    fun setShop(model: Shop) {
+        _shop.value = model
     }
 }

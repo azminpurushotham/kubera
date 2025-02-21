@@ -1,5 +1,7 @@
 package com.collection.kubera.ui.orderhistory
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.CollectionHistory
@@ -126,6 +128,7 @@ class CollectionViewModel : ViewModel() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun getTodaysCollection() {
         Timber.v("getTodaysBalance")
         viewModelScope.launch(Dispatchers.IO) {

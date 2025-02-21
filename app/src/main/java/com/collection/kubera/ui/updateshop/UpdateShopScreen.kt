@@ -33,21 +33,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.collection.kubera.data.Shop
 import com.collection.kubera.states.UpdateShopUiState
 import com.collection.kubera.ui.AllDestinations
 import com.collection.kubera.ui.theme.headingLabelD
 import com.collection.kubera.ui.theme.onHintD
 import timber.log.Timber
 
-@Preview
 @Composable
 fun UpdateShopScreen(
-    id: String? = null,
+    model: Shop,
     navController: NavHostController? = null,
     viewModel: UpdateShopViewModel = viewModel()
 ) {
@@ -143,13 +142,20 @@ fun UpdateShopScreen(
     }
 
     fun enableButton() {
-        val shopL = !isShopNameError  && ((shopName?:shop?.shopName) != shop?.shopName)
+        val shopL = !isShopNameError && ((shopName ?: shop?.shopName) != shop?.shopName)
         val fnameL = !isFirstNameError && (firstName ?: shop?.firstName) != shop?.firstName
-        val lnameL = !isLastNameError && ((lastName?:shop?.lastName) != shop?.lastName)
-        val balanceL = !((if((balance?:"").isNotEmpty()){balance!!.toLong()}else{shop?.balance?:0L}).equals(shop?.balance ?: 0L))
-        val phoneL = !isPhoneNumberError && !isPhoneNumberFormatError && ((phoneNumber?:shop?.phoneNumber)  != shop?.phoneNumber)
-        val secondPhoneL = !isSecondPhoneNumberError && ((secondPhoneNumber?:shop?.secondPhoneNumber) != shop?.secondPhoneNumber)
-        Timber.tag("enableButton").v("shopL -> $shopL fnameL -> $fnameL lnameL-> $lnameL balanceL -> $balanceL phoneL -> $phoneL secondPhoneL -> $secondPhoneL")
+        val lnameL = !isLastNameError && ((lastName ?: shop?.lastName) != shop?.lastName)
+        val balanceL = !((if ((balance ?: "").isNotEmpty()) {
+            balance!!.toLong()
+        } else {
+            shop?.balance ?: 0L
+        }).equals(shop?.balance ?: 0L))
+        val phoneL = !isPhoneNumberError && !isPhoneNumberFormatError && ((phoneNumber
+            ?: shop?.phoneNumber) != shop?.phoneNumber)
+        val secondPhoneL = !isSecondPhoneNumberError && ((secondPhoneNumber
+            ?: shop?.secondPhoneNumber) != shop?.secondPhoneNumber)
+        Timber.tag("enableButton")
+            .v("shopL -> $shopL fnameL -> $fnameL lnameL-> $lnameL balanceL -> $balanceL phoneL -> $phoneL secondPhoneL -> $secondPhoneL")
         isEnabled = (
                 shopL
                         || fnameL
@@ -160,7 +166,7 @@ fun UpdateShopScreen(
     }
     when (uiState) {
         is UpdateShopUiState.Initial -> {
-            id?.let { viewModel.getShopDetails(it) }
+            viewModel.setShop(model)
         }
 
         UpdateShopUiState.Loading -> {
@@ -326,7 +332,7 @@ fun UpdateShopScreen(
 //            },
 //        )
 
-        (if (balance != null) {
+      /*  (if (balance != null) {
             balance
         } else if (shop?.balance != null) {
             shop?.balance.toString()
@@ -360,7 +366,7 @@ fun UpdateShopScreen(
             )
         }
 
-        Spacer(Modifier.height(30.dp))
+        Spacer(Modifier.height(30.dp))*/
         Text(
             "Update Owner Details",
             fontSize = 18.sp,

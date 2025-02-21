@@ -23,6 +23,7 @@ gson = "2.10.1"
 accompanist = "0.36.0"
 roomCommon = "2.6.1"
 swiperefreshlayout = "1.7.6"
+paging = "3.2.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -56,6 +57,7 @@ timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "tim
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
 swiperefreshlayout = {group="androidx.compose.foundation",name="foundation",version.ref="swiperefreshlayout"}
+androidx-paging = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
 
 
 [plugins]

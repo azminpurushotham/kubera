@@ -1,6 +1,7 @@
 package com.collection.kubera.ui
 
 import androidx.navigation.NavHostController
+import com.collection.kubera.data.Shop
 import com.collection.kubera.ui.AllDestinations.PROFILE
 import com.collection.kubera.ui.AllDestinations.SHOP_LIST
 import com.collection.kubera.ui.AllDestinations.ADD_NEW_SHOP
@@ -51,8 +52,8 @@ class AppNavigationActions(private val navController: NavHostController) {
         }
     }
 
-    fun navigateToUpdateShop(shopId: String?) {
-        navController.navigate("${UPDATE_SHOP}/$shopId") {
+    fun navigateToUpdateShop(model: String?) {
+        navController.navigate("${UPDATE_SHOP}?$model") {
             launchSingleTop = true
             popUpTo(SHOP_DETAILS)
         }

@@ -31,6 +31,10 @@ class ShopDetailsViewModel : ViewModel() {
         }
     }
 
+    fun setShop(model: Shop){
+        _shop.value = model
+    }
+
     fun getShopDetails(
         id: String
     ) {

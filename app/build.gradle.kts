@@ -77,5 +77,6 @@ dependencies {
 //    implementation(libs.play.services.provider)
 
     implementation(libs.navigation.compose)
-    implementation(libs.androidx.room.common) 
+    implementation(libs.androidx.room.common)
+    implementation(libs.androidx.paging)
 }

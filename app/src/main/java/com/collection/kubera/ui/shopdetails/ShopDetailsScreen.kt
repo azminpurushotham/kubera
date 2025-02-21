@@ -1,7 +1,6 @@
 package com.collection.kubera.ui.shopdetails
 
 import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,11 +44,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.collection.kubera.data.Shop
 import com.collection.kubera.states.ShopDetailUiState
-import com.collection.kubera.ui.AllDestinations.COLLECTION_HISTORY
 import com.collection.kubera.ui.AllDestinations.SHOP_COLLECTION_HISTORY
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
-import com.collection.kubera.ui.AllDestinations.SHOP_LIST
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.headingLabelD
@@ -57,13 +55,15 @@ import com.collection.kubera.ui.theme.labelBackgroundD
 import com.collection.kubera.ui.theme.labelD
 import com.collection.kubera.ui.theme.onHintD
 import com.collection.kubera.ui.theme.red
-import kotlinx.coroutines.flow.collect
+import com.google.gson.Gson
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShopDetailsScreen(
-    id: String? = null,
+    id:String?,
+    model: Shop?,
     navController: NavHostController,
 ) {
     val context = LocalContext.current
@@ -85,6 +85,7 @@ fun ShopDetailsScreen(
 
     when (uiState) {
         is ShopDetailUiState.Initial -> {
+            model?.let { viewModel.setShop(it) }
             id?.let { viewModel.getShopDetails(it) }
         }
 

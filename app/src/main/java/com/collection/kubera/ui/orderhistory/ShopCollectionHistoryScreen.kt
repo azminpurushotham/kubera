@@ -312,12 +312,7 @@ fun ShopCollectionHistoryScreen(
                         containerColor = boxColorD,
                     ),
                     onClick = {
-                        Timber.v("SHOP_DETAILS")
-                        navController.navigate("${SHOP_DETAILS}/${item.shopId}") {
-                            popUpTo(SHOP_COLLECTION_HISTORY) {
-                                inclusive = false
-                            }
-                        }
+
                     }) {
                     Row(
                         modifier = Modifier

@@ -44,14 +44,17 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.collection.kubera.data.Shop
 import com.collection.kubera.ui.addnewshop.AddNewShopScreen
 import com.collection.kubera.ui.orderhistory.CollectionHistoryScreen
 import com.collection.kubera.ui.orderhistory.ShopCollectionHistoryScreen
 import com.collection.kubera.ui.shopdetails.ShopDetailsScreen
 import com.collection.kubera.ui.shoplist.ShopListScreen
 import com.collection.kubera.ui.updateshop.UpdateShopScreen
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,9 +100,10 @@ fun AppNavGraph(
                     if (currentRoute.contains(AllDestinations.SHOP_DETAILS)) {
                         IconButton(
                             onClick = {
-                                navigationActions.navigateToUpdateShop(
-                                    currentNavBackStackEntry?.arguments?.getString("shopId")
-                                )
+                                currentNavBackStackEntry?.arguments?.getString("model")?.let { s->
+                                    Timber.tag("UPDATE_SHOP").d("shop: $s")
+                                    navigationActions.navigateToUpdateShop(s)
+                                }
                             },
                             content = {
                                 Icon(
@@ -182,13 +186,27 @@ fun AppNavGraph(
             composable(AllDestinations.ADD_NEW_SHOP) {
                 AddNewShopScreen(navController)
             }
-            composable("${AllDestinations.SHOP_DETAILS}/{shopId}") { backStackEntry ->
-                val shopId = backStackEntry.arguments?.getString("shopId")
-                ShopDetailsScreen(shopId, navController)
+            composable("${AllDestinations.SHOP_DETAILS}?{model}") { backStackEntry ->
+                val shop = backStackEntry.arguments?.getString("model")
+                shop?.let { s->
+                    Timber.tag("SHOP_DETAILS").d("shop: $s")
+                    val prm = Gson().fromJson(s, Shop::class.java)
+                    ShopDetailsScreen(null,prm, navController)
+                }
             }
-            composable("${AllDestinations.UPDATE_SHOP}/{shopId}") { backStackEntry ->
-                val shopId = backStackEntry.arguments?.getString("shopId")
-                UpdateShopScreen(shopId, navController)
+            composable("${AllDestinations.SHOP_DETAILS}/{shopId}") { backStackEntry ->
+                val shop = backStackEntry.arguments?.getString("shopId")
+                shop?.let { s->
+                    ShopDetailsScreen(s,null, navController)
+                }
+            }
+            composable("${AllDestinations.UPDATE_SHOP}?{model}") { backStackEntry ->
+                val shop = backStackEntry.arguments?.getString("model")
+                shop?.let { s->
+                    Timber.tag("UPDATE_SHOP").d("shop: $s")
+                    val prm = Gson().fromJson(s, Shop::class.java)
+                    UpdateShopScreen(prm, navController)
+                }
             }
         }
     }

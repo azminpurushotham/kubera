@@ -2,8 +2,10 @@ package com.collection.kubera.ui.addnewshop
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.collection.kubera.data.CollectionHistory
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.AddNewShopUiState
+import com.collection.kubera.states.ShopDetailUiState
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
@@ -54,6 +56,9 @@ class AddNewShopViewModel : ViewModel() {
             }
             firestore.collection("shop")
                 .add(prm).addOnSuccessListener {
+                    insertCollectionHistory(
+                        prm
+                    )
                     _uiState.value =
                         AddNewShopUiState.AddNewShopSuccess("New Shop Added Successfully")
                 }.addOnFailureListener {
@@ -63,5 +68,34 @@ class AddNewShopViewModel : ViewModel() {
                 }
         }
 
+    }
+    private fun insertCollectionHistory(shop: Shop) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val prm = CollectionHistory().apply {
+                if (shop.id?.isEmpty() != true) {
+                    this.shopId = shop.id!!
+                }
+                if (shop.shopName.isEmpty() != true) this.shopName = shop.shopName
+                if (shop.shopName.isEmpty() != true) this.s_shopName = shop.shopName.lowercase()
+                if ((shop.balance?:0)>1) this.amount = shop.balance
+                if (shop.firstName.isEmpty() != true) this.firstName = shop.firstName
+                if (shop.firstName.isEmpty() != true) this.s_firstName = shop.firstName.lowercase()
+                if ((shop.lastName ?: "").isNotEmpty()) this.lastName = shop.lastName
+                if ((shop.lastName ?: "").isNotEmpty()) this.s_lastName = (shop.lastName ?: "").lowercase()
+                if (shop.phoneNumber.toString().isNotEmpty()) this.phoneNumber = shop.phoneNumber
+                if (shop.secondPhoneNumber != null && secondPhoneNumber.toString()
+                        .isNotEmpty()
+                ) this.secondPhoneNumber = secondPhoneNumber!!
+                if ((shop.mailId ?: "").isNotEmpty()) this.mailId = shop.mailId
+                this.timestamp = Timestamp.now()
+                this.transactionType = "Credit"
+            }
+            firestore.collection("collection_history")
+                .add(prm).addOnSuccessListener {
+
+                }.addOnFailureListener {
+                    _uiState.value = AddNewShopUiState.AddNewShopError("Collection history not updated")
+                }
+        }
     }
 }

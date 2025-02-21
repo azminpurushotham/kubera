@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -52,6 +53,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
 import com.collection.kubera.ui.AllDestinations.SHOP_LIST
@@ -59,6 +61,7 @@ import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.onHintD
 import com.collection.kubera.ui.theme.red
+import com.google.gson.Gson
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -98,8 +101,7 @@ fun ShopListScreen(
         // Code to execute only when the Composable is resumed
         LaunchedEffect(Unit) { // Use LaunchedEffect for side effects
             Timber.i("Composable is resumed!")
-            viewModel.getSwipeShopsOnResume()
-            // ... your logic here ...
+//            viewModel.getSwipeShopsOnResume()
         }
     } else if (lifecycleState.value == Lifecycle.Event.ON_PAUSE) {
         // Code to execute when paused
@@ -111,7 +113,7 @@ fun ShopListScreen(
 
     val onRefresh: () -> Unit = {
         isRefreshing = true
-        viewModel.getSwipeShops()
+//        viewModel.getSwipeShops()
         viewModel.getBalance()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             viewModel.getTodaysCollection()
@@ -120,7 +122,7 @@ fun ShopListScreen(
 
     when (uiState) {
         is HomeUiState.Initial -> {
-            viewModel.getShops()
+//            viewModel.getShops()
             viewModel.getBalance()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 viewModel.getTodaysCollection()
@@ -169,6 +171,9 @@ fun ShopListScreen(
         isRefreshing = isRefreshing,
         onRefresh = onRefresh,
     ) {
+        LazyColumn {
+
+        }
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
@@ -262,7 +267,7 @@ fun ShopListScreen(
                     ),
                     onClick = {
                         Timber.v("SHOP_DETAILS")
-                        navController.navigate("${SHOP_DETAILS}/${item.id}"){
+                        navController.navigate("${SHOP_DETAILS}?${Gson().toJson(item)}"){
                             popUpTo(SHOP_LIST){
                                 inclusive = false
                             }
@@ -321,6 +326,30 @@ fun ShopListScreen(
                 }
                 Spacer(modifier = Modifier.height(2.dp))
             }
+        }
+
+        @Composable
+        fun PaginatedList() {
+            /*val lazyPagingItems = viewModel.items.collectAsLazyPagingItems()
+
+                LazyColumn {
+                items(lazyPagingItems) { item ->
+                    Text(text = item ?: "Loading...")
+                }
+
+                lazyPagingItems.apply {
+                    when {
+                        loadState.append is LoadState.Loading -> {
+                            item { CircularProgressIndicator() }
+                        }
+                        loadState.append is LoadState.Error -> {
+                            item {
+                                Text("Error loading more items")
+                            }
+                        }
+                    }
+                }
+            }*/
         }
     }
 }
