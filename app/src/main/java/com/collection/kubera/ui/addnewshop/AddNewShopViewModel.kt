@@ -7,6 +7,7 @@ import com.collection.kubera.data.BalanceAmount
 import com.collection.kubera.data.CollectionHistory
 import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
+import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
 import com.collection.kubera.states.AddNewShopUiState
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
@@ -61,7 +62,7 @@ class AddNewShopViewModel : ViewModel() {
                     insertCollectionHistory(
                         prm
                     )
-                    prm.balance?.let { it1 -> updateBalanceCollections(it1) }
+                    prm.balance?.let { it1 -> updateTotalBalance(it1) }
                     _uiState.value =
                         AddNewShopUiState.AddNewShopSuccess("New Shop Added Successfully")
                 }.addOnFailureListener {
@@ -93,7 +94,7 @@ class AddNewShopViewModel : ViewModel() {
                 this.timestamp = Timestamp.now()
                 this.transactionType = "Credit"
             }
-            firestore.collection("collection_history")
+            firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                 .add(prm).addOnSuccessListener {
                     Timber.tag("Success").i("Collection history updated")
                 }.addOnFailureListener {
@@ -103,8 +104,8 @@ class AddNewShopViewModel : ViewModel() {
     }
 
 
-    private fun updateBalanceCollections(b: Long) {
-        Timber.tag("updateBalanceCollections").i("updateBalanceCollections")
+    private fun updateTotalBalance(b: Long) {
+        Timber.tag("updateTotalBalance").i("updateTotalBalance")
         viewModelScope.launch (Dispatchers.IO){
             firestore.collection(BALANCE_COLLECTION)
                 .get()
@@ -121,10 +122,10 @@ class AddNewShopViewModel : ViewModel() {
                                 .document(it[0].id!!)
                                 .update(mapOf("balance" to balance))
                                 .addOnSuccessListener {
-                                    Timber.tag("updateBalanceCollections").i("Success")
+                                    Timber.tag("updateTotalBalance").i("Success")
                                 }
                                 .addOnFailureListener {
-                                    Timber.tag("updateBalanceCollections").e("Error deleting collection: $it")
+                                    Timber.tag("updateTotalBalance").e("Error deleting collection: $it")
                                 }
                         }
                     }

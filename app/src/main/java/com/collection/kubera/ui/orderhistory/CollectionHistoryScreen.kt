@@ -71,6 +71,8 @@ fun CollectionHistoryScreen(
     val shopList by viewModel.shopList.collectAsState()
     val balance by viewModel.balance.collectAsState()
     val todaysCollection by viewModel.todaysCollection.collectAsState()
+    val todaysCredit by viewModel.todaysCredit.collectAsState()
+    val todaysDebit by viewModel.todaysDebit.collectAsState()
 
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -81,15 +83,13 @@ fun CollectionHistoryScreen(
     val onRefresh: () -> Unit = {
         isRefreshing = true
         viewModel.getSwipeShopsCollectionHistory()
-        viewModel.companyBalance()
+        viewModel.getBalance()
         viewModel.getTodaysCollection()
     }
 
     when (uiState) {
         is HomeUiState.Initial -> {
-            viewModel.getCollectionHistory()
-            viewModel.companyBalance()
-            viewModel.getTodaysCollection()
+            viewModel.init()
         }
 
         HomeUiState.Loading -> {
@@ -352,12 +352,28 @@ fun CollectionHistoryScreen(
                             fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
-                        Text(
-                            todaysCollection.toString(),
-                            fontWeight = FontWeight(400),
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                            color = if (todaysCollection>0) green else red,
-                        )
+                        Row {
+                            Text(
+                                todaysCollection.toString(),
+                                fontWeight = FontWeight(400),
+                                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                                color = if (todaysCollection>0) green else red,
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                todaysCredit.toString(),
+                                fontWeight = FontWeight(400),
+                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                color = green,
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                todaysDebit.toString(),
+                                fontWeight = FontWeight(400),
+                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                                color =   red,
+                            )
+                        }
                     }
                     Text(
                         balance.toString(),
@@ -407,6 +423,12 @@ fun CollectionHistoryScreen(
                                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
+                            Text(
+                                "Collected By : ${item.collectedBy}",
+                                fontWeight = FontWeight(400),
+                                fontSize = MaterialTheme.typography.labelMedium.fontSize,
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
                         }
                         Column {
                             Row(Modifier.align(Alignment.End)) {
@@ -443,7 +465,6 @@ fun CollectionHistoryScreen(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(2.dp))
             }
         }
     }

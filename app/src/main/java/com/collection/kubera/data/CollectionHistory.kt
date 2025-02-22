@@ -19,6 +19,8 @@ data class CollectionHistory(
     var secondPhoneNumber: String? = null,
     var mailId: String = "",
     var amount: Long? = null,
+    var collectedBy : String = "Admin",
+    var collectedById : String? = null,
     var transactionType: String? = null,
     var timestamp: Timestamp? = null,
 ): Parcelable {
@@ -34,6 +36,8 @@ data class CollectionHistory(
         "",
         "",
         "",
+        null,
+        "Admin",
         null,
         null,
         Timestamp.now())
@@ -64,6 +68,8 @@ data class CollectionHistory(
         parcel.readString(),
         parcel.readString()?:"",
         parcel.readValue(Long::class.java.classLoader) as? Long,
+        parcel.readString()?:"",
+        parcel.readString()?:"",
         parcel.readString()?:"",
         parcel.readParcelable(Timestamp::class.java.classLoader)
     ) {

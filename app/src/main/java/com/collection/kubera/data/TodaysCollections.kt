@@ -7,7 +7,7 @@ data class TodaysCollections(
     var credit: Long = 0,
     val datedmy: String?,
     var debit: Long = 0,
-    var id: String,
+    var id: String? = null,
     val timestamp: Timestamp = Timestamp.now()
 ){
     constructor():this(0,0,null,0,"",Timestamp.now())

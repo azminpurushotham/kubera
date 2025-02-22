@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.CollectionHistory
 import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
+import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
 import com.collection.kubera.states.HomeUiState
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -56,7 +57,7 @@ class ShopCollectionViewModel : ViewModel() {
         if (id != null) {
             _uiState.value = HomeUiState.Loading
             if (id.length > 1) {
-                firestore.collection("collection_history")
+                firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                     .whereEqualTo("shopId", id)
                     .orderBy("timestamp", Query.Direction.DESCENDING) // Newest first
                     .get()
@@ -81,7 +82,7 @@ class ShopCollectionViewModel : ViewModel() {
         Timber.v("getCollectionHistory ${id ?: "NONE"}")
         _uiState.value = HomeUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection("collection_history")
+            firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                 .orderBy("timestamp", Query.Direction.DESCENDING) // Newest first
                 .whereEqualTo("shopId", id)
                 .get()

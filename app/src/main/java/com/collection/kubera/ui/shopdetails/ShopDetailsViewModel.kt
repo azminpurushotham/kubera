@@ -8,6 +8,7 @@ import com.collection.kubera.data.CollectionHistory
 import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TODAYS_COLLECTION
+import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
 import com.collection.kubera.data.TodaysCollections
 import com.collection.kubera.states.ShopDetailUiState
 import com.google.firebase.Timestamp
@@ -71,22 +72,24 @@ class ShopDetailsViewModel : ViewModel() {
             } else {
                 (shop.value?.balance?:0L) - (b.toLong())
             }
-            firestore.collection(SHOP_COLLECTION)
-                .document(it)
-                .update("balance", balance)
-                .addOnSuccessListener {
-                    insertCollectionHistory(
-                        id,
-                        b = b,
-                        selectedOption = selectedOption
-                    )
-                    updateBalanceCollections(balance,selectedOption)
-                    updateTodaysCollection(balance,selectedOption)
-                    updateState(ShopDetailUiState.ShopDetailToast("Successfully balance updated"))
-                    updateState(ShopDetailUiState.ShopDetailsPopBack("Successfully balance updated"))
-                }.addOnFailureListener {
-                    updateState(ShopDetailUiState.ShopDetailToast("Balance not updated"))
-                }
+            viewModelScope.launch (Dispatchers.IO){
+                firestore.collection(SHOP_COLLECTION)
+                    .document(it)
+                    .update("balance", balance)
+                    .addOnSuccessListener {
+                        insertCollectionHistory(
+                            id,
+                            b = b,
+                            selectedOption = selectedOption
+                        )
+                        updateTotalBalance(balance,selectedOption)
+                        updateTodaysCollection(b.toLong(),selectedOption)
+                        updateState(ShopDetailUiState.ShopDetailToast("Successfully balance updated"))
+                        updateState(ShopDetailUiState.ShopDetailsPopBack("Successfully balance updated"))
+                    }.addOnFailureListener {
+                        updateState(ShopDetailUiState.ShopDetailToast("Balance not updated"))
+                    }
+            }
         }
     }
 
@@ -118,7 +121,7 @@ class ShopDetailsViewModel : ViewModel() {
                     this.timestamp = Timestamp.now()
                     this.transactionType = selectedOption
                 }
-                firestore.collection("collection_history")
+                firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                     .add(prm).addOnSuccessListener {
                         updateState(ShopDetailUiState.ShopDetailToast("Successfully collection history updated"))
                     }.addOnFailureListener {
@@ -128,8 +131,8 @@ class ShopDetailsViewModel : ViewModel() {
         }
     }
 
-    private fun updateBalanceCollections(b: Long, selectedOption: String) {
-        Timber.tag("updateBalanceCollections").i("updateBalanceCollections")
+    private fun updateTotalBalance(b: Long, selectedOption: String) {
+        Timber.tag("updateTotalBalance").i("updateTotalBalance")
         viewModelScope.launch (Dispatchers.IO){
             firestore.collection(BALANCE_COLLECTION)
                 .get()
@@ -150,10 +153,10 @@ class ShopDetailsViewModel : ViewModel() {
                                 .document(it[0].id!!)
                                 .update(mapOf("balance" to balance))
                                 .addOnSuccessListener {
-                                    Timber.tag("updateBalanceCollections").i("Success")
+                                    Timber.tag("updateTotalBalance").i("Success")
                                 }
                                 .addOnFailureListener {
-                                    Timber.tag("updateBalanceCollections").e("Error deleting collection: $it")
+                                    Timber.tag("updateTotalBalance").e("Error deleting collection: $it")
                                 }
                         }
                     }
@@ -177,6 +180,7 @@ class ShopDetailsViewModel : ViewModel() {
                             }
                     }.also {
                         if(it.isNotEmpty()){
+                            Timber.tag("updateTodaysCollection").i("Update")
                             val prm = mutableMapOf<String, Any>()
                             val balance = if (selectedOption == "Credit") {
                                 (it[0].balance) + (b )
@@ -190,43 +194,47 @@ class ShopDetailsViewModel : ViewModel() {
                             if (selectedOption == "Debit") {
                                 prm["debit"] = (it[0].debit) - b
                             }
-                            firestore.collection(BALANCE_COLLECTION)
-                                .document(it[0].id)
-                                .update(prm)
-                                .addOnSuccessListener {
-                                    Timber.tag("updateTodaysCollection").i("Success")
-                                }
-                                .addOnFailureListener {
-                                    Timber.tag("updateTodaysCollection").e("Error deleting collection: $it")
-                                }
+                            it[0].id?.let { it1 ->
+                                firestore.collection(TODAYS_COLLECTION)
+                                    .document(it1)
+                                    .update(prm)
+                                    .addOnSuccessListener {
+                                        Timber.tag("updateTodaysCollection").i("Success")
+                                    }
+                                    .addOnFailureListener {
+                                        Timber.tag("updateTodaysCollection").e("Error deleting collection: $it")
+                                    }
+                            }
                         }else{
-                            val prm = TodaysCollections()
-                            val balance = if (selectedOption == "Credit") {
-                                (it[0].balance) + (b)
-                            } else {
-                                (it[0].balance) - (b)
-                            }
-                            prm.balance = balance
-                            if (selectedOption == "Credit") {
-                                prm.credit = (it[0].credit) + b
-                            }
-                            if (selectedOption == "Debit") {
-                                prm.debit = (it[0].debit) - b
-                            }
-
-                            firestore.collection(TODAYS_COLLECTION)
-                                .add(prm)
-                                .addOnSuccessListener {
-                                    Timber.tag("updateTodaysCollection").i("Success")
-                                }
-                                .addOnFailureListener {e->
-                                    Timber.tag("updateTodaysCollection").e(e)
-                                }
+                            insertTodaysCollection(b, selectedOption)
                         }
                     }
                 }
                 .addOnFailureListener {
                     Timber.tag("getBalance").e("$it")
+                }
+        }
+    }
+
+    private fun insertTodaysCollection(b: Long, selectedOption: String) {
+        Timber.tag("insertTodaysCollection").i("Add new Entry")
+        val prm = TodaysCollections()
+        prm.balance = b
+        if (selectedOption == "Credit") {
+            prm.credit = b
+        }
+        if (selectedOption == "Debit") {
+            prm.debit = b
+        }
+
+        viewModelScope.launch (Dispatchers.IO){
+            firestore.collection(TODAYS_COLLECTION)
+                .add(prm)
+                .addOnSuccessListener {
+                    Timber.tag("insertTodaysCollection").i("Success")
+                }
+                .addOnFailureListener { e ->
+                    Timber.tag("insertTodaysCollection").e(e)
                 }
         }
     }

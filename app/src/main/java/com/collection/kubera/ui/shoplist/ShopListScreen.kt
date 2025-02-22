@@ -117,18 +117,14 @@ fun ShopListScreen(
         isRefreshing = true
         viewModel.getSwipeShops()
         viewModel.getBalance()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            viewModel.getTodaysCollectionLogic()
-        }
+        viewModel.getTodaysCollectionLogic()
     }
 
     when (uiState) {
         is HomeUiState.Initial -> {
             viewModel.getShops()
             viewModel.getBalance()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                viewModel.getTodaysCollectionLogic()
-            }
+            viewModel.getTodaysCollectionLogic()
         }
 
         HomeUiState.Loading -> {
@@ -255,14 +251,14 @@ fun ShopListScreen(
                             Text(
                                 todaysCredit.toString(),
                                 fontWeight = FontWeight(400),
-                                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 color = green,
                             )
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 todaysDebit.toString(),
                                 fontWeight = FontWeight(400),
-                                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
                                 color =   red,
                             )
                         }
