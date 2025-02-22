@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.collection.kubera.data.BALANCE_COLLECTION
 import com.collection.kubera.data.BalanceAmount
@@ -19,6 +20,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -40,16 +42,23 @@ class ShopListViewModel : ViewModel() {
     private val _todaysDebit = MutableStateFlow(0L)
     val todaysDebit: StateFlow<Long> get() = _todaysDebit
     private val firestore = FirebaseFirestore.getInstance()
-    val pageSize = 20L // Number of documents per page
-    private var lastDocumentSnapshot: DocumentSnapshot? =
-        null // Store the last document of the current page
+    val pageSize = 1 // Number of documents per page
+    private var lastDocumentSnapshot: DocumentSnapshot? = null // Store the last document of the current page
 
+    val shopFlow: Flow<PagingData<Shop>> = getShops().cachedIn(viewModelScope)
 
-    val items = Pager(PagingConfig(pageSize = 20)) {
-        ShopListPagingSource(pageSize, firestore)
-    }.flow.cachedIn(viewModelScope)
+    fun init() {
+        getBalance()
+        getTodaysCollectionLogic()
+    }
 
-    fun getTodaysCollectionLogic() {
+    fun onRefresh(){
+        getSwipeShops()
+        getBalance()
+        getTodaysCollectionLogic()
+    }
+
+    private fun getTodaysCollectionLogic() {
         clearTodaysCollection()
     }
 
@@ -131,46 +140,23 @@ class ShopListViewModel : ViewModel() {
         }
     }
 
-
-    fun getShops() {
-        Timber.v("getShops")
-        _uiState.value = HomeUiState.Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            var query = firestore.collection(SHOP_COLLECTION)
-                .limit(pageSize)
-            if (lastDocumentSnapshot != null) {
-                query =
-                    query.startAfter(lastDocumentSnapshot!!) // Start after the last document of the previous page
-            }
-            query.get()
-                .addOnSuccessListener { r ->
-                    _shopList.value = r.documents.mapNotNull {
-                        it.toObject(Shop::class.java)
-                            ?.apply {
-                                id = it.id
-                            }
-                    }
-                    lastDocumentSnapshot = if (r.documents.isEmpty()) {
-                        null
-                    } else {
-                        r.documents.last()
-                    }
-                    Timber.tag("SIZE").i("${shopList.value.size}")
-                    _uiState.value = HomeUiState.HomeSuccess("Success")
-                }
-                .addOnFailureListener {
-                    _uiState.value = HomeUiState.HomeError(it.message ?: "Unknown error")
-                }
-        }
+    private fun getShops(): Flow<PagingData<Shop>> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = pageSize,
+                enablePlaceholders = true
+            ),
+            pagingSourceFactory = { ShopListPagingSource(pageSize, firestore) }
+        ).flow
     }
 
-    fun getSwipeShops() {
+    private fun getSwipeShops() {
         Timber.v("getSwipeShops")
         _uiState.value = HomeUiState.Refreshing
         lastDocumentSnapshot = null
         viewModelScope.launch(Dispatchers.IO) {
             var query = firestore.collection(SHOP_COLLECTION)
-                .limit(pageSize)
+                .limit(pageSize.toLong())
             if (lastDocumentSnapshot != null) {
                 query =
                     query.startAfter(lastDocumentSnapshot!!) // Start after the last document of the previous page
@@ -201,7 +187,7 @@ class ShopListViewModel : ViewModel() {
         Timber.v("getSwipeShopsOnResume")
         viewModelScope.launch(Dispatchers.IO) {
             var query = firestore.collection(SHOP_COLLECTION)
-                .limit(pageSize)
+                .limit(pageSize.toLong())
             if (lastDocumentSnapshot != null) {
                 query =
                     query.startAfter(lastDocumentSnapshot!!) // Start after the last document of the previous page
@@ -307,6 +293,7 @@ class ShopListViewModel : ViewModel() {
             }.await()
         }
     }
+
 
 
 }
