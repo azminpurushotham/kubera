@@ -2,13 +2,14 @@ package com.collection.kubera.ui.shoplist
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import com.collection.kubera.data.SHOP_COLLECTION
 import com.google.firebase.firestore.FirebaseFirestore
 
 class ShopListPagingSource(private val pageSize: Long, private val firestore: FirebaseFirestore) : PagingSource<Int, String>() {
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, String> {
         val page = params.key ?: 1 // Start from page 1
         return try {
-            var query = firestore.collection("shop")
+            var query = firestore.collection(SHOP_COLLECTION)
                 .limit(pageSize)
 
             val items = List(pageSize.toInt()) { "Item ${((page - 1) * 20) + it + 1}" } // Fake data

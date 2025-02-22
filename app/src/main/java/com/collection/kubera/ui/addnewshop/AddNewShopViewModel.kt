@@ -2,10 +2,12 @@ package com.collection.kubera.ui.addnewshop
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.collection.kubera.data.BALANCE_COLLECTION
+import com.collection.kubera.data.BalanceAmount
 import com.collection.kubera.data.CollectionHistory
+import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.AddNewShopUiState
-import com.collection.kubera.states.ShopDetailUiState
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
@@ -49,16 +51,17 @@ class AddNewShopViewModel : ViewModel() {
                 if (phoneNumber.toString().isNotEmpty()) this.phoneNumber = phoneNumber
                 if (secondPhoneNumber != null && secondPhoneNumber.toString()
                         .isNotEmpty()
-                ) this.secondPhoneNumber = secondPhoneNumber!!
+                ) this.secondPhoneNumber = secondPhoneNumber
                 if ((mailId ?: "").isNotEmpty()) this.mailId = mailId!!
                 this.timestamp = Timestamp.now()
                 this.status = true
             }
-            firestore.collection("shop")
+            firestore.collection(SHOP_COLLECTION)
                 .add(prm).addOnSuccessListener {
                     insertCollectionHistory(
                         prm
                     )
+                    prm.balance?.let { it1 -> updateBalanceCollections(it1) }
                     _uiState.value =
                         AddNewShopUiState.AddNewShopSuccess("New Shop Added Successfully")
                 }.addOnFailureListener {
@@ -72,14 +75,14 @@ class AddNewShopViewModel : ViewModel() {
     private fun insertCollectionHistory(shop: Shop) {
         viewModelScope.launch(Dispatchers.IO) {
             val prm = CollectionHistory().apply {
-                if (shop.id?.isEmpty() != true) {
-                    this.shopId = shop.id!!
+                if (shop.id.isNotEmpty()) {
+                    this.shopId = shop.id
                 }
-                if (shop.shopName.isEmpty() != true) this.shopName = shop.shopName
-                if (shop.shopName.isEmpty() != true) this.s_shopName = shop.shopName.lowercase()
+                if (shop.shopName.isNotEmpty()) this.shopName = shop.shopName
+                if (shop.shopName.isNotEmpty()) this.s_shopName = shop.shopName.lowercase()
                 if ((shop.balance?:0)>1) this.amount = shop.balance
-                if (shop.firstName.isEmpty() != true) this.firstName = shop.firstName
-                if (shop.firstName.isEmpty() != true) this.s_firstName = shop.firstName.lowercase()
+                if (shop.firstName.isNotEmpty()) this.firstName = shop.firstName
+                if (shop.firstName.isNotEmpty()) this.s_firstName = shop.firstName.lowercase()
                 if ((shop.lastName ?: "").isNotEmpty()) this.lastName = shop.lastName
                 if ((shop.lastName ?: "").isNotEmpty()) this.s_lastName = (shop.lastName ?: "").lowercase()
                 if (shop.phoneNumber.toString().isNotEmpty()) this.phoneNumber = shop.phoneNumber
@@ -92,9 +95,42 @@ class AddNewShopViewModel : ViewModel() {
             }
             firestore.collection("collection_history")
                 .add(prm).addOnSuccessListener {
-
+                    Timber.tag("Success").i("Collection history updated")
                 }.addOnFailureListener {
                     _uiState.value = AddNewShopUiState.AddNewShopError("Collection history not updated")
+                }
+        }
+    }
+
+
+    private fun updateBalanceCollections(b: Long) {
+        Timber.tag("updateBalanceCollections").i("updateBalanceCollections")
+        viewModelScope.launch (Dispatchers.IO){
+            firestore.collection(BALANCE_COLLECTION)
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    querySnapshot.documents.mapNotNull {
+                        it.toObject(BalanceAmount::class.java)
+                            ?.apply {
+                                id = it.id
+                            }
+                    }.also {
+                        if(it.isNotEmpty()){
+                            val balance = (it[0].balance) + b
+                            firestore.collection(BALANCE_COLLECTION)
+                                .document(it[0].id!!)
+                                .update(mapOf("balance" to balance))
+                                .addOnSuccessListener {
+                                    Timber.tag("updateBalanceCollections").i("Success")
+                                }
+                                .addOnFailureListener {
+                                    Timber.tag("updateBalanceCollections").e("Error deleting collection: $it")
+                                }
+                        }
+                    }
+                }
+                .addOnFailureListener {
+                    Timber.tag("getBalance").e("$it")
                 }
         }
     }

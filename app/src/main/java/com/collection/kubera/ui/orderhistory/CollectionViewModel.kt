@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.CollectionHistory
+import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.utils.getTodayStartAndEndTime
@@ -87,7 +88,7 @@ class CollectionViewModel : ViewModel() {
     internal fun companyBalance() {
         Timber.v("companyBalance")
         viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection("shop")
+            firestore.collection(SHOP_COLLECTION)
                 .get()
                 .addOnSuccessListener { querySnapshot ->
                     var total = 0.0
@@ -132,7 +133,7 @@ class CollectionViewModel : ViewModel() {
     fun getTodaysCollection() {
         Timber.v("getTodaysBalance")
         viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection("shop")
+            firestore.collection(SHOP_COLLECTION)
                 .whereGreaterThanOrEqualTo("timestamp", getTodayStartAndEndTime().first)
                 .whereLessThanOrEqualTo("timestamp", getTodayStartAndEndTime().second)
                 .get()

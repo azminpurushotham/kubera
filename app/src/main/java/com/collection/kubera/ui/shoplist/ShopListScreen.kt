@@ -76,6 +76,8 @@ fun ShopListScreen(
     val uiState by viewModel.uiState.collectAsState()
     val shopList by viewModel.shopList.collectAsState()
     val balance by viewModel.balance.collectAsState()
+    val todaysCredit by viewModel.todaysCredit.collectAsState()
+    val todaysDebit by viewModel.todaysDebit.collectAsState()
     val todaysCollection by viewModel.todaysCollection.collectAsState()
     var shopName by remember { mutableStateOf("") }
 
@@ -113,19 +115,19 @@ fun ShopListScreen(
 
     val onRefresh: () -> Unit = {
         isRefreshing = true
-//        viewModel.getSwipeShops()
+        viewModel.getSwipeShops()
         viewModel.getBalance()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            viewModel.getTodaysCollection()
+            viewModel.getTodaysCollectionLogic()
         }
     }
 
     when (uiState) {
         is HomeUiState.Initial -> {
-//            viewModel.getShops()
+            viewModel.getShops()
             viewModel.getBalance()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                viewModel.getTodaysCollection()
+                viewModel.getTodaysCollectionLogic()
             }
         }
 
@@ -242,12 +244,28 @@ fun ShopListScreen(
                             fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
-                        Text(
-                            todaysCollection.toString(),
-                            fontWeight = FontWeight(400),
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                            color = if (todaysCollection>0) green else red,
-                        )
+                        Row {
+                            Text(
+                                todaysCollection.toString(),
+                                fontWeight = FontWeight(400),
+                                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                                color = if (todaysCollection>0) green else red,
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                todaysCredit.toString(),
+                                fontWeight = FontWeight(400),
+                                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                                color = green,
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                todaysDebit.toString(),
+                                fontWeight = FontWeight(400),
+                                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                                color =   red,
+                            )
+                        }
                     }
                     Text(
                         balance.toString(),

@@ -1,6 +1,7 @@
 package com.collection.kubera.ui.updateshop
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.UpdateShopUiState
 import com.google.firebase.Timestamp
@@ -77,7 +78,7 @@ class UpdateShopViewModel : ViewModel() {
 
             Timber.tag("UPDATE").i(ud.toString())
             shop.value?.id?.let {
-                firestore.collection("shop")
+                firestore.collection(SHOP_COLLECTION)
                     .document(it)
                     .update(ud).addOnSuccessListener {
                         _uiState.value =
@@ -99,7 +100,7 @@ class UpdateShopViewModel : ViewModel() {
         Timber.v("getShopDetails")
         updateState(UpdateShopUiState.Loading)
         viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection("shop")
+            firestore.collection(SHOP_COLLECTION)
                 .document(id)
                 .get()
                 .addOnSuccessListener { result ->

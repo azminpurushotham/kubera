@@ -3,6 +3,7 @@ package com.collection.kubera.ui.orderhistory
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.CollectionHistory
+import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.HomeUiState
 import com.google.firebase.firestore.FirebaseFirestore
@@ -32,7 +33,7 @@ class ShopCollectionViewModel : ViewModel() {
     ) {
         Timber.v("getShopDetails")
         viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection("shop")
+            firestore.collection(SHOP_COLLECTION)
                 .document(id)
                 .get()
                 .addOnSuccessListener { result ->
