@@ -26,6 +26,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -56,6 +57,7 @@ import com.collection.kubera.ui.theme.labelD
 import com.collection.kubera.ui.theme.onHintD
 import com.collection.kubera.ui.theme.red
 import com.google.gson.Gson
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
@@ -74,7 +76,6 @@ fun ShopDetailsScreen(
     var balance by remember { mutableStateOf("") }
     var isEnabled by remember { mutableStateOf(false) }
 
-    val scope = rememberCoroutineScope()
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
 
@@ -122,81 +123,16 @@ fun ShopDetailsScreen(
     }
 
     if (showBottomSheet) {
-        ModalBottomSheet(
-            shape = RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp),
-            sheetState = sheetState,
-            containerColor = boxColorD,
-            content = {
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        "Confirmation",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                    )
-                    Spacer(modifier = Modifier.height(30.dp))
-                    Text(
-                        "Do you want to ${selectedOption.uppercase()} the balance with",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                    )
-                    Text(
-                        balance,
-                        color = if (selectedOption == "Credit") {
-                            green
-                        } else {
-                            red
-                        },
-                        fontSize = MaterialTheme.typography.headlineLarge.fontSize,
-                        fontWeight = FontWeight(600)
-                    )
-
-                    Spacer(modifier = Modifier.height(30.dp))
-                    Button(
-                        shape = RoundedCornerShape(5.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        enabled = isEnabled,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (selectedOption == "Credit") {
-                                green
-                            } else {
-                                red
-                            },
-                            contentColor = MaterialTheme.colorScheme.onPrimary
-                        ),
-                        onClick = {
-                            scope.launch {
-                                sheetState.hide()
-                                viewModel.updateBalance(
-                                    shop?.id,
-                                    balance,
-                                    selectedOption
-                                )
-                            }
-                        }) {
-                        Text(
-                            if (selectedOption == "Credit") {
-                                "Add Fund"
-                            } else {
-                                "Withdraw Fund"
-                            },
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontWeight = FontWeight(1),
-                            fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                }
-            },
-            onDismissRequest = {
+        ShowBottomSheet(
+            sheetState,
+            selectedOption,
+            balance,
+            isEnabled,
+            viewModel,
+            shop,
+            {
                 showBottomSheet = false
-            },
+            }
         )
     }
 
@@ -509,6 +445,7 @@ fun ShopDetailsScreen(
         Spacer(modifier = Modifier.height(60.dp))
     }
 }
+
 
 
 

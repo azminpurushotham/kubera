@@ -13,9 +13,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet  
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,14 +33,13 @@ import timber.log.Timber
 
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Composable 
-internal fun showCollectionSort( 
+@Composable
+internal fun ShowCollectionSort(
     viewModel: CollectionViewModel,
-    s: Boolean
-): Boolean {
-    Timber.tag("showCollectionSort").i(s.toString())
-    val sheetState = rememberModalBottomSheetState()
-    var showBottomSheet = s
+    sheetState: SheetState,
+    onDismiss: () -> Unit
+) {
+    Timber.tag("showCollectionSort").i("showBottomSheet")
     ModalBottomSheet(
         sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp),
@@ -167,8 +166,7 @@ internal fun showCollectionSort(
             }
         },
         onDismissRequest = {
-            showBottomSheet = false
+            onDismiss()
         },
     )
-    return showBottomSheet
 }

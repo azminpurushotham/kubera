@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.red
+import kotlin.math.absoluteValue
 
 @Composable
 internal fun BalanceHeader(
@@ -62,7 +63,7 @@ internal fun BalanceHeader(
                     verticalAlignment = Alignment.Bottom // Aligns items to the bottom
                 ) {
                     Text(
-                        todaysCollection.toString(),
+                        todaysCollection.absoluteValue.toString(),
                         fontWeight = FontWeight(400),
                         fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                         color = if (todaysCollection > 0) green else red,
@@ -75,7 +76,7 @@ internal fun BalanceHeader(
                         color = green,
                     )
                     Text(
-                        "$todaysCredit",
+                        "${todaysCredit.absoluteValue}",
                         fontWeight = FontWeight(400),
                         fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                         color = green,
@@ -88,7 +89,7 @@ internal fun BalanceHeader(
                         color = red,
                     )
                     Text(
-                        "$todaysDebit",
+                        "${todaysDebit.absoluteValue}",
                         fontWeight = FontWeight(400),
                         fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                         color = red,
@@ -96,7 +97,7 @@ internal fun BalanceHeader(
                 }
             }
             Text(
-                balance.toString(),
+                balance.absoluteValue.toString(),
                 fontWeight = FontWeight(400),
                 fontSize = 30.sp,
                 color = if (balance > 0) green else red,

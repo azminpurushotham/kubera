@@ -156,7 +156,9 @@ fun ShopListScreen(
             // Show loading indicator
             if (shops.loadState.append is  LoadState.Loading) {
                 item {
-                    CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
                 }
             }
         }
