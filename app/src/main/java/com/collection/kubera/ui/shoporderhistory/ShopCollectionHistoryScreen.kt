@@ -1,4 +1,4 @@
-package com.collection.kubera.ui.orderhistory
+package com.collection.kubera.ui.shoporderhistory
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -51,8 +51,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.collection.kubera.R
 import com.collection.kubera.states.HomeUiState
-import com.collection.kubera.ui.AllDestinations.SHOP_COLLECTION_HISTORY
-import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
 import com.collection.kubera.ui.theme.backgroundD
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green

@@ -1,4 +1,4 @@
-package com.collection.kubera.ui.orderhistory
+package com.collection.kubera.ui.shoporderhistory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

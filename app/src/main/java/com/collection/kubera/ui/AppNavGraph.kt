@@ -47,7 +47,7 @@ import androidx.navigation.compose.rememberNavController
 import com.collection.kubera.data.Shop
 import com.collection.kubera.ui.addnewshop.AddNewShopScreen
 import com.collection.kubera.ui.orderhistory.CollectionHistoryScreen
-import com.collection.kubera.ui.orderhistory.ShopCollectionHistoryScreen
+import com.collection.kubera.ui.shoporderhistory.ShopCollectionHistoryScreen
 import com.collection.kubera.ui.shopdetails.ShopDetailsScreen
 import com.collection.kubera.ui.shoplist.ShopListScreen
 import com.collection.kubera.ui.updateshop.UpdateShopScreen

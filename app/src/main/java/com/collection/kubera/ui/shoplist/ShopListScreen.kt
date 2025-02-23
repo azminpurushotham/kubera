@@ -68,7 +68,7 @@ fun ShopListScreen(
         // Code to execute only when the Composable is resumed
         LaunchedEffect(Unit) { // Use LaunchedEffect for side effects
             Timber.i("Composable is resumed!")
-//            viewModel.getSwipeShopsOnResume()
+            viewModel.onResume()
         }
     } else if (lifecycleState.value == Lifecycle.Event.ON_PAUSE) {
         // Code to execute when paused

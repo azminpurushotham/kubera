@@ -53,6 +53,11 @@ class ShopListViewModel : ViewModel() {
         getTodaysCollectionLogic()
     }
 
+    fun onResume() {
+        getBalance()
+        getTodaysCollectionLogic()
+    }
+
     fun onRefresh(){
         getSwipeShops()
         getBalance()
