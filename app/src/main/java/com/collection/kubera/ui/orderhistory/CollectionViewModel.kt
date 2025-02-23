@@ -51,54 +51,55 @@ class CollectionViewModel : ViewModel() {
     fun getCollectionHistory(type: String? = null) {
         Timber.v("getCollectionHistory")
         _uiState.value = HomeUiState.Loading
-        val query: Task<QuerySnapshot>
-        if (type=="ASC"){
-            query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                .orderBy("timestamp", Query.Direction.ASCENDING)
-                .limit(pageLimit)
-                .get()
-        }else if(type=="DESC"){
-            query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .limit(pageLimit)
-                .get()
-        }else if(type=="SAZ"){
-            query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                .orderBy("s_shopName", Query.Direction.ASCENDING)
-                .limit(pageLimit)
-                .get()
-        }else if(type=="SZA"){
-            query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                .orderBy("s_shopName", Query.Direction.DESCENDING)
-                .limit(pageLimit)
-                .get()
-        }else if(type=="UAZ"){
-            query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                .orderBy("s_firstName", Query.Direction.ASCENDING)
-                .limit(pageLimit)
-                .get()
-        }else if(type=="UZA"){
-            query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                .orderBy("s_firstName", Query.Direction.DESCENDING)
-                .limit(pageLimit)
-                .get()
-        }else{
-            query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .limit(pageLimit)
-                .get()
-        }
         viewModelScope.launch(Dispatchers.IO) {
-            query.addOnSuccessListener { results ->
-                _uiState.value = HomeUiState.HomeSuccess("Success")
-                _shopList.value = results.mapNotNull {
-                    it.toObject(CollectionHistory::class.java)
-                        .apply {
-                            this.shopId = it.data.get("shopId").toString()
-                        }
-                }
+            val query: Task<QuerySnapshot>
+            if (type == "ASC") {
+                query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
+                    .orderBy("timestamp", Query.Direction.ASCENDING)
+                    .limit(pageLimit)
+                    .get()
+            } else if (type == "DESC") {
+                query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+                    .limit(pageLimit)
+                    .get()
+            } else if (type == "SAZ") {
+                query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
+                    .orderBy("s_shopName", Query.Direction.ASCENDING)
+                    .limit(pageLimit)
+                    .get()
+            } else if (type == "SZA") {
+                query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
+                    .orderBy("s_shopName", Query.Direction.DESCENDING)
+                    .limit(pageLimit)
+                    .get()
+            } else if (type == "UAZ") {
+                query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
+                    .orderBy("s_firstName", Query.Direction.ASCENDING)
+                    .limit(pageLimit)
+                    .get()
+            } else if (type == "UZA") {
+                query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
+                    .orderBy("s_firstName", Query.Direction.DESCENDING)
+                    .limit(pageLimit)
+                    .get()
+            } else {
+                query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
+                    .orderBy("timestamp", Query.Direction.DESCENDING)
+                    .limit(pageLimit)
+                    .get()
             }
-                .addOnFailureListener {e->
+            query
+                .addOnSuccessListener { results ->
+                    _uiState.value = HomeUiState.HomeSuccess("Success")
+                    _shopList.value = results.mapNotNull {
+                        it.toObject(CollectionHistory::class.java)
+                            .apply {
+                                this.shopId = it.data.get("shopId").toString()
+                            }
+                    }
+                }
+                .addOnFailureListener { e ->
                     println("Error querying documents: $e")
                     _uiState.value = HomeUiState.HomeError("Error querying documents: $e")
                 }
@@ -108,30 +109,28 @@ class CollectionViewModel : ViewModel() {
     internal fun getBalance() {
         Timber.tag("getBalance").i("getBalance")
         viewModelScope.launch(Dispatchers.IO) {
-            async {
-                firestore.collection(BALANCE_COLLECTION)
-                    .get()
-                    .addOnSuccessListener {
-                        val balanceAmounts = it.documents.mapNotNull { item ->
-                            item.toObject(BalanceAmount::class.java)
-                                ?.apply {
-                                    id = item.id
-                                }
-                        }
-                        if (balanceAmounts.isNotEmpty() && balanceAmounts[0].balance > 0) {
-                            Timber.tag("getBalance").i(it.toString())
-                            _balance.value = balanceAmounts[0].balance
-                        } else {
-                            _balance.value = 0L
-                        }
+            firestore.collection(BALANCE_COLLECTION)
+                .get()
+                .addOnSuccessListener {
+                    val balanceAmounts = it.documents.mapNotNull { item ->
+                        item.toObject(BalanceAmount::class.java)
+                            ?.apply {
+                                id = item.id
+                            }
                     }
-                    .addOnFailureListener {
-                        Timber.e(it)
+                    if (balanceAmounts.isNotEmpty() && balanceAmounts[0].balance > 0) {
+                        Timber.tag("getBalance").i(it.toString())
+                        _balance.value = balanceAmounts[0].balance
+                    } else {
                         _balance.value = 0L
-                        _uiState.value =
-                            HomeUiState.HomeError(it.message ?: "Unable to show balance")
                     }
-            }.await()
+                }
+                .addOnFailureListener {
+                    Timber.e(it)
+                    _balance.value = 0L
+                    _uiState.value =
+                        HomeUiState.HomeError(it.message ?: "Unable to show balance")
+                }
         }
     }
 
@@ -151,13 +150,12 @@ class CollectionViewModel : ViewModel() {
                             }
                     }
                 }
-                .addOnFailureListener {e->
+                .addOnFailureListener { e ->
                     println("Error querying documents: $e")
                     _uiState.value = HomeUiState.HomeError("Error querying documents: $e")
                 }
         }
     }
-
 
 
     internal fun getTodaysCollection() {
@@ -172,7 +170,7 @@ class CollectionViewModel : ViewModel() {
                                 id = it.id
                             }
                     }.also {
-                        if(it.isNotEmpty()){
+                        if (it.isNotEmpty()) {
                             _todaysCollection.value = it[0].balance
                             _todaysCredit.value = it[0].credit
                             _todaysDebit.value = it[0].debit

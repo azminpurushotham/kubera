@@ -26,6 +26,7 @@ import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -71,7 +72,6 @@ fun CollectionHistoryScreen(
     val uiState by viewModel.uiState.collectAsState()
     val shopList by viewModel.shopList.collectAsState()
 
-    val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
 
     val refreshState = rememberPullToRefreshState()
@@ -128,135 +128,7 @@ fun CollectionHistoryScreen(
 
 
     if (showBottomSheet) {
-        ModalBottomSheet(
-            sheetState = sheetState,
-            shape = RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp),
-            containerColor = boxColorD,
-            content = {
-                Column(
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, end = 16.dp),
-                ) {
-                    Text(
-                        "Sort By",
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight(600),
-                        fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.Start)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Text(
-                            "User Name",
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                        )
-
-                        Spacer(modifier = Modifier.weight(1f)) // Spacer to fill the space
-                        Row{
-                            Button(onClick = {
-                                viewModel.getCollectionHistory("UAZ")
-                            }) {
-                                Text(
-                                    "A - Z",
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontSize = MaterialTheme.typography.titleSmall.fontSize,
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(60.dp))
-                            Button(
-                                onClick = {
-                                    viewModel.getCollectionHistory("UZA")
-                                }) {
-                                Text(
-                                    "Z - A",
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    fontSize = MaterialTheme.typography.titleSmall.fontSize,
-                                )
-                            }
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Row{
-                        Text(
-                            "Shop Name",
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                        )
-                        Spacer(modifier = Modifier.weight(1f)) // Spacer to fill the space
-                        Button(onClick = {
-                            viewModel.getCollectionHistory("SAZ")
-                        }) {
-                            Text(
-                                "A - Z",
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontSize = MaterialTheme.typography.titleSmall.fontSize,
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(60.dp))
-                        Button(
-                            onClick = {
-                                viewModel.getCollectionHistory("SZA")
-                            }) {
-                            Text(
-                                "Z - A",
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                fontSize = MaterialTheme.typography.titleSmall.fontSize,
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Row(
-                        modifier = Modifier
-                            .align(Alignment.Start)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        Text(
-                            "Entry Time",
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            fontSize = MaterialTheme.typography.titleMedium.fontSize,
-                        )
-                        Spacer(modifier = Modifier.weight(1f)) // Spacer to fill the space
-                        Button(
-                            onClick = {
-                                viewModel.getCollectionHistory("ASC")
-                            }) {
-                            Image(
-                                painter = painterResource(id = R.drawable.baseline_arrow_upward_24), // Replace with your drawable
-                                contentDescription = stringResource(R.string.filter),
-                                alignment = Alignment.CenterEnd,
-                                contentScale = ContentScale.Crop,
-                                colorFilter = ColorFilter.tint(onprimaryD)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(60.dp))
-                        Button(onClick = {
-                            viewModel.getCollectionHistory("DSC")
-                        }) {
-                            Image(
-                                modifier = Modifier.rotate(180f),
-                                painter = painterResource(id = R.drawable.baseline_arrow_upward_24), // Replace with your drawable
-                                contentDescription = stringResource(R.string.filter),
-                                alignment = Alignment.CenterEnd,
-                                contentScale = ContentScale.Crop,
-                                colorFilter = ColorFilter.tint(onprimaryD)
-                            )
-                        }
-                    }
-                }
-            },
-            onDismissRequest = {
-                showBottomSheet = false
-            },
-        )
+        showBottomSheet = showCollectionSort(viewModel, showBottomSheet)
     }
 
     PullToRefreshBox(

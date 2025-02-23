@@ -47,7 +47,8 @@ internal fun BalanceHeader(
                     bottom = 8.dp
                 )
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
                 Text(

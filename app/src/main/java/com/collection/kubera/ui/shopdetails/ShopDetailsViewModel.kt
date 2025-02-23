@@ -196,7 +196,7 @@ class ShopDetailsViewModel : ViewModel() {
                                 prm["credit"] = (list[0].credit) + b
                             }
                             if (selectedOption == "Debit") {
-                                prm["debit"] = (list[0].debit) - b
+                                prm["debit"] = (list[0].debit) + b
                             }
                             list[0].id?.let { it1 ->
                                 firestore.collection(TODAYS_COLLECTION)
