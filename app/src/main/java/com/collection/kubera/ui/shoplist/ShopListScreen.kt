@@ -44,15 +44,11 @@ fun ShopListScreen(
     val lifecycleState = remember { mutableStateOf(Lifecycle.Event.ON_CREATE) } // Initialize
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    val balance by viewModel.balance.collectAsState()
-    val todaysCredit by viewModel.todaysCredit.collectAsState()
-    val todaysDebit by viewModel.todaysDebit.collectAsState()
-    val todaysCollection by viewModel.todaysCollection.collectAsState()
-    val shopName by remember { mutableStateOf("") }
 
     val refreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
     val shops = viewModel.shopFlow.collectAsLazyPagingItems()
+    val shopsList by viewModel.shopList.collectAsState()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -142,12 +138,18 @@ fun ShopListScreen(
             horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
         ) {
             item {
-                Header(shopName, viewModel, todaysCollection, todaysCredit, todaysDebit, balance)
+                Header(viewModel)
             }
 
-            items(shops.itemSnapshotList) { shop ->
-                shop?.let { item ->
-                    ShopItem(navController, item)
+            if(shopsList.isNotEmpty()){
+                items(shopsList) {
+                    ShopItem(navController, it)
+                }
+            }else{
+                items(shops.itemSnapshotList) { shop ->
+                    shop?.let { item ->
+                        ShopItem(navController, item)
+                    }
                 }
             }
 

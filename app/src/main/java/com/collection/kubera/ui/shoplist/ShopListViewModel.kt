@@ -19,13 +19,14 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class ShopListViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> =
@@ -59,7 +60,7 @@ class ShopListViewModel : ViewModel() {
     }
 
     private fun getTodaysCollectionLogic() {
-        clearTodaysCollection()
+        clearTodaysCollectionLogic()
     }
 
     private fun getTodaysCollection() {
@@ -88,8 +89,8 @@ class ShopListViewModel : ViewModel() {
         }
     }
 
-    private fun clearTodaysCollection() {
-        Timber.v("clearTodaysCollection")
+    private fun clearTodaysCollectionLogic() {
+        Timber.v("clearTodaysCollectionLogic")
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(TODAYS_COLLECTION)
                 .get()
@@ -101,31 +102,10 @@ class ShopListViewModel : ViewModel() {
                             }
                     }.also {
                         if(it.isNotEmpty()){
-                            val cd = it[0].timestamp.toDate()
-                            val n = Timestamp.now().toDate()
+                            val cd =  formatFirestoreTimestamp(it[0].timestamp)
+                            val n = formatFirestoreTimestamp(Timestamp.now())
                             if (cd != n) {
-                                firestore.collection(TODAYS_COLLECTION)
-                                    .get()
-                                    .addOnSuccessListener { querySnapshot ->
-                                        val batch = firestore.batch()
-                                        for (document in querySnapshot.documents) {
-                                            batch.delete(document.reference)
-                                        }
-                                        batch.commit()
-                                            .addOnSuccessListener {
-                                                Timber.tag("clearTodaysCollection")
-                                                    .i("Collection deleted successfully")
-                                            }
-                                            .addOnFailureListener { e ->
-                                                Timber.tag("clearTodaysCollection")
-                                                    .i("Error deleting collection: $e")
-                                            }
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Timber.tag("clearTodaysCollection")
-                                            .i("Error fetching collection: $e")
-                                    }
-
+                                clearPreviousDaysCollections()
                             } else {
                                 getTodaysCollection()
                             }
@@ -136,6 +116,32 @@ class ShopListViewModel : ViewModel() {
                     _uiState.value = HomeUiState.HomeError(
                         it.message ?: "Something went wrong,Please refresh the page"
                     )
+                }
+        }
+    }
+
+    private fun clearPreviousDaysCollections() {
+        viewModelScope.launch (Dispatchers.IO){
+            firestore.collection(TODAYS_COLLECTION)
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    val batch = firestore.batch()
+                    for (document in querySnapshot.documents) {
+                        batch.delete(document.reference)
+                    }
+                    batch.commit()
+                        .addOnSuccessListener {
+                            Timber.tag("clearTodaysCollectionLogic")
+                                .i("Collection deleted successfully")
+                        }
+                        .addOnFailureListener { e ->
+                            Timber.tag("clearTodaysCollectionLogic")
+                                .i("Error deleting collection: $e")
+                        }
+                }
+                .addOnFailureListener { e ->
+                    Timber.tag("clearTodaysCollectionLogic")
+                        .i("Error fetching collection: $e")
                 }
         }
     }
@@ -223,16 +229,19 @@ class ShopListViewModel : ViewModel() {
                     .whereGreaterThanOrEqualTo("s_shopName", listOf(shopName.lowercase()))
                     .whereLessThan("s_shopName", listOf(shopName.lowercase()))
 //                    .whereEqualTo("s_shopName", listOf( shopName.lowercase()))
+                    .limit(10)
                     .get()
                 val q2 = firestore.collection(SHOP_COLLECTION)
 //                    .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
                     .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
 //                    .whereEqualTo("s_firstName", listOf( shopName.lowercase()))
+                    .limit(10)
                     .get()
                 val q3 = firestore.collection(SHOP_COLLECTION)
                     .whereGreaterThanOrEqualTo("s_lastName", shopName.lowercase())
                     .whereLessThan("s_lastName", shopName.lowercase())
 //                    .whereEqualTo("s_lastName", listOf( shopName.lowercase()))
+                    .limit(10)
                     .get()
 
 
@@ -267,33 +276,34 @@ class ShopListViewModel : ViewModel() {
     internal fun getBalance() {
         Timber.tag("getBalance").i("getBalance")
         viewModelScope.launch(Dispatchers.IO) {
-            async {
-                firestore.collection(BALANCE_COLLECTION)
-                    .get()
-                    .addOnSuccessListener {
-                        val balanceAmounts = it.documents.mapNotNull { item ->
-                            item.toObject(BalanceAmount::class.java)
-                                ?.apply {
-                                    id = item.id
-                                }
-                        }
-                        if (balanceAmounts.isNotEmpty() && balanceAmounts[0].balance > 0) {
-                            Timber.tag("getBalance").i(it.toString())
-                            _balance.value = balanceAmounts[0].balance
-                        } else {
-                            _balance.value = 0L
-                        }
+            firestore.collection(BALANCE_COLLECTION)
+                .get()
+                .addOnSuccessListener {
+                    val balanceAmounts = it.documents.mapNotNull { item ->
+                        item.toObject(BalanceAmount::class.java)
+                            ?.apply {
+                                id = item.id
+                            }
                     }
-                    .addOnFailureListener {
-                        Timber.e(it)
+                    if (balanceAmounts.isNotEmpty() && balanceAmounts[0].balance > 0) {
+                        Timber.tag("getBalance").i(it.toString())
+                        _balance.value = balanceAmounts[0].balance
+                    } else {
                         _balance.value = 0L
-                        _uiState.value =
-                            HomeUiState.HomeError(it.message ?: "Unable to show balance")
                     }
-            }.await()
+                }
+                .addOnFailureListener {
+                    Timber.e(it)
+                    _balance.value = 0L
+                    _uiState.value =
+                        HomeUiState.HomeError(it.message ?: "Unable to show balance")
+                }
         }
     }
-
-
-
+}
+fun formatFirestoreTimestamp(timestamp: Timestamp?): String? {
+    if (timestamp == null) return null
+    val sdf = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()) // Change format as needed
+    val date = timestamp.toDate() // Convert Firestore Timestamp to Date
+    return sdf.format(date) // Format Date
 }

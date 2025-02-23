@@ -37,7 +37,7 @@ class ShopDetailsViewModel : ViewModel() {
         }
     }
 
-    fun setShop(model: Shop){
+    fun setShop(model: Shop) {
         _shop.value = model
     }
 
@@ -68,11 +68,11 @@ class ShopDetailsViewModel : ViewModel() {
         id?.let {
             _uiState.value = ShopDetailUiState.Loading
             val balance = if (selectedOption == "Credit") {
-              (shop.value?.balance?:0L) + (b.toLong())
+                (shop.value?.balance ?: 0L) + (b.toLong())
             } else {
-                (shop.value?.balance?:0L) - (b.toLong())
+                (shop.value?.balance ?: 0L) - (b.toLong())
             }
-            viewModelScope.launch (Dispatchers.IO){
+            viewModelScope.launch(Dispatchers.IO) {
                 firestore.collection(SHOP_COLLECTION)
                     .document(it)
                     .update("balance", balance)
@@ -82,8 +82,8 @@ class ShopDetailsViewModel : ViewModel() {
                             b = b,
                             selectedOption = selectedOption
                         )
-                        updateTotalBalance(balance,selectedOption)
-                        updateTodaysCollection(b.toLong(),selectedOption)
+                        updateTotalBalance(balance, selectedOption)
+                        updateTodaysCollection(b.toLong(), selectedOption)
                         updateState(ShopDetailUiState.ShopDetailToast("Successfully balance updated"))
                         updateState(ShopDetailUiState.ShopDetailsPopBack("Successfully balance updated"))
                     }.addOnFailureListener {
@@ -110,10 +110,13 @@ class ShopDetailsViewModel : ViewModel() {
                     if (shop.shopName.isEmpty() != true) this.s_shopName = shop.shopName.lowercase()
                     if ((balance ?: "").isEmpty() != true) this.amount = (balance ?: "0").toLong()
                     if (shop.firstName.isEmpty() != true) this.firstName = shop.firstName
-                    if (shop.firstName.isEmpty() != true) this.s_firstName = shop.firstName.lowercase()
+                    if (shop.firstName.isEmpty() != true) this.s_firstName =
+                        shop.firstName.lowercase()
                     if ((shop.lastName ?: "").isNotEmpty()) this.lastName = shop.lastName
-                    if ((shop.lastName ?: "").isNotEmpty()) this.s_lastName = (shop.lastName ?: "").lowercase()
-                    if (shop.phoneNumber.toString().isNotEmpty()) this.phoneNumber = shop.phoneNumber
+                    if ((shop.lastName ?: "").isNotEmpty()) this.s_lastName =
+                        (shop.lastName ?: "").lowercase()
+                    if (shop.phoneNumber.toString().isNotEmpty()) this.phoneNumber =
+                        shop.phoneNumber
                     if (shop.secondPhoneNumber != null && secondPhoneNumber.toString()
                             .isNotEmpty()
                     ) this.secondPhoneNumber = secondPhoneNumber!!
@@ -133,7 +136,7 @@ class ShopDetailsViewModel : ViewModel() {
 
     private fun updateTotalBalance(b: Long, selectedOption: String) {
         Timber.tag("updateTotalBalance").i("updateTotalBalance")
-        viewModelScope.launch (Dispatchers.IO){
+        viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(BALANCE_COLLECTION)
                 .get()
                 .addOnSuccessListener { querySnapshot ->
@@ -143,11 +146,11 @@ class ShopDetailsViewModel : ViewModel() {
                                 id = it.id
                             }
                     }.also {
-                        if(it.isNotEmpty()){
+                        if (it.isNotEmpty()) {
                             val balance = if (selectedOption == "Credit") {
-                                (it[0].balance) + (b )
+                                (it[0].balance) + (b)
                             } else {
-                                (it[0].balance) - (b )
+                                (it[0].balance) - (b)
                             }
                             firestore.collection(BALANCE_COLLECTION)
                                 .document(it[0].id!!)
@@ -156,7 +159,8 @@ class ShopDetailsViewModel : ViewModel() {
                                     Timber.tag("updateTotalBalance").i("Success")
                                 }
                                 .addOnFailureListener {
-                                    Timber.tag("updateTotalBalance").e("Error deleting collection: $it")
+                                    Timber.tag("updateTotalBalance")
+                                        .e("Error deleting collection: $it")
                                 }
                         }
                     }
@@ -169,32 +173,32 @@ class ShopDetailsViewModel : ViewModel() {
 
     private fun updateTodaysCollection(b: Long, selectedOption: String) {
         Timber.tag("updateTodaysCollection").i("updateTodaysCollection")
-        viewModelScope.launch (Dispatchers.IO){
+        viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(TODAYS_COLLECTION)
                 .get()
                 .addOnSuccessListener { querySnapshot ->
-                    querySnapshot.documents.mapNotNull {
-                        it.toObject(TodaysCollections::class.java)
+                    querySnapshot.documents.mapNotNull { item ->
+                        item.toObject(TodaysCollections::class.java)
                             ?.apply {
-                                id = it.id
+                                id = item.id
                             }
-                    }.also {
-                        if(it.isNotEmpty()){
+                    }.also { list ->
+                        if (list.isNotEmpty()) {
                             Timber.tag("updateTodaysCollection").i("Update")
                             val prm = mutableMapOf<String, Any>()
                             val balance = if (selectedOption == "Credit") {
-                                (it[0].balance) + (b )
+                                (list[0].balance) + (b)
                             } else {
-                                (it[0].balance) - (b )
+                                (list[0].balance) - (b)
                             }
                             prm["balance"] = balance
-                             if (selectedOption == "Credit") {
-                                 prm["credit"] = (it[0].credit) + b
-                             }
-                            if (selectedOption == "Debit") {
-                                prm["debit"] = (it[0].debit) - b
+                            if (selectedOption == "Credit") {
+                                prm["credit"] = (list[0].credit) + b
                             }
-                            it[0].id?.let { it1 ->
+                            if (selectedOption == "Debit") {
+                                prm["debit"] = (list[0].debit) - b
+                            }
+                            list[0].id?.let { it1 ->
                                 firestore.collection(TODAYS_COLLECTION)
                                     .document(it1)
                                     .update(prm)
@@ -202,16 +206,18 @@ class ShopDetailsViewModel : ViewModel() {
                                         Timber.tag("updateTodaysCollection").i("Success")
                                     }
                                     .addOnFailureListener {
-                                        Timber.tag("updateTodaysCollection").e("Error deleting collection: $it")
+                                        Timber.tag("updateTodaysCollection")
+                                            .e("Error deleting collection: $it")
                                     }
                             }
-                        }else{
+                        } else {
                             insertTodaysCollection(b, selectedOption)
                         }
                     }
+
                 }
                 .addOnFailureListener {
-                    Timber.tag("getBalance").e("$it")
+                    Timber.tag("updateTodaysCollection").e("$it")
                 }
         }
     }
@@ -227,7 +233,7 @@ class ShopDetailsViewModel : ViewModel() {
             prm.debit = b
         }
 
-        viewModelScope.launch (Dispatchers.IO){
+        viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(TODAYS_COLLECTION)
                 .add(prm)
                 .addOnSuccessListener {

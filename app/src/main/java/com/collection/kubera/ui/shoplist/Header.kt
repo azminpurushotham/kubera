@@ -1,21 +1,14 @@
 package com.collection.kubera.ui.shoplist
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -23,34 +16,28 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.collection.kubera.ui.theme.boxColorD
-import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.onHintD
-import com.collection.kubera.ui.theme.red
 
 
 @Composable
 internal fun Header(
-    shopName: String,
-    viewModel: ShopListViewModel,
-    todaysCollection: Long,
-    todaysCredit: Long,
-    todaysDebit: Long,
-    balance: Long
+    viewModel: ShopListViewModel
 ) {
-    var shopName1 = shopName
+    var shopName by remember { mutableStateOf("") }
     Spacer(modifier = Modifier.height(15.dp))
     Box {
         OutlinedTextField(
-            value = shopName1,
+            value = shopName,
             onValueChange = {
-                shopName1 = it
-                viewModel.getShops(shopName1)
+                shopName = it
+                viewModel.getShops(shopName)
             },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.onSurface,
@@ -71,70 +58,17 @@ internal fun Header(
             trailingIcon = {
                 val icon = Icons.Filled.Search
                 IconButton(onClick = {
-                    viewModel.getShops(shopName1)
+                    viewModel.getShops(shopName)
                 }) {
                     Icon(
                         imageVector = icon,
-                        contentDescription = "Toggle password visibility"
+                        contentDescription = "Search"
                     )
                 }
             },
         )
     }
     Spacer(modifier = Modifier.height(20.dp))
-    Card(
-        elevation = CardDefaults.cardElevation(20.dp),
-        shape = RoundedCornerShape(0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .background(color = boxColorD)
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = 8.dp,
-                    bottom = 8.dp
-                )
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    "Today's Collection",
-                    fontWeight = FontWeight(600),
-                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-                Row {
-                    Text(
-                        todaysCollection.toString(),
-                        fontWeight = FontWeight(400),
-                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                        color = if (todaysCollection > 0) green else red,
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        todaysCredit.toString(),
-                        fontWeight = FontWeight(400),
-                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                        color = green,
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        todaysDebit.toString(),
-                        fontWeight = FontWeight(400),
-                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                        color = red,
-                    )
-                }
-            }
-            Text(
-                balance.toString(),
-                fontWeight = FontWeight(400),
-                fontSize = 30.sp,
-                color = if (balance > 0) green else red,
-            )
-        }
-    }
+    BalanceHeader(viewModel)
     Spacer(modifier = Modifier.height(10.dp))
 }

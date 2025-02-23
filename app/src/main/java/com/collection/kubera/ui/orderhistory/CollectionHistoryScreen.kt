@@ -53,6 +53,7 @@ import com.collection.kubera.R
 import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
 import com.collection.kubera.ui.AllDestinations.SHOP_LIST
+import com.collection.kubera.ui.shoplist.BalanceHeader
 import com.collection.kubera.ui.theme.backgroundD
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
@@ -69,10 +70,6 @@ fun CollectionHistoryScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     val shopList by viewModel.shopList.collectAsState()
-    val balance by viewModel.balance.collectAsState()
-    val todaysCollection by viewModel.todaysCollection.collectAsState()
-    val todaysCredit by viewModel.todaysCredit.collectAsState()
-    val todaysDebit by viewModel.todaysDebit.collectAsState()
 
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -274,44 +271,6 @@ fun CollectionHistoryScreen(
             verticalArrangement = Arrangement.Center, // Vertically center items
             horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
         ) {
-//            Spacer(modifier = Modifier.height(15.dp))
-//            Box {
-//                OutlinedTextField(
-//                    value = shopName,
-//                    onValueChange = {
-//                        shopName = it
-//                        viewModel.getCollectionHistory(shopName)
-//                    },
-//                    colors = OutlinedTextFieldDefaults.colors(
-//                        focusedBorderColor = MaterialTheme.colorScheme.onSurface,
-//                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-//                        focusedLabelColor = MaterialTheme.colorScheme.onSurface,
-//                        unfocusedLabelColor = onHintD,
-//                        cursorColor = MaterialTheme.colorScheme.onPrimary,
-//                        focusedTextColor = MaterialTheme.colorScheme.onSurface
-//                    ),
-//                    singleLine = true,
-//                    label = { Text("Search shops here...") },
-//                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-//                    shape = RoundedCornerShape(30.dp),
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .height(60.dp)
-//                        .padding(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 0.dp),
-//                    trailingIcon = {
-//                        val icon = Icons.Filled.Search
-//                        IconButton(onClick = {
-//                            viewModel.getCollectionHistory(shopName)
-//                        }) {
-//                            Icon(
-//                                imageVector = icon,
-//                                contentDescription = "Toggle password visibility"
-//                            )
-//                        }
-//                    },
-//                )
-//            }
-//            Spacer(modifier = Modifier.height(20.dp))
             Button(
                 colors = ButtonDefaults.buttonColors(backgroundD),
                 onClick = {
@@ -329,61 +288,7 @@ fun CollectionHistoryScreen(
                     colorFilter = ColorFilter.tint(onprimaryD) // Optional color filter
                 )
             }
-            Card(
-                elevation = CardDefaults.cardElevation(20.dp),
-                shape = RoundedCornerShape(0.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .background(color = boxColorD)
-                        .padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = 8.dp,
-                            bottom = 8.dp
-                        )
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            "Today's Collection",
-                            fontWeight = FontWeight(600),
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Row {
-                            Text(
-                                todaysCollection.toString(),
-                                fontWeight = FontWeight(400),
-                                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                                color = if (todaysCollection>0) green else red,
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                todaysCredit.toString(),
-                                fontWeight = FontWeight(400),
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                color = green,
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Text(
-                                todaysDebit.toString(),
-                                fontWeight = FontWeight(400),
-                                fontSize = MaterialTheme.typography.bodyMedium.fontSize,
-                                color =   red,
-                            )
-                        }
-                    }
-                    Text(
-                        balance.toString(),
-                        fontWeight = FontWeight(400),
-                        fontSize = 30.sp,
-                        color = green,
-                    )
-                }
-            }
-
+            BalanceHeader(viewModel)
             Spacer(modifier = Modifier.height(10.dp))
             for (item in shopList) {
                 ElevatedCard(
