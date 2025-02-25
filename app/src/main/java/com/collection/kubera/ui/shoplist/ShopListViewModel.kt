@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
-import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.collection.kubera.data.BALANCE_COLLECTION
 import com.collection.kubera.data.BalanceAmount
@@ -19,7 +18,6 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,10 +41,18 @@ class ShopListViewModel : ViewModel() {
     private val _todaysDebit = MutableStateFlow(0L)
     val todaysDebit: StateFlow<Long> get() = _todaysDebit
     private val firestore = FirebaseFirestore.getInstance()
-    val pageSize = 15 // Number of documents per page
-    private var lastDocumentSnapshot: DocumentSnapshot? = null // Store the last document of the current page
-
-    val shopFlow: Flow<PagingData<Shop>> = getShops().cachedIn(viewModelScope)
+    val pageSize = 20 // Number of documents per page
+    private var lastDocumentSnapshot: DocumentSnapshot? =
+        null // Store the last document of the current page
+    private val baseQuery = firestore.collection(SHOP_COLLECTION)
+    val shopFlow = Pager(
+        PagingConfig(
+            pageSize = pageSize,
+            initialLoadSize = pageSize,
+            enablePlaceholders = true
+        ),
+        pagingSourceFactory = { ShopListPagingSource(baseQuery) }
+    ).flow.cachedIn(viewModelScope)
 
     fun init() {
         getBalance()
@@ -58,7 +64,7 @@ class ShopListViewModel : ViewModel() {
         getTodaysCollectionLogic()
     }
 
-    fun onRefresh(){
+    fun onRefresh() {
         getSwipeShops()
         getBalance()
         getTodaysCollectionLogic()
@@ -106,8 +112,8 @@ class ShopListViewModel : ViewModel() {
                                 id = it.id
                             }
                     }.also {
-                        if(it.isNotEmpty()){
-                            val cd =  formatFirestoreTimestamp(it[0].timestamp)
+                        if (it.isNotEmpty()) {
+                            val cd = formatFirestoreTimestamp(it[0].timestamp)
                             val n = formatFirestoreTimestamp(Timestamp.now())
                             if (cd != n) {
                                 clearPreviousDaysCollections()
@@ -126,7 +132,7 @@ class ShopListViewModel : ViewModel() {
     }
 
     private fun clearPreviousDaysCollections() {
-        viewModelScope.launch (Dispatchers.IO){
+        viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(TODAYS_COLLECTION)
                 .get()
                 .addOnSuccessListener { querySnapshot ->
@@ -151,15 +157,6 @@ class ShopListViewModel : ViewModel() {
         }
     }
 
-    private fun getShops(): Flow<PagingData<Shop>> {
-        return Pager(
-            config = PagingConfig(
-                pageSize = pageSize,
-                enablePlaceholders = true
-            ),
-            pagingSourceFactory = { ShopListPagingSource(pageSize, firestore) }
-        ).flow
-    }
 
     private fun getSwipeShops() {
         Timber.v("getSwipeShops")
@@ -306,6 +303,7 @@ class ShopListViewModel : ViewModel() {
         }
     }
 }
+
 fun formatFirestoreTimestamp(timestamp: Timestamp?): String? {
     if (timestamp == null) return null
     val sdf = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()) // Change format as needed

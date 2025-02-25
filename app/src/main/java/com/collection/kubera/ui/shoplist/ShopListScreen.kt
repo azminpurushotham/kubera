@@ -4,12 +4,12 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -23,7 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -153,14 +152,33 @@ fun ShopListScreen(
                 }
             }
 
-            // Show loading indicator
-            if (shops.loadState.append is  LoadState.Loading) {
-                item {
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                    )
+            // Handle loading states (optional)
+            shops.apply {
+                when {
+                    loadState.refresh is LoadState.Loading -> {
+                        item {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        }
+                    }
+                    loadState.append is LoadState.Loading -> {
+                        item {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    }
+                    }
+                    loadState.append is LoadState.NotLoading ->{
+                        Timber.i("NotLoading")
+                    }
+                    loadState.refresh is LoadState.Error -> {
+                        val e = shops.loadState.refresh as LoadState.Error
+                        item { Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.onPrimary) }
+                    }
                 }
             }
+
         }
     }
 }
