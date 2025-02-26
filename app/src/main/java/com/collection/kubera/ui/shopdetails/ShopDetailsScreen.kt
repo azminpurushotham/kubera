@@ -1,5 +1,6 @@
 package com.collection.kubera.ui.shopdetails
 
+import android.content.SharedPreferences
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,6 +57,7 @@ import com.collection.kubera.ui.theme.labelBackgroundD
 import com.collection.kubera.ui.theme.labelD
 import com.collection.kubera.ui.theme.onHintD
 import com.collection.kubera.ui.theme.red
+import com.collection.kubera.utils.PreferenceHelper
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -78,6 +80,7 @@ fun ShopDetailsScreen(
 
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
+    val pref = PreferenceHelper.getPrefs(context)
 
     fun enableButton() {
         isEnabled = balance.isNotEmpty() && balance.toLong() > 0
@@ -86,6 +89,7 @@ fun ShopDetailsScreen(
 
     when (uiState) {
         is ShopDetailUiState.Initial -> {
+            viewModel.setPref(pref)
             model?.let { viewModel.setShop(it) }
             id?.let { viewModel.getShopDetails(it) }
         }
@@ -427,7 +431,7 @@ fun ShopDetailsScreen(
         }
         Button(
             onClick = {
-                navController.navigate("${SHOP_COLLECTION_HISTORY}/${shop?.id}") {
+                navController.navigate("${SHOP_COLLECTION_HISTORY}?${Gson().toJson(shop)}") {
                     popUpTo(SHOP_DETAILS){inclusive = false}
                 }
             },

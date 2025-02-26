@@ -179,9 +179,13 @@ fun AppNavGraph(
             composable(AllDestinations.COLLECTION_HISTORY) {
                 CollectionHistoryScreen(navController)
             }
-            composable("${AllDestinations.SHOP_COLLECTION_HISTORY}/{shopId}") { backStackEntry ->
-                val shopId = backStackEntry.arguments?.getString("shopId")
-                ShopCollectionHistoryScreen(shopId, navController)
+            composable("${AllDestinations.SHOP_COLLECTION_HISTORY}?{model}") { backStackEntry ->
+                val shop = backStackEntry.arguments?.getString("model")
+                shop?.let { s->
+                    Timber.tag("SHOP_COLLECTION_HISTORY").d("shop: $s")
+                    val prm = Gson().fromJson(s, Shop::class.java)
+                    ShopCollectionHistoryScreen(prm, navController)
+                }
             }
             composable(AllDestinations.ADD_NEW_SHOP) {
                 AddNewShopScreen(navController)

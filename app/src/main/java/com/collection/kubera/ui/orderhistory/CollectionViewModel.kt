@@ -15,7 +15,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -95,7 +94,9 @@ class CollectionViewModel : ViewModel() {
                     _shopList.value = results.mapNotNull {
                         it.toObject(CollectionHistory::class.java)
                             .apply {
-                                this.shopId = it.data.get("shopId").toString()
+                                it.data["shopId"]?.let { i ->
+                                    shopId = i as String?
+                                }
                             }
                     }
                 }
@@ -146,7 +147,9 @@ class CollectionViewModel : ViewModel() {
                     _shopList.value = results.mapNotNull {
                         it.toObject(CollectionHistory::class.java)
                             .apply {
-                                this.shopId = it.data.get("shopId").toString()
+                                it.data["shopId"]?.let { i ->
+                                    this.shopId = i.toString()
+                                }
                             }
                     }
                 }

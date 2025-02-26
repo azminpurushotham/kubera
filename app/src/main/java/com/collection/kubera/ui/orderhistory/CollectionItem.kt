@@ -12,19 +12,26 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.collection.kubera.data.CollectionHistory
+import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
-import com.collection.kubera.ui.AllDestinations.SHOP_LIST
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.red
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.math.absoluteValue
 
@@ -33,6 +40,9 @@ internal fun CollectionItem(
     navController: NavHostController,
     item: CollectionHistory
 ) {
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var message : String? = null
     ElevatedCard(
         shape = RoundedCornerShape(0.dp),
         colors = CardDefaults.cardColors(
@@ -40,9 +50,19 @@ internal fun CollectionItem(
         ),
         onClick = {
             Timber.v("SHOP_DETAILS")
-            navController.navigate("$SHOP_DETAILS/${item.shopId}") {
-                popUpTo(SHOP_LIST) {
-                    inclusive = false
+            if((item.shopId?:"").isNotEmpty()){
+                navController.navigate("$SHOP_DETAILS/${item.shopId}") {
+                    popUpTo(TRANSECTION_HISTORY_COLLECTION) {
+                        inclusive = false
+                    }
+                }
+            } else{
+                scope.launch {
+                    message = "Unfortunately shop details are not available,please make home page's SEARCH useful"
+                    snackbarHostState.showSnackbar(
+                        message = message!!,
+                        duration = SnackbarDuration.Short
+                    )
                 }
             }
         }) {
@@ -60,17 +80,19 @@ internal fun CollectionItem(
         ) {
             Column {
                 Text(
-                    "${item.firstName} ${item.lastName}",
+                    "${item.firstName} ${item.lastName?:""}",
                     fontWeight = FontWeight(500),
                     fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                Text(
-                    item.shopName,
-                    fontWeight = FontWeight(1),
-                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                item.shopName?.let {
+                    Text(
+                        it,
+                        fontWeight = FontWeight(1),
+                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
                 Text(
                     "Collected By : ${item.collectedBy}",
                     fontWeight = FontWeight(400),
@@ -114,4 +136,19 @@ internal fun CollectionItem(
         }
     }
     Spacer(Modifier.height(2.dp))
+    SnackbarHost(
+        hostState = snackbarHostState,
+        snackbar = { snackbarData ->
+            Snackbar(
+                modifier = Modifier.padding(16.dp),
+                contentColor = MaterialTheme.colorScheme.error,
+                containerColor = MaterialTheme.colorScheme.surface,
+                content = {
+                    Text(
+                        text = message?:""
+                    )
+                }
+            )
+        }
+    )
 }

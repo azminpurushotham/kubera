@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.collection.kubera.R
+import com.collection.kubera.data.Shop
 import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.ui.theme.backgroundD
 import com.collection.kubera.ui.theme.boxColorD
@@ -61,13 +62,13 @@ import timber.log.Timber
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShopCollectionHistoryScreen(
-    id: String? = null,
+    prm: Shop,
     navController: NavHostController,
     viewModel: ShopCollectionViewModel = viewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    val shopList by viewModel.shopList.collectAsState()
+    val shopList by viewModel.collections.collectAsState()
     val shop by viewModel.shop.collectAsState()
     val balance by viewModel.balance.collectAsState()
 
@@ -78,18 +79,14 @@ fun ShopCollectionHistoryScreen(
     var isRefreshing by remember { mutableStateOf(false) }
     val onRefresh: () -> Unit = {
         isRefreshing = true
-        viewModel.getSwipeShopsCollectionHistory(id)
-        if (id != null) {
-            viewModel.getShopDetails(id)
-        }
+        viewModel.getSwipeShopsCollectionHistory()
+        viewModel.setShop(prm)
     }
 
     when (uiState) {
         is HomeUiState.Initial -> {
-            if (id != null) {
-                viewModel.getCollectionHistory(id)
-                viewModel.getShopDetails(id)
-            }
+            viewModel.setShop(prm)
+            viewModel.getCollectionHistory()
         }
 
         HomeUiState.Loading -> {

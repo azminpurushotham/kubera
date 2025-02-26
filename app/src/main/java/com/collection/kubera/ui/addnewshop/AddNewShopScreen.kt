@@ -42,6 +42,7 @@ import com.collection.kubera.states.AddNewShopUiState
 import com.collection.kubera.ui.AllDestinations
 import com.collection.kubera.ui.theme.headingLabelD
 import com.collection.kubera.ui.theme.onHintD
+import com.collection.kubera.utils.PreferenceHelper
 
 @Preview
 @Composable
@@ -77,7 +78,7 @@ fun AddNewShopScreen(
     var mailId by remember { mutableStateOf("") }
     var isMailIdError by rememberSaveable { mutableStateOf(false) }
     var isMailIdFormateError by rememberSaveable { mutableStateOf(false) }
-
+    val pref = PreferenceHelper.getPrefs(context)
 
     fun validateShopName(shopName: String) {
         isShopNameError = shopName.length < characterLimit
@@ -152,7 +153,7 @@ fun AddNewShopScreen(
     }
     when (uiState) {
         is AddNewShopUiState.Initial -> {
-
+            viewModel.setPreference(pref)
         }
 
         AddNewShopUiState.Loading -> {

@@ -9,7 +9,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import com.collection.kubera.ui.theme.KuberaTheme
-import com.collection.kubera.ui.BakingScreen
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 class LandingActivity : ComponentActivity() {

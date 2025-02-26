@@ -149,6 +149,10 @@ fun CollectionHistoryScreen(
             BalanceHeader(viewModel)
             Spacer(modifier = Modifier.height(10.dp))
             for (item in shopList) {
+                if(item.shopId==null){
+                    Timber.tag("NAME").i(item.shopName)
+                    Timber.tag("ID").i(item.shopId)
+                }
                 CollectionItem(navController, item)
             }
         }

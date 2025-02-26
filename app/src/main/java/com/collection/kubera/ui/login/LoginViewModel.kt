@@ -1,8 +1,14 @@
 package com.collection.kubera.ui.login
 
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.states.LoginUiState
+import com.collection.kubera.utils.ISLOGGEDIN
+import com.collection.kubera.utils.PASSWORD
+import com.collection.kubera.utils.PreferenceHelper.set
+import com.collection.kubera.utils.USER_ID
+import com.collection.kubera.utils.USER_NAME
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,6 +23,7 @@ class LoginViewModel : ViewModel() {
     val uiState: StateFlow<LoginUiState> =
         _uiState.asStateFlow()
     private val firestore = FirebaseFirestore.getInstance()
+    var pref : SharedPreferences? = null
 
     fun login(userName: String, password: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -28,6 +35,10 @@ class LoginViewModel : ViewModel() {
                 .get().addOnSuccessListener {  querySnapshot ->
                     if (!querySnapshot.isEmpty) {
                         for (document in querySnapshot.documents) {
+                            pref?.set(USER_NAME,userName)
+                            pref?.set(PASSWORD,password)
+                            pref?.set(ISLOGGEDIN,true)
+                            pref?.set(USER_ID,document.id)
                             Timber.v("Document found: ${document.id}")
                             _uiState.value = LoginUiState.LoginSuccess("Successfully logged in")
                         }
@@ -39,5 +50,9 @@ class LoginViewModel : ViewModel() {
                     _uiState.value = LoginUiState.LoginFiled("Please enter correct credentials")
                 }
         }
+    }
+
+    fun setPreference(pref: SharedPreferences) {
+        this.pref = pref
     }
 }

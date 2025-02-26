@@ -1,5 +1,6 @@
 package com.collection.kubera.ui.addnewshop
 
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.BALANCE_COLLECTION
@@ -9,6 +10,8 @@ import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
 import com.collection.kubera.states.AddNewShopUiState
+import com.collection.kubera.utils.USER_ID
+import com.collection.kubera.utils.USER_NAME
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +27,7 @@ class AddNewShopViewModel : ViewModel() {
     val uiState: StateFlow<AddNewShopUiState> =
         _uiState.asStateFlow()
     private val firestore = FirebaseFirestore.getInstance()
+    var pref: SharedPreferences? = null
 
     fun saveShopDetails(
         shopName: String,
@@ -59,6 +63,7 @@ class AddNewShopViewModel : ViewModel() {
             }
             firestore.collection(SHOP_COLLECTION)
                 .add(prm).addOnSuccessListener {
+                    prm.apply { id = it.id }
                     insertCollectionHistory(
                         prm
                     )
@@ -68,11 +73,13 @@ class AddNewShopViewModel : ViewModel() {
                 }.addOnFailureListener {
                     _uiState.value =
                         AddNewShopUiState.AddNewShopError("Shop is not added,please try again")
-                    _uiState.value = AddNewShopUiState.AddNewShopCompleted("Shop is not added,please try again")
+                    _uiState.value =
+                        AddNewShopUiState.AddNewShopCompleted("Shop is not added,please try again")
                 }
         }
 
     }
+
     private fun insertCollectionHistory(shop: Shop) {
         viewModelScope.launch(Dispatchers.IO) {
             val prm = CollectionHistory().apply {
@@ -81,16 +88,22 @@ class AddNewShopViewModel : ViewModel() {
                 }
                 if (shop.shopName.isNotEmpty()) this.shopName = shop.shopName
                 if (shop.shopName.isNotEmpty()) this.s_shopName = shop.shopName.lowercase()
-                if ((shop.balance?:0)>1) this.amount = shop.balance
+                if ((shop.balance ?: 0) > 1) this.amount = shop.balance
                 if (shop.firstName.isNotEmpty()) this.firstName = shop.firstName
                 if (shop.firstName.isNotEmpty()) this.s_firstName = shop.firstName.lowercase()
                 if ((shop.lastName ?: "").isNotEmpty()) this.lastName = shop.lastName
-                if ((shop.lastName ?: "").isNotEmpty()) this.s_lastName = (shop.lastName ?: "").lowercase()
+                if ((shop.lastName ?: "").isNotEmpty()) this.s_lastName =
+                    (shop.lastName ?: "").lowercase()
                 if (shop.phoneNumber.toString().isNotEmpty()) this.phoneNumber = shop.phoneNumber
-                if (shop.secondPhoneNumber != null && secondPhoneNumber.toString()
-                        .isNotEmpty()
-                ) this.secondPhoneNumber = secondPhoneNumber!!
+                if (
+                    shop.secondPhoneNumber != null &&
+                    (secondPhoneNumber ?: "").isNotEmpty()
+                ) {
+                    this.secondPhoneNumber = secondPhoneNumber!!
+                }
                 if ((shop.mailId ?: "").isNotEmpty()) this.mailId = shop.mailId
+                this.collectedById = pref?.getString(USER_ID, null)
+                this.collectedBy = pref?.getString(USER_NAME, null) ?: "Admin"
                 this.timestamp = Timestamp.now()
                 this.transactionType = "Credit"
             }
@@ -98,7 +111,8 @@ class AddNewShopViewModel : ViewModel() {
                 .add(prm).addOnSuccessListener {
                     Timber.tag("Success").i("Collection history updated")
                 }.addOnFailureListener {
-                    _uiState.value = AddNewShopUiState.AddNewShopError("Collection history not updated")
+                    _uiState.value =
+                        AddNewShopUiState.AddNewShopError("Collection history not updated")
                 }
         }
     }
@@ -106,7 +120,7 @@ class AddNewShopViewModel : ViewModel() {
 
     private fun updateTotalBalance(b: Long) {
         Timber.tag("updateTotalBalance").i("updateTotalBalance")
-        viewModelScope.launch (Dispatchers.IO){
+        viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(BALANCE_COLLECTION)
                 .get()
                 .addOnSuccessListener { querySnapshot ->
@@ -116,7 +130,7 @@ class AddNewShopViewModel : ViewModel() {
                                 id = it.id
                             }
                     }.also {
-                        if(it.isNotEmpty()){
+                        if (it.isNotEmpty()) {
                             val balance = (it[0].balance) + b
                             firestore.collection(BALANCE_COLLECTION)
                                 .document(it[0].id!!)
@@ -125,7 +139,8 @@ class AddNewShopViewModel : ViewModel() {
                                     Timber.tag("updateTotalBalance").i("Success")
                                 }
                                 .addOnFailureListener {
-                                    Timber.tag("updateTotalBalance").e("Error deleting collection: $it")
+                                    Timber.tag("updateTotalBalance")
+                                        .e("Error deleting collection: $it")
                                 }
                         }
                     }
@@ -134,5 +149,9 @@ class AddNewShopViewModel : ViewModel() {
                     Timber.tag("getBalance").e("$it")
                 }
         }
+    }
+
+    fun setPreference(pref: SharedPreferences) {
+        this.pref = pref
     }
 }

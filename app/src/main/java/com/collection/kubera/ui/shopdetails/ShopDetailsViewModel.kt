@@ -1,5 +1,6 @@
 package com.collection.kubera.ui.shopdetails
 
+import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.BALANCE_COLLECTION
@@ -11,6 +12,8 @@ import com.collection.kubera.data.TODAYS_COLLECTION
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
 import com.collection.kubera.data.TodaysCollections
 import com.collection.kubera.states.ShopDetailUiState
+import com.collection.kubera.utils.USER_ID
+import com.collection.kubera.utils.USER_NAME
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
@@ -22,6 +25,7 @@ import kotlinx.coroutines.launch
 import timber.log.Timber
 
 class ShopDetailsViewModel : ViewModel() {
+    private lateinit var pref: SharedPreferences
     private val _uiState: MutableStateFlow<ShopDetailUiState> =
         MutableStateFlow(ShopDetailUiState.Initial)
     val uiState: Flow<ShopDetailUiState> =
@@ -55,6 +59,7 @@ class ShopDetailsViewModel : ViewModel() {
                             ?.apply {
                                 this.id = id
                             }
+                        Timber.i(_shop.value.toString())
                     }
                     updateState(ShopDetailUiState.ShopDetailSuccess("Success"))
                 }.addOnFailureListener {
@@ -117,9 +122,11 @@ class ShopDetailsViewModel : ViewModel() {
                         (shop.lastName ?: "").lowercase()
                     if (shop.phoneNumber.toString().isNotEmpty()) this.phoneNumber =
                         shop.phoneNumber
-                    if (shop.secondPhoneNumber != null && secondPhoneNumber.toString()
+                    if (shop.secondPhoneNumber != null && shop.secondPhoneNumber.toString()
                             .isNotEmpty()
-                    ) this.secondPhoneNumber = secondPhoneNumber!!
+                    ) this.secondPhoneNumber = shop.secondPhoneNumber!!
+                    this.collectedBy = pref.getString(USER_NAME, "") ?: ""
+                    this.collectedById = pref.getString(USER_ID, "") ?: ""
                     if ((shop.mailId ?: "").isNotEmpty()) this.mailId = shop.mailId
                     this.timestamp = Timestamp.now()
                     this.transactionType = selectedOption
@@ -243,5 +250,9 @@ class ShopDetailsViewModel : ViewModel() {
                     Timber.tag("insertTodaysCollection").e(e)
                 }
         }
+    }
+
+    fun setPref(pref: SharedPreferences) {
+        this.pref = pref
     }
 }

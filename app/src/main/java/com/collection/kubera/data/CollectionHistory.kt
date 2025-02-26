@@ -7,17 +7,17 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 data class CollectionHistory(
-    var id: String = "",
-    var shopId: String = "",
-    var shopName: String = "",
-    var s_shopName: String = "",
-    var firstName: String = "",
-    var s_firstName: String = "",
-    var lastName: String = "",
-    var s_lastName: String = "",
+    var id: String? = null,
+    var shopId: String? = null,
+    var shopName:String? = null,
+    var s_shopName:String? = null,
+    var firstName:String? = null,
+    var s_firstName:String? = null,
+    var lastName:String? = null,
+    var s_lastName:String? = null,
     var phoneNumber: String? = null,
     var secondPhoneNumber: String? = null,
-    var mailId: String = "",
+    var mailId:String? = null,
     var amount: Long? = null,
     var collectedBy : String = "Admin",
     var collectedById : String? = null,
@@ -25,17 +25,17 @@ data class CollectionHistory(
     var timestamp: Timestamp? = null,
 ): Parcelable {
     constructor() : this(
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
-        "",
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
         null,
         "Admin",
         null,
@@ -56,23 +56,46 @@ data class CollectionHistory(
         }
 
     constructor(parcel: Parcel) : this(
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
         parcel.readString(),
         parcel.readString(),
-        parcel.readString()?:"",
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
+        parcel.readString(),
         parcel.readValue(Long::class.java.classLoader) as? Long,
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
+        parcel.readString()?:"Admin",
+        parcel.readString(),
+        parcel.readString(),
         parcel.readParcelable(Timestamp::class.java.classLoader)
     ) {
+    }
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeString(id)
+        parcel.writeString(shopId)
+        parcel.writeString(shopName)
+        parcel.writeString(s_shopName)
+        parcel.writeString(firstName)
+        parcel.writeString(s_firstName)
+        parcel.writeString(lastName)
+        parcel.writeString(s_lastName)
+        parcel.writeString(phoneNumber)
+        parcel.writeString(secondPhoneNumber)
+        parcel.writeString(mailId)
+        parcel.writeValue(amount)
+        parcel.writeString(collectedBy)
+        parcel.writeString(collectedById)
+        parcel.writeString(transactionType)
+        parcel.writeParcelable(timestamp, flags)
+    }
+
+    override fun describeContents(): Int {
+        return 0
     }
 
     companion object CREATOR : Parcelable.Creator<CollectionHistory> {
@@ -85,11 +108,5 @@ data class CollectionHistory(
         }
     }
 
-    override fun describeContents(): Int {
-        TODO("Not yet implemented")
-    }
 
-    override fun writeToParcel(dest: Parcel, flags: Int) {
-        TODO("Not yet implemented")
-    }
 }

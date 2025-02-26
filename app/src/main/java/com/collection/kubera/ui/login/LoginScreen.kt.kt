@@ -52,6 +52,7 @@ import com.collection.kubera.utils.ISLOGGEDIN
 import com.collection.kubera.utils.PASSWORD
 import com.collection.kubera.utils.PreferenceHelper
 import com.collection.kubera.utils.PreferenceHelper.set
+import com.collection.kubera.utils.USER_ID
 import com.collection.kubera.utils.USER_NAME
 
 @Preview
@@ -104,7 +105,7 @@ fun LoginScreen(
                     }
 
                     is LoginUiState.Initial -> {
-
+                        viewModel.setPreference(pref)
                     }
 
                     is LoginUiState.LoginFiled -> {
@@ -121,9 +122,6 @@ fun LoginScreen(
                             (uiState as LoginUiState.LoginSuccess).message,
                             Toast.LENGTH_LONG
                         ).show()
-                        pref[USER_NAME] = userName
-                        pref[PASSWORD] = password
-                        pref[ISLOGGEDIN] = true
                         context.startActivity(Intent(context, MainActivity::class.java))
                         val currentActivity = context as? MainActivity
                         currentActivity?.finish()
