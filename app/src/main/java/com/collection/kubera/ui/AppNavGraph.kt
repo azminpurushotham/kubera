@@ -48,6 +48,7 @@ import androidx.navigation.compose.rememberNavController
 import com.collection.kubera.data.Shop
 import com.collection.kubera.ui.addnewshop.AddNewShopScreen
 import com.collection.kubera.ui.orderhistory.CollectionHistoryScreen
+import com.collection.kubera.ui.settings.SettingsScreen
 import com.collection.kubera.ui.shoporderhistory.ShopCollectionHistoryScreen
 import com.collection.kubera.ui.shopdetails.ShopDetailsScreen
 import com.collection.kubera.ui.shoplist.ShopListScreen
@@ -215,7 +216,7 @@ fun AppNavGraph(
             }
 
             composable(AllDestinations.SETTINGS) {
-                AddNewShopScreen(navController)
+                SettingsScreen(navController)
             }
         }
     }
