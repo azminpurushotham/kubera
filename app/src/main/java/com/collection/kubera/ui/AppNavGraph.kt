@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -151,15 +152,15 @@ fun AppNavGraph(
                         }
                     )
                     BottomAppBarItem(
-                        iconResId = Icons.Default.Person,
-                        label = "Profile",
+                        iconResId = Icons.Default.Settings,
+                        label = "Settings",
                         onClick = {
-                            navigationActions.navigateToProfile()
+                            navigationActions.navigateToSettings()
                         }
                     )
                     BottomAppBarItem(
-                        iconResId = Icons.Default.Logout,
-                        label = "Logout",
+                        iconResId = Icons.Default.Person,
+                        label = "Profile",
                         onClick = {
                         }
                     )
@@ -212,6 +213,10 @@ fun AppNavGraph(
                     UpdateShopScreen(prm, navController)
                 }
             }
+
+            composable(AllDestinations.SETTINGS) {
+                AddNewShopScreen(navController)
+            }
         }
     }
 
@@ -262,6 +267,7 @@ fun getTitle(currentRoute: String): String {
         AllDestinations.SHOP_LIST -> AllDestinations.SHOP_LIST
         AllDestinations.COLLECTION_HISTORY -> AllDestinations.COLLECTION_HISTORY
         AllDestinations.SHOP_COLLECTION_HISTORY -> AllDestinations.SHOP_COLLECTION_HISTORY
+        AllDestinations.SETTINGS -> AllDestinations.SETTINGS
         AllDestinations.PROFILE -> AllDestinations.PROFILE
         AllDestinations.ADD_NEW_SHOP -> AllDestinations.ADD_NEW_SHOP
         AllDestinations.UPDATE_SHOP -> AllDestinations.UPDATE_SHOP
