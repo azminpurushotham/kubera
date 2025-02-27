@@ -79,4 +79,5 @@ dependencies {
     implementation(libs.navigation.compose)
     implementation(libs.androidx.room.common)
     implementation(libs.androidx.paging)
+    implementation(libs.csv)
 }

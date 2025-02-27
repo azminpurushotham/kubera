@@ -13,10 +13,10 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Report
+import androidx.compose.material.icons.filled.TextSnippet
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -48,7 +48,7 @@ import androidx.navigation.compose.rememberNavController
 import com.collection.kubera.data.Shop
 import com.collection.kubera.ui.addnewshop.AddNewShopScreen
 import com.collection.kubera.ui.orderhistory.CollectionHistoryScreen
-import com.collection.kubera.ui.settings.SettingsScreen
+import com.collection.kubera.ui.report.ReportScreen
 import com.collection.kubera.ui.shoporderhistory.ShopCollectionHistoryScreen
 import com.collection.kubera.ui.shopdetails.ShopDetailsScreen
 import com.collection.kubera.ui.shoplist.ShopListScreen
@@ -153,10 +153,10 @@ fun AppNavGraph(
                         }
                     )
                     BottomAppBarItem(
-                        iconResId = Icons.Default.Settings,
-                        label = "Settings",
+                        iconResId = Icons.Default.TextSnippet,
+                        label = "Report",
                         onClick = {
-                            navigationActions.navigateToSettings()
+                            navigationActions.navigateToReport()
                         }
                     )
                     BottomAppBarItem(
@@ -215,8 +215,8 @@ fun AppNavGraph(
                 }
             }
 
-            composable(AllDestinations.SETTINGS) {
-                SettingsScreen(navController)
+            composable(AllDestinations.REPORT) {
+                ReportScreen(navController)
             }
         }
     }
@@ -268,7 +268,7 @@ fun getTitle(currentRoute: String): String {
         AllDestinations.SHOP_LIST -> AllDestinations.SHOP_LIST
         AllDestinations.COLLECTION_HISTORY -> AllDestinations.COLLECTION_HISTORY
         AllDestinations.SHOP_COLLECTION_HISTORY -> AllDestinations.SHOP_COLLECTION_HISTORY
-        AllDestinations.SETTINGS -> AllDestinations.SETTINGS
+        AllDestinations.REPORT -> AllDestinations.REPORT
         AllDestinations.PROFILE -> AllDestinations.PROFILE
         AllDestinations.ADD_NEW_SHOP -> AllDestinations.ADD_NEW_SHOP
         AllDestinations.UPDATE_SHOP -> AllDestinations.UPDATE_SHOP

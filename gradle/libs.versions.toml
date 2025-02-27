@@ -24,6 +24,7 @@ accompanist = "0.36.0"
 roomCommon = "2.6.1"
 swiperefreshlayout = "1.7.6"
 paging = "3.2.1"
+csv = "2.15.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -58,7 +59,7 @@ gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
 swiperefreshlayout = {group="androidx.compose.foundation",name="foundation",version.ref="swiperefreshlayout"}
 androidx-paging = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
-
+csv = {group="com.fasterxml.jackson.dataformat",name="jackson-dataformat-csv",version.ref="csv"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

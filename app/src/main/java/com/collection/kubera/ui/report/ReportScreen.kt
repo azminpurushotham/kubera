@@ -1,0 +1,270 @@
+package com.collection.kubera.ui.report
+
+import android.os.Build
+import android.os.Environment
+import android.widget.Toast
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.getString
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.collection.kubera.R
+import com.collection.kubera.states.ReportUiState
+import com.collection.kubera.ui.theme.headingLabelD
+import com.collection.kubera.ui.theme.labelD
+import com.collection.kubera.utils.getCurrentDate
+import kotlinx.coroutines.launch
+
+@Composable
+fun ReportScreen(navController: NavHostController) {
+    val context = LocalContext.current
+    val viewModel: ReportViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState(ReportUiState.Initial)
+    var isButtonEnabled by remember { mutableStateOf(false) }
+    val path =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    var message : String? = null
+
+
+    when(uiState){
+        ReportUiState.Initial -> {}
+        ReportUiState.Loading -> {
+            Box (
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
+            ){
+                CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.tertiary,)
+            }
+
+        }
+        is ReportUiState.ReportCompleted ->{
+
+        }
+        is ReportUiState.ReportError ->{
+            LaunchedEffect(Unit){
+                scope.launch {
+                    message =  (uiState as ReportUiState.ReportError).errorMessage
+                    snackbarHostState.showSnackbar(
+                        message = message!!,
+                        duration = SnackbarDuration.Long
+                    )
+                }
+            }
+        }
+        is ReportUiState.ReportInit -> {
+
+        }
+        is ReportUiState.ReportSuccess -> {
+            Toast.makeText(context,(uiState as ReportUiState.ReportSuccess).message,Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Center, // Vertically center items
+        horizontalAlignment = Alignment.Start // Horizontally center items
+    ) {
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            "Generate Report",
+            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            fontWeight = FontWeight(1),
+            color = headingLabelD,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Text(
+            "Collection report for a specific date range",
+            fontSize = MaterialTheme.typography.titleMedium.fontSize,
+            fontWeight = FontWeight(1),
+            color = labelD,
+            modifier = Modifier.align(Alignment.Start),
+            overflow = TextOverflow.Ellipsis
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Row(
+            modifier = Modifier
+                .align(Alignment.Start)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceAround,
+        ) {
+            Button(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(5.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
+                    contentColor =  MaterialTheme.colorScheme.onPrimary
+                ),
+                onClick = {
+
+                },
+                content = {
+                    Text(
+                        "Select From Date",
+                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                        fontWeight = FontWeight(1),
+                        color = headingLabelD
+                    )
+                }
+            )
+            Spacer(Modifier.width(10.dp))
+            Button(
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(5.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
+                    contentColor =  MaterialTheme.colorScheme.onPrimary
+                ),
+                onClick = {
+
+                },
+                content = {
+                    Text(
+                        "Select To Date",
+                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                        fontWeight = FontWeight(1),
+                        color = headingLabelD
+                    )
+                }
+
+            )
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Button(
+            onClick = {
+            },
+            shape = RoundedCornerShape(5.dp),
+            modifier = Modifier.fillMaxWidth(),
+            enabled = isButtonEnabled, // Control button's enabled state
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (isButtonEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface, // Green when enabled, Gray when disabled
+                contentColor = if (isButtonEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
+            )
+        ) {
+            Text("Generate Report",
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                fontWeight = FontWeight(1),
+                color = headingLabelD)
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            "Today's Report",
+            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            fontWeight = FontWeight(1),
+            color = headingLabelD,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Text(
+            "Collection report of today",
+            fontSize = MaterialTheme.typography.titleMedium.fontSize,
+            fontWeight = FontWeight(1),
+            color = labelD,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Button(
+            onClick = {
+                val d = getCurrentDate()
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    viewModel.todaysReport("${path.absolutePath}/${getString(context,R.string.app_name)}/Collection/${d}",d)
+                }
+            },
+            shape = RoundedCornerShape(5.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
+                contentColor =  MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
+            Text("Generate Today's Report",
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                fontWeight = FontWeight(1),
+                color = headingLabelD)
+        }
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            "Shops Report",
+            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            fontWeight = FontWeight(1),
+            color = headingLabelD,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Text(
+            "All shops current balance report",
+            fontSize = MaterialTheme.typography.titleMedium.fontSize,
+            fontWeight = FontWeight(1),
+            color = labelD,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Button(
+            onClick = {
+            },
+            shape = RoundedCornerShape(5.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
+                contentColor =  MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
+            Text("All Shops",
+                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                fontWeight = FontWeight(1),
+                color = headingLabelD)
+        }
+    }
+    SnackbarHost(
+        hostState = snackbarHostState,
+        snackbar = { snackbarData ->
+            Snackbar(
+                modifier = Modifier.padding(16.dp),
+                contentColor = MaterialTheme.colorScheme.error,
+                containerColor = MaterialTheme.colorScheme.surface,
+                content = {
+                    Text(
+                        text = message?:""
+                    )
+                }
+            )
+        }
+    )
+
+}
+
