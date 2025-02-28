@@ -8,7 +8,9 @@ import com.collection.kubera.data.BalanceAmount
 import com.collection.kubera.data.CollectionHistory
 import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
+import com.collection.kubera.data.TODAYS_COLLECTION
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
+import com.collection.kubera.data.TodaysCollections
 import com.collection.kubera.states.AddNewShopUiState
 import com.collection.kubera.utils.USER_ID
 import com.collection.kubera.utils.USER_NAME
@@ -68,6 +70,7 @@ class AddNewShopViewModel : ViewModel() {
                         prm
                     )
                     prm.balance?.let { it1 -> updateTotalBalance(it1) }
+                    balance?.let { it1 -> updateTodaysCollection(it1.toLong()) }
                     _uiState.value =
                         AddNewShopUiState.AddNewShopSuccess("New Shop Added Successfully")
                 }.addOnFailureListener {
@@ -147,6 +150,66 @@ class AddNewShopViewModel : ViewModel() {
                 }
                 .addOnFailureListener {
                     Timber.tag("getBalance").e("$it")
+                }
+        }
+    }
+
+    private fun updateTodaysCollection(b: Long) {
+        Timber.tag("updateTodaysCollection").i("updateTodaysCollection")
+        viewModelScope.launch(Dispatchers.IO) {
+            firestore.collection(TODAYS_COLLECTION)
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    querySnapshot.documents.mapNotNull { item ->
+                        item.toObject(TodaysCollections::class.java)
+                            ?.apply {
+                                id = item.id
+                            }
+                    }.also { list ->
+                        if (list.isNotEmpty()) {
+                            Timber.tag("updateTodaysCollection").i("Update")
+                            val prm = mutableMapOf<String, Any>()
+                            val balance =  (list[0].balance) + (b)
+                            prm["balance"] = balance
+                            prm["credit"] = balance
+                            list[0].id?.let { it1 ->
+                                firestore.collection(TODAYS_COLLECTION)
+                                    .document(it1)
+                                    .update(prm)
+                                    .addOnSuccessListener {
+                                        Timber.tag("updateTodaysCollection").i("Success")
+                                    }
+                                    .addOnFailureListener {
+                                        Timber.tag("updateTodaysCollection")
+                                            .e("Error deleting collection: $it")
+                                    }
+                            }
+                        } else {
+                            insertTodaysCollection(b)
+                        }
+                    }
+
+                }
+                .addOnFailureListener {
+                    Timber.tag("updateTodaysCollection").e("$it")
+                }
+        }
+    }
+
+    private fun insertTodaysCollection(b: Long) {
+        Timber.tag("insertTodaysCollection").i("Add new Entry")
+        val prm = TodaysCollections()
+        prm.balance = b
+        prm.credit = b
+
+        viewModelScope.launch(Dispatchers.IO) {
+            firestore.collection(TODAYS_COLLECTION)
+                .add(prm)
+                .addOnSuccessListener {
+                    Timber.tag("insertTodaysCollection").i("Success")
+                }
+                .addOnFailureListener { e ->
+                    Timber.tag("insertTodaysCollection").e(e)
                 }
         }
     }

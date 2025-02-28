@@ -106,5 +106,6 @@ class ShopCollectionViewModel : ViewModel() {
 
     fun setShop(shop: Shop) {
         _shop.value = shop
+        _balance.value = _shop.value?.balance ?: 0
     }
 }

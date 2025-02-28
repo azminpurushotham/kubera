@@ -38,7 +38,7 @@ class CollectionViewModel : ViewModel() {
     val todaysCredit: StateFlow<Long> get() = _todaysCredit
     private val _todaysDebit = MutableStateFlow(0L)
     val todaysDebit: StateFlow<Long> get() = _todaysDebit
-    val pageLimit = 200L
+    val pageLimit = 1L
 
 
     fun init() {

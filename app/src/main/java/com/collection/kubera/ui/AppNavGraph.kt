@@ -140,7 +140,7 @@ fun AppNavGraph(
                     )
                     BottomAppBarItem(
                         iconResId = Icons.Default.History,
-                        label = "Orders",
+                        label = "Collections",
                         onClick = {
                             navigationActions.navigateToCollectionHistory()
                         }

@@ -55,18 +55,18 @@ class ShopListViewModel : ViewModel() {
     ).flow.cachedIn(viewModelScope)
 
     fun init() {
-        getBalance()
+//        getBalance()
         getTodaysCollectionLogic()
     }
 
     fun onResume() {
-        getBalance()
+//        getBalance()
         getTodaysCollectionLogic()
     }
 
     fun onRefresh() {
         getSwipeShops()
-        getBalance()
+//        getBalance()
         getTodaysCollectionLogic()
     }
 
@@ -86,7 +86,7 @@ class ShopListViewModel : ViewModel() {
                                 id = it.id
                             }
                     }.also {
-                        _todaysCollection.value = it[0].balance
+                        _balance.value = it[0].balance
                         _todaysCredit.value = it[0].credit
                         _todaysDebit.value = it[0].debit
                     }

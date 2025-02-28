@@ -3,6 +3,7 @@ package com.collection.kubera.ui.theme
 import androidx.compose.ui.graphics.Color
 
 val primaryD = Color(0xFF344767)
+val primaryLightD = Color(0xFF4A6BA7)
 val secondaryD = Color(0xFFCCC2DC)
 val onSurfaceD = Color(0xFFe8e9e9)
 val onHintD = Color(0xFF9EA2A2)

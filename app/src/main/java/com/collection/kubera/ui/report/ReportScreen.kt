@@ -3,7 +3,6 @@ package com.collection.kubera.ui.report
 import android.os.Build
 import android.os.Environment
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,12 +19,21 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DateRangePicker
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,40 +55,51 @@ import com.collection.kubera.R
 import com.collection.kubera.states.ReportUiState
 import com.collection.kubera.ui.theme.headingLabelD
 import com.collection.kubera.ui.theme.labelD
+import com.collection.kubera.ui.theme.primaryLightD
 import com.collection.kubera.utils.getCurrentDate
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportScreen(navController: NavHostController) {
     val context = LocalContext.current
     val viewModel: ReportViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState(ReportUiState.Initial)
     var isButtonEnabled by remember { mutableStateOf(false) }
-    val path =  Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
+    val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    var message : String? = null
+    var message: String? = null
+    var showDatePicker by remember { mutableStateOf(false) }
+    var selectedDate by remember { mutableStateOf<Long?>(null) }
+    val datePickerState = rememberDateRangePickerState(
+        initialSelectedStartDateMillis = System.currentTimeMillis(),
+        initialSelectedEndDateMillis = System.currentTimeMillis()
+    )
 
 
-    when(uiState){
+    when (uiState) {
         ReportUiState.Initial -> {}
         ReportUiState.Loading -> {
-            Box (
+            Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
-            ){
+            ) {
                 CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.tertiary,)
+                    color = MaterialTheme.colorScheme.tertiary,
+                )
             }
 
         }
-        is ReportUiState.ReportCompleted ->{
+
+        is ReportUiState.ReportCompleted -> {
 
         }
-        is ReportUiState.ReportError ->{
-            LaunchedEffect(Unit){
+
+        is ReportUiState.ReportError -> {
+            LaunchedEffect(Unit) {
                 scope.launch {
-                    message =  (uiState as ReportUiState.ReportError).errorMessage
+                    message = (uiState as ReportUiState.ReportError).errorMessage
                     snackbarHostState.showSnackbar(
                         message = message!!,
                         duration = SnackbarDuration.Long
@@ -88,11 +107,53 @@ fun ReportScreen(navController: NavHostController) {
                 }
             }
         }
+
         is ReportUiState.ReportInit -> {
 
         }
+
         is ReportUiState.ReportSuccess -> {
-            Toast.makeText(context,(uiState as ReportUiState.ReportSuccess).message,Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                (uiState as ReportUiState.ReportSuccess).message,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            colors = DatePickerDefaults.colors(
+                containerColor = MaterialTheme.colorScheme.surface,
+            ),
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDatePicker = false
+                    selectedDate = datePickerState.selectedStartDateMillis
+                    selectedDate = datePickerState.selectedStartDateMillis
+                }) {
+                    Text("Confirm", color = primaryLightD)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel", color = primaryLightD)
+                }
+            }
+        ) {
+            DateRangePicker(
+                state = datePickerState,
+                colors = DatePickerDefaults.colors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    todayDateBorderColor = primaryLightD,
+                    todayContentColor = primaryLightD,
+                    dateTextFieldColors = TextFieldDefaults.colors(
+                        focusedTextColor = MaterialTheme.colorScheme.error
+                    )
+                ),
+
+            )
         }
     }
 
@@ -108,7 +169,7 @@ fun ReportScreen(navController: NavHostController) {
         Text(
             "Generate Report",
             fontSize = MaterialTheme.typography.titleLarge.fontSize,
-            fontWeight = FontWeight(1),
+            fontWeight = FontWeight(300),
             color = headingLabelD,
             modifier = Modifier.align(Alignment.Start)
         )
@@ -121,53 +182,26 @@ fun ReportScreen(navController: NavHostController) {
             overflow = TextOverflow.Ellipsis
         )
         Spacer(modifier = Modifier.height(20.dp))
-        Row(
-            modifier = Modifier
-                .align(Alignment.Start)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceAround,
-        ) {
-            Button(
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(5.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
-                    contentColor =  MaterialTheme.colorScheme.onPrimary
-                ),
-                onClick = {
 
-                },
-                content = {
-                    Text(
-                        "Select From Date",
-                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                        fontWeight = FontWeight(1),
-                        color = headingLabelD
-                    )
-                }
-            )
-            Spacer(Modifier.width(10.dp))
-            Button(
-                modifier = Modifier.weight(1f),
-                shape = RoundedCornerShape(5.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
-                    contentColor =  MaterialTheme.colorScheme.onPrimary
-                ),
-                onClick = {
-
-                },
-                content = {
-                    Text(
-                        "Select To Date",
-                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                        fontWeight = FontWeight(1),
-                        color = headingLabelD
-                    )
-                }
-
-            )
-        }
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(5.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ),
+            onClick = {
+                showDatePicker = true
+            },
+            content = {
+                Text(
+                    "Select Date Range",
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                    fontWeight = FontWeight(1),
+                    color = headingLabelD
+                )
+            }
+        )
         Spacer(modifier = Modifier.height(20.dp))
         Button(
             onClick = {
@@ -180,16 +214,18 @@ fun ReportScreen(navController: NavHostController) {
                 contentColor = if (isButtonEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
             )
         ) {
-            Text("Generate Report",
+            Text(
+                "Generate Report",
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                 fontWeight = FontWeight(1),
-                color = headingLabelD)
+                color = headingLabelD
+            )
         }
         Spacer(modifier = Modifier.height(20.dp))
         Text(
             "Today's Report",
             fontSize = MaterialTheme.typography.titleLarge.fontSize,
-            fontWeight = FontWeight(1),
+            fontWeight = FontWeight(300),
             color = headingLabelD,
             modifier = Modifier.align(Alignment.Start)
         )
@@ -204,26 +240,35 @@ fun ReportScreen(navController: NavHostController) {
             onClick = {
                 val d = getCurrentDate()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    viewModel.todaysReport("${path.absolutePath}/${getString(context,R.string.app_name)}/Collection/${d}",d)
+                    viewModel.todaysReport(
+                        "${path.absolutePath}/${
+                            getString(
+                                context,
+                                R.string.app_name
+                            )
+                        }/Collection/${d}", d
+                    )
                 }
             },
             shape = RoundedCornerShape(5.dp),
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
-                contentColor =  MaterialTheme.colorScheme.onPrimary
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
-            Text("Generate Today's Report",
+            Text(
+                "Generate Today's Report",
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                 fontWeight = FontWeight(1),
-                color = headingLabelD)
+                color = headingLabelD
+            )
         }
         Spacer(modifier = Modifier.height(20.dp))
         Text(
             "Shops Report",
             fontSize = MaterialTheme.typography.titleLarge.fontSize,
-            fontWeight = FontWeight(1),
+            fontWeight = FontWeight(300),
             color = headingLabelD,
             modifier = Modifier.align(Alignment.Start)
         )
@@ -241,13 +286,15 @@ fun ReportScreen(navController: NavHostController) {
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
-                contentColor =  MaterialTheme.colorScheme.onPrimary
+                contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
-            Text("All Shops",
+            Text(
+                "All Shops",
                 fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                 fontWeight = FontWeight(1),
-                color = headingLabelD)
+                color = headingLabelD
+            )
         }
     }
     SnackbarHost(
@@ -259,7 +306,7 @@ fun ReportScreen(navController: NavHostController) {
                 containerColor = MaterialTheme.colorScheme.surface,
                 content = {
                     Text(
-                        text = message?:""
+                        text = message ?: ""
                     )
                 }
             )

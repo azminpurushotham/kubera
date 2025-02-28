@@ -62,13 +62,13 @@ internal fun BalanceHeader(
                     horizontalArrangement = Arrangement.Start, // Aligns items to the left
                     verticalAlignment = Alignment.Bottom // Aligns items to the bottom
                 ) {
-                    Text(
-                        todaysCollection.absoluteValue.toString(),
-                        fontWeight = FontWeight(400),
-                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                        color = if (todaysCollection > 0) green else red,
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
+//                    Text(
+//                        todaysCollection.absoluteValue.toString(),
+//                        fontWeight = FontWeight(400),
+//                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+//                        color = if (todaysCollection > 0) green else red,
+//                    )
+//                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         "Cr:",
                         fontWeight = FontWeight(400),
