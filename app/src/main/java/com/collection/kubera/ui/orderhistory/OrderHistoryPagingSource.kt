@@ -2,21 +2,21 @@ package com.collection.kubera.ui.orderhistory
 
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
-import com.collection.kubera.data.CollectionHistory
+import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 
 class OrderHistoryPagingSource(private val pageSize: Int, private val firestore: FirebaseFirestore) :
-    PagingSource<Query, CollectionHistory>() {
-    override suspend fun load(params: LoadParams<Query>): LoadResult<Query, CollectionHistory> {
+    PagingSource<Query, CollectionModel>() {
+    override suspend fun load(params: LoadParams<Query>): LoadResult<Query, CollectionModel> {
         return try {
             val query = params.key ?: firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                 .limit(pageSize.toLong())
             val snapshot = query.get().await()
             val shops = snapshot.documents.mapNotNull {
-                it.toObject(CollectionHistory::class.java)
+                it.toObject(CollectionModel::class.java)
                     ?.apply {
                         id = it.id
                     }
@@ -38,5 +38,5 @@ class OrderHistoryPagingSource(private val pageSize: Int, private val firestore:
         }
     }
 
-    override fun getRefreshKey(state: PagingState<Query, CollectionHistory>): Query? = null
+    override fun getRefreshKey(state: PagingState<Query, CollectionModel>): Query? = null
 }

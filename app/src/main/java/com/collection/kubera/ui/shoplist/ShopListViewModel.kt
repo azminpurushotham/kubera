@@ -41,7 +41,7 @@ class ShopListViewModel : ViewModel() {
     private val _todaysDebit = MutableStateFlow(0L)
     val todaysDebit: StateFlow<Long> get() = _todaysDebit
     private val firestore = FirebaseFirestore.getInstance()
-    val pageSize = 1 // Number of documents per page
+    val pageSize = 20 // Number of documents per page
     private var lastDocumentSnapshot: DocumentSnapshot? =
         null // Store the last document of the current page
     private val baseQuery = firestore.collection(SHOP_COLLECTION)

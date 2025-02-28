@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.BALANCE_COLLECTION
 import com.collection.kubera.data.BalanceAmount
-import com.collection.kubera.data.CollectionHistory
+import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TODAYS_COLLECTION
@@ -107,7 +107,7 @@ class ShopDetailsViewModel : ViewModel() {
             }
             viewModelScope.launch(Dispatchers.IO) {
                 val shop = shop.value
-                val prm = CollectionHistory().apply {
+                val prm = CollectionModel().apply {
                     if (shop?.id?.isEmpty() != true) {
                         this.shopId = shop?.id!!
                     }
@@ -131,6 +131,7 @@ class ShopDetailsViewModel : ViewModel() {
                     this.timestamp = Timestamp.now()
                     this.transactionType = selectedOption
                 }
+                Timber.tag("insertCollectionHistory").i(prm.toString())
                 firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                     .add(prm).addOnSuccessListener {
                         updateState(ShopDetailUiState.ShopDetailToast("Successfully collection history updated"))

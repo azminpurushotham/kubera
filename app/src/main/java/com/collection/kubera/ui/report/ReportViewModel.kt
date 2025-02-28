@@ -2,7 +2,7 @@ package com.collection.kubera.ui.report
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
-import com.collection.kubera.data.CollectionHistory
+import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
@@ -24,62 +24,67 @@ import java.util.Date
 class ReportViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun todaysReport(path: String, date: String = getCurrentDate()
     ) {
-        Timber.tag("todaysReport")
-        _uiState.value = ReportUiState.Loading
-        //            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-        val dir = File(path)
-        if (!dir.exists()) {
-            dir.mkdirs()
-        }
-        val schema = getReportSchema()
-        val localDateTime = LocalDateTime.now()
-        val zoneId: ZoneId = ZoneId.systemDefault()
-        val startOfDay = localDateTime.toLocalDate().atStartOfDay(zoneId)
-        val endOfDay = localDateTime.toLocalDate().atTime(23, 59, 59).atZone(zoneId)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            Timber.i("todaysReport")
+            _uiState.value = ReportUiState.Loading
+            val dir = File(path)
+            if (!dir.exists()) {
+                dir.mkdirs()
+            }
+            val schema = getReportSchema()
+            val localDateTime = LocalDateTime.now()
+            val zoneId: ZoneId = ZoneId.systemDefault()
+            val startOfDay = localDateTime.toLocalDate().atStartOfDay(zoneId)
+            val endOfDay = localDateTime.toLocalDate().atTime(23, 59, 59).atZone(zoneId)
 
-        val startTimestamp = Timestamp(Date.from(startOfDay.toInstant()))
-        val endTimestamp = Timestamp(Date.from(endOfDay.toInstant()))
+            val startTimestamp = Timestamp(Date.from(startOfDay.toInstant()))
+            val endTimestamp = Timestamp(Date.from(endOfDay.toInstant()))
 
-        firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .whereGreaterThanOrEqualTo("timestamp", startTimestamp)
-            .whereLessThanOrEqualTo("timestamp", endTimestamp)
-            .get()
-            .addOnSuccessListener {
-                val r = it.documents.mapNotNull { item ->
-                    item.toObject(CollectionHistory::class.java)
-                        ?.apply {
-                            id = item.id
+            firestore.collection(TRANSECTION_HISTORY_COLLECTION)
+                .orderBy("timestamp", Query.Direction.DESCENDING)
+                .whereGreaterThanOrEqualTo("timestamp", startTimestamp)
+                .whereLessThanOrEqualTo("timestamp", endTimestamp)
+                .get()
+                .addOnSuccessListener {
+                        val r = it.documents.mapNotNull { item ->
+                            try {
+                                item.toObject(CollectionModel::class.java)
+                                    ?.apply {
+                                        id = item.id
+                                    }
+                            } catch (e: Exception) {
+                                Timber.e(e)
+                            }
+                        }
+                        Timber.i(r.toString())
+                        if(r.isNotEmpty()){
+                            try {
+                                writeCsvFile(
+                                    fileName = "$date.csv",
+                                    dir.absolutePath,
+                                    list = r,
+                                    schema = schema
+                                )
+                                _uiState.value = ReportUiState.ReportSuccess("Today's $date report generated successfully")
+                            } catch (e: Exception) {
+                                _uiState.value = ReportUiState.ReportError("Failed to create today's report $date ERROR $e")
+                            }
+                        }else{
+                            _uiState.value = ReportUiState.ReportError("No collection report for today $date")
                         }
                 }
-                if(r.isNotEmpty()){
-                    try {
-                        writeCsvFile(
-                            fileName = "$date.csv",
-                            dir.absolutePath,
-                            list = r,
-                            schema = schema
-                        )
-                        _uiState.value = ReportUiState.ReportSuccess("Today's $date report generated successfully")
-                    } catch (e: Exception) {
-                        _uiState.value = ReportUiState.ReportError("Failed to create today's report $date ERROR $e")
-                    }
-                }else{
-                    _uiState.value = ReportUiState.ReportError("No collection report for today $date")
+                .addOnFailureListener {e->
+                    _uiState.value = ReportUiState.ReportError("No collection report for today $date $e")
                 }
-            }
-            .addOnFailureListener {e->
-                _uiState.value = ReportUiState.ReportError("No collection report for today $date $e")
-            }
+        }
     }
 
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun generateReport(path: String, startDate: String, endDate: String) {
-        Timber.tag("generateReport")
+        Timber.i("generateReport")
         _uiState.value = ReportUiState.Loading
         //            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
         val dir = File(path)
@@ -98,7 +103,7 @@ class ReportViewModel : ViewModel() {
                 .get()
                 .addOnSuccessListener {
                     val r = it.documents.mapNotNull { item ->
-                        item.toObject(CollectionHistory::class.java)
+                        item.toObject(CollectionModel::class.java)
                             ?.apply {
                                 id = item.id
                             }
@@ -129,6 +134,7 @@ class ReportViewModel : ViewModel() {
     }
 
     fun generateAllshops(path: String) {
+        Timber.i("generateAllshops")
         _uiState.value = ReportUiState.Loading
         //            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
         val dir = File(path)
@@ -184,6 +190,7 @@ class ReportViewModel : ViewModel() {
             .addColumn("SecondaryPhoneNumber")
             .addColumn("MailId")
             .addColumn("CollectedById")
+            .addColumn("stability")
             .build()
     }
 
@@ -205,10 +212,9 @@ class ReportViewModel : ViewModel() {
             .addColumn("SecondaryPhoneNumber")
             .addColumn("MailId")
             .addColumn("Status")
+            .addColumn("stability")
             .build()
     }
-
-
 
     private val _uiState: MutableStateFlow<ReportUiState> =
         MutableStateFlow(ReportUiState.Initial)

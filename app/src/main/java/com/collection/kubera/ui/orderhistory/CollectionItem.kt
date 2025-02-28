@@ -25,7 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.collection.kubera.data.CollectionHistory
+import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
 import com.collection.kubera.ui.theme.boxColorD
@@ -38,7 +38,7 @@ import kotlin.math.absoluteValue
 @Composable
 internal fun CollectionItem(
     navController: NavHostController,
-    item: CollectionHistory
+    item: CollectionModel
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()

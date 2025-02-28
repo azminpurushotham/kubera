@@ -2,7 +2,6 @@ package com.collection.kubera.data
 
 import android.os.Parcel
 import android.os.Parcelable
-import androidx.room.TypeConverters
 import com.collection.kubera.utils.dmyh
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
@@ -10,8 +9,7 @@ import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-@TypeConverters(DateConverter::class)
-data class CollectionHistory(
+data class CollectionModel(
     @field:JsonProperty("Id")
     var id: String? = null,
     @field:JsonProperty("ShopId")
@@ -42,6 +40,8 @@ data class CollectionHistory(
     var collectedById : String? = null,
     @field:JsonProperty("TransactionType")
     var transactionType: String? = null,
+//    @field:JsonIgnore
+//    var stability: Int? = 1,
     @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     var timestamp: Timestamp? = null,
 ): Parcelable {
@@ -61,6 +61,7 @@ data class CollectionHistory(
         "Admin",
         null,
         null,
+//        null,
         Timestamp.now(),
         )
 
@@ -106,6 +107,7 @@ data class CollectionHistory(
         parcel.readString()?:"Admin",
         parcel.readString(),
         parcel.readString(),
+//        parcel.readInt(),
         parcel.readParcelable(Timestamp::class.java.classLoader),
     )
 
@@ -125,6 +127,7 @@ data class CollectionHistory(
         parcel.writeString(collectedBy)
         parcel.writeString(collectedById)
         parcel.writeString(transactionType)
+//        stability?.let { parcel.writeInt(it) }
         parcel.writeParcelable(timestamp, flags)
     }
 
@@ -132,12 +135,12 @@ data class CollectionHistory(
         return 0
     }
 
-    companion object CREATOR : Parcelable.Creator<CollectionHistory> {
-        override fun createFromParcel(parcel: Parcel): CollectionHistory {
-            return CollectionHistory(parcel)
+    companion object CREATOR : Parcelable.Creator<CollectionModel> {
+        override fun createFromParcel(parcel: Parcel): CollectionModel {
+            return CollectionModel(parcel)
         }
 
-        override fun newArray(size: Int): Array<CollectionHistory?> {
+        override fun newArray(size: Int): Array<CollectionModel?> {
             return arrayOfNulls(size)
         }
     }

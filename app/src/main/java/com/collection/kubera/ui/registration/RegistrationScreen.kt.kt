@@ -230,7 +230,7 @@ fun RegistrationScreen(
                         modifier = Modifier.fillMaxWidth(),
                         enabled = isEnabled, // Control button's enabled state
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
+                            containerColor = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary, // Green when enabled, Gray when disabled
                             contentColor = if (isEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
                         )
                     ) {

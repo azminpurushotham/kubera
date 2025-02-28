@@ -57,6 +57,7 @@ import com.collection.kubera.ui.theme.primaryLightD
 import com.collection.kubera.utils.dateFormate2
 import com.collection.kubera.utils.getCurrentDate
 import kotlinx.coroutines.launch
+import timber.log.Timber
 import java.time.LocalDate
 import java.util.Date
 
@@ -114,6 +115,7 @@ fun ReportScreen(navController: NavHostController) {
             LaunchedEffect(Unit) {
                 scope.launch {
                     message = (uiState as ReportUiState.ReportError).errorMessage
+                    Timber.e(message)
                     snackbarHostState.showSnackbar(
                         message = message!!,
                         duration = SnackbarDuration.Long

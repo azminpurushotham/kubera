@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.BALANCE_COLLECTION
 import com.collection.kubera.data.BalanceAmount
-import com.collection.kubera.data.CollectionHistory
+import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TODAYS_COLLECTION
@@ -85,7 +85,7 @@ class AddNewShopViewModel : ViewModel() {
 
     private fun insertCollectionHistory(shop: Shop) {
         viewModelScope.launch(Dispatchers.IO) {
-            val prm = CollectionHistory().apply {
+            val prm = CollectionModel().apply {
                 if (shop.id.isNotEmpty()) {
                     this.shopId = shop.id
                 }

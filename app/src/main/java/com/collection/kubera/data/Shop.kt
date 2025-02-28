@@ -39,8 +39,8 @@ data class Shop(
     @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     var timestamp: Timestamp? = null,
     @field:JsonProperty("Status")
-    var status: Boolean = true
-): Parcelable {
+    var status: Boolean = true,
+) : Parcelable {
     constructor() : this(
         "",
         "",
@@ -56,7 +56,8 @@ data class Shop(
         "",
         null,
         Timestamp.now(),
-        false)
+        false,
+    )
 
     @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     var datedmy: String = ""
@@ -65,6 +66,7 @@ data class Shop(
             val formatter = SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault())
             return formatter.format(date)
         }
+
     @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     var time: String = ""
         get() {
@@ -74,7 +76,7 @@ data class Shop(
         }
 
     @field:JsonProperty("Time")
-    var datetime : String = ""
+    var datetime: String = ""
         get() {
             val date = timestamp?.toDate()
             val formatter = SimpleDateFormat(dmyh, Locale.getDefault())
@@ -82,23 +84,22 @@ data class Shop(
         }
 
     constructor(parcel: Parcel) : this(
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
-        parcel.readString()?:"",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
         parcel.readString(),
         parcel.readString(),
-        parcel.readString()?:"",
+        parcel.readString() ?: "",
         parcel.readValue(Long::class.java.classLoader) as? Long,
         parcel.readParcelable(Timestamp::class.java.classLoader),
-        parcel.readByte() != 0.toByte()
-    ) {
-    }
+        parcel.readByte() != 0.toByte(),
+    )
 
     companion object CREATOR : Parcelable.Creator<Shop> {
         override fun createFromParcel(parcel: Parcel): Shop {

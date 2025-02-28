@@ -2,7 +2,7 @@ package com.collection.kubera.ui.shoporderhistory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.CollectionHistory
+import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
@@ -20,8 +20,8 @@ class ShopCollectionViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> =
         MutableStateFlow(HomeUiState.Initial)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-    private val _collections = MutableStateFlow<List<CollectionHistory>>(emptyList())
-    val collections: StateFlow<List<CollectionHistory>> get() = _collections
+    private val _collections = MutableStateFlow<List<CollectionModel>>(emptyList())
+    val collections: StateFlow<List<CollectionModel>> get() = _collections
     private val _balance = MutableStateFlow<Long>(0)
     val balance: StateFlow<Long> get() = _balance
     private val firestore = FirebaseFirestore.getInstance()
@@ -62,7 +62,7 @@ class ShopCollectionViewModel : ViewModel() {
                 .get()
                 .addOnSuccessListener { snapshot ->
                     _collections.value = snapshot.mapNotNull {
-                        it.toObject(CollectionHistory::class.java)
+                        it.toObject(CollectionModel::class.java)
                             .apply {
                                 it.data["shopId"]?.let {i->
                                     this.shopId = i.toString()
@@ -88,7 +88,7 @@ class ShopCollectionViewModel : ViewModel() {
                 .get()
                 .addOnSuccessListener { snapshot ->
                     _collections.value = snapshot.mapNotNull {
-                        it.toObject(CollectionHistory::class.java)
+                        it.toObject(CollectionModel::class.java)
                             .apply {
                                 it.data["shopId"]?.let {i->
                                     this.shopId = i.toString()

@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.BALANCE_COLLECTION
 import com.collection.kubera.data.BalanceAmount
-import com.collection.kubera.data.CollectionHistory
+import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TODAYS_COLLECTION
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
@@ -25,8 +25,8 @@ class CollectionViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> =
         MutableStateFlow(HomeUiState.Initial)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-    private val _shopList = MutableStateFlow<List<CollectionHistory>>(emptyList())
-    val shopList: StateFlow<List<CollectionHistory>> get() = _shopList
+    private val _shopList = MutableStateFlow<List<CollectionModel>>(emptyList())
+    val shopList: StateFlow<List<CollectionModel>> get() = _shopList
     private val _balance = MutableStateFlow<Long>(0)
     val balance: StateFlow<Long> get() = _balance
     private val firestore = FirebaseFirestore.getInstance()
@@ -38,7 +38,7 @@ class CollectionViewModel : ViewModel() {
     val todaysCredit: StateFlow<Long> get() = _todaysCredit
     private val _todaysDebit = MutableStateFlow(0L)
     val todaysDebit: StateFlow<Long> get() = _todaysDebit
-    val pageLimit = 1L
+    val pageLimit = 150L
 
 
     fun init() {
@@ -92,7 +92,7 @@ class CollectionViewModel : ViewModel() {
                 .addOnSuccessListener { results ->
                     _uiState.value = HomeUiState.HomeSuccess("Success")
                     _shopList.value = results.mapNotNull {
-                        it.toObject(CollectionHistory::class.java)
+                        it.toObject(CollectionModel::class.java)
                             .apply {
                                 it.data["shopId"]?.let { i ->
                                     shopId = i as String?
@@ -145,7 +145,7 @@ class CollectionViewModel : ViewModel() {
                 .addOnSuccessListener { results ->
                     _uiState.value = HomeUiState.HomeSuccess("Success")
                     _shopList.value = results.mapNotNull {
-                        it.toObject(CollectionHistory::class.java)
+                        it.toObject(CollectionModel::class.java)
                             .apply {
                                 it.data["shopId"]?.let { i ->
                                     this.shopId = i.toString()
