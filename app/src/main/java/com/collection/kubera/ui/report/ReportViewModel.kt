@@ -3,6 +3,8 @@ import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import com.collection.kubera.data.CollectionHistory
+import com.collection.kubera.data.SHOP_COLLECTION
+import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
 import com.collection.kubera.states.ReportUiState
 import com.collection.kubera.utils.getCurrentDate
@@ -126,6 +128,44 @@ class ReportViewModel : ViewModel() {
 
     }
 
+    fun generateAllshops(path: String) {
+        _uiState.value = ReportUiState.Loading
+        //            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        val dir = File(path)
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
+        val schema = getShopsSchema()
+        firestore.collection(SHOP_COLLECTION)
+            .get()
+            .addOnSuccessListener {
+                val r = it.documents.mapNotNull { item ->
+                    item.toObject(Shop::class.java)
+                        ?.apply {
+                            id = item.id
+                        }
+                }
+                if(r.isNotEmpty()){
+                    try {
+                        writeCsvFile(
+                            fileName = "AllShops.csv",
+                            dir.absolutePath,
+                            list = r,
+                            schema = schema
+                        )
+                        _uiState.value = ReportUiState.ReportSuccess("AllShops report generated successfully")
+                    } catch (e: Exception) {
+                        _uiState.value = ReportUiState.ReportError("Failed to create AllShops report ERROR $e")
+                    }
+                }else{
+                    _uiState.value = ReportUiState.ReportError("Failed to create AllShops report")
+                }
+            }
+            .addOnFailureListener {e->
+                _uiState.value = ReportUiState.ReportError("Failed to create AllShops report $e")
+            }
+    }
+
     private fun getReportSchema(): CsvSchema {
         return CsvSchema.builder()
             .addColumn("Time")
@@ -146,6 +186,28 @@ class ReportViewModel : ViewModel() {
             .addColumn("CollectedById")
             .build()
     }
+
+    private fun getShopsSchema(): CsvSchema {
+        return CsvSchema.builder()
+            .addColumn("ShopName")
+            .addColumn("FirstName")
+            .addColumn("LastName")
+            .addColumn("PhoneNumber")
+            .addColumn("Balance")
+            .addColumn("TransactionType")
+            .addColumn("Time")
+            .addColumn("Location")
+            .addColumn("Landmark")
+            .addColumn("Id")
+            .addColumn("ShopNameL")
+            .addColumn("FirstNameL")
+            .addColumn("LastNameL")
+            .addColumn("SecondaryPhoneNumber")
+            .addColumn("MailId")
+            .addColumn("Status")
+            .build()
+    }
+
 
 
     private val _uiState: MutableStateFlow<ReportUiState> =

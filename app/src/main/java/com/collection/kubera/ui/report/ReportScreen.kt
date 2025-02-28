@@ -305,6 +305,14 @@ fun ReportScreen(navController: NavHostController) {
         )
         Button(
             onClick = {
+                viewModel.generateAllshops(
+                    "${path.absolutePath}/${
+                        getString(
+                            context,
+                            R.string.app_name
+                        )
+                    }/Shops"
+                )
             },
             shape = RoundedCornerShape(5.dp),
             modifier = Modifier.fillMaxWidth(),
