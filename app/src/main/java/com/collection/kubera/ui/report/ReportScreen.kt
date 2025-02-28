@@ -3,28 +3,27 @@ package com.collection.kubera.ui.report
 import android.os.Build
 import android.os.Environment
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -32,7 +31,6 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -56,9 +54,13 @@ import com.collection.kubera.states.ReportUiState
 import com.collection.kubera.ui.theme.headingLabelD
 import com.collection.kubera.ui.theme.labelD
 import com.collection.kubera.ui.theme.primaryLightD
+import com.collection.kubera.utils.dateFormate2
 import com.collection.kubera.utils.getCurrentDate
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.util.Date
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportScreen(navController: NavHostController) {
@@ -71,12 +73,24 @@ fun ReportScreen(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     var message: String? = null
     var showDatePicker by remember { mutableStateOf(false) }
-    var selectedDate by remember { mutableStateOf<Long?>(null) }
+    val today = LocalDate.now()
     val datePickerState = rememberDateRangePickerState(
-        initialSelectedStartDateMillis = System.currentTimeMillis(),
-        initialSelectedEndDateMillis = System.currentTimeMillis()
+        selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val s =
+                    LocalDate.ofEpochDay(utcTimeMillis / 86_400_000) // Convert millis to LocalDate
+                return !s.isAfter(today) // ✅ Allow only past & today, disable future dates
+            }
+        }
     )
+    val startDate = datePickerState.selectedStartDateMillis?.let {
+        isButtonEnabled = true
+        dateFormate2.format(Date(it))
+    }
 
+    val endDate = datePickerState.selectedEndDateMillis?.let {
+        dateFormate2.format(Date(it))
+    }
 
     when (uiState) {
         ReportUiState.Initial -> {}
@@ -130,8 +144,6 @@ fun ReportScreen(navController: NavHostController) {
             confirmButton = {
                 TextButton(onClick = {
                     showDatePicker = false
-                    selectedDate = datePickerState.selectedStartDateMillis
-                    selectedDate = datePickerState.selectedStartDateMillis
                 }) {
                     Text("Confirm", color = primaryLightD)
                 }
@@ -148,11 +160,12 @@ fun ReportScreen(navController: NavHostController) {
                     containerColor = MaterialTheme.colorScheme.surface,
                     todayDateBorderColor = primaryLightD,
                     todayContentColor = primaryLightD,
+                    dayContentColor = MaterialTheme.colorScheme.onSurface,
+                    disabledDayContentColor = MaterialTheme.colorScheme.onSecondary,
                     dateTextFieldColors = TextFieldDefaults.colors(
                         focusedTextColor = MaterialTheme.colorScheme.error
                     )
                 ),
-
             )
         }
     }
@@ -195,7 +208,11 @@ fun ReportScreen(navController: NavHostController) {
             },
             content = {
                 Text(
-                    "Select Date Range",
+                    if (startDate == null) {
+                        "Select Date Range"
+                    } else {
+                        "$startDate - $endDate"
+                    },
                     fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                     fontWeight = FontWeight(1),
                     color = headingLabelD
@@ -205,6 +222,16 @@ fun ReportScreen(navController: NavHostController) {
         Spacer(modifier = Modifier.height(20.dp))
         Button(
             onClick = {
+                viewModel.generateReport(
+                    "${path.absolutePath}/${
+                        getString(
+                            context,
+                            R.string.app_name
+                        )
+                    }/Collection",
+                    startDate!!,
+                    endDate!!
+                )
             },
             shape = RoundedCornerShape(5.dp),
             modifier = Modifier.fillMaxWidth(),
@@ -238,17 +265,14 @@ fun ReportScreen(navController: NavHostController) {
         )
         Button(
             onClick = {
-                val d = getCurrentDate()
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    viewModel.todaysReport(
-                        "${path.absolutePath}/${
-                            getString(
-                                context,
-                                R.string.app_name
-                            )
-                        }/Collection/${d}", d
-                    )
-                }
+                viewModel.todaysReport(
+                    "${path.absolutePath}/${
+                        getString(
+                            context,
+                            R.string.app_name
+                        )
+                    }/Collection"
+                )
             },
             shape = RoundedCornerShape(5.dp),
             modifier = Modifier.fillMaxWidth(),

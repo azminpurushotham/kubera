@@ -16,6 +16,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Date
 
 
@@ -56,6 +57,25 @@ internal fun getCurrentDate(): String {
     return dateFormate2.format(Date())
 }
 
+
+internal fun getDateFromTimestamp(timestamp: Long):  String {
+    return dateFormate2.format(Date().apply {
+        this.time = timestamp
+    })
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun String.toTimestamp(): Timestamp? {
+    return try {
+        val formatter = DateTimeFormatter.ofPattern(dmy)
+        val localDate = LocalDate.parse(this, formatter)
+        val instant = localDate.atStartOfDay(ZoneId.systemDefault()).toInstant()
+        Timestamp(Date.from(instant))
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
 
 @RequiresApi(Build.VERSION_CODES.O)
 internal fun convertZonedDateTimeToTimestamp(zonedDateTime: ZonedDateTime): Timestamp {
