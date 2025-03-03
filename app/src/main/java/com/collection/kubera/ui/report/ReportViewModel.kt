@@ -8,6 +8,7 @@ import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
 import com.collection.kubera.states.ReportUiState
 import com.collection.kubera.utils.getCurrentDate
+import com.collection.kubera.utils.toEndTimestamp
 import com.collection.kubera.utils.toTimestamp
 import com.collection.kubera.utils.writeCsvFile
 import com.fasterxml.jackson.dataformat.csv.CsvSchema
@@ -93,7 +94,8 @@ class ReportViewModel : ViewModel() {
         }
         val schema = getReportSchema()
         val startTimestamp = startDate.toTimestamp()
-        val endTimestamp = endDate.toTimestamp()
+        val endTimestamp = endDate.toEndTimestamp()
+        Timber.tag("generateReportDATE").i("$startTimestamp - $endTimestamp")
 
         if(startTimestamp!=null && endTimestamp!=null){
             firestore.collection(TRANSECTION_HISTORY_COLLECTION)
@@ -109,6 +111,7 @@ class ReportViewModel : ViewModel() {
                             }
                     }
                     if(r.isNotEmpty()){
+                        Timber.tag("generateReportSIZE").i(r.size.toString())
                         try {
                             writeCsvFile(
                                 fileName = "$startDate-$endDate.csv",
@@ -118,14 +121,14 @@ class ReportViewModel : ViewModel() {
                             )
                             _uiState.value = ReportUiState.ReportSuccess("$startDate - $endDate report generated successfully")
                         } catch (e: Exception) {
-                            _uiState.value = ReportUiState.ReportError("Failed to create today's report $startDate - $endDate ERROR $e")
+                            _uiState.value = ReportUiState.ReportError("Failed to create report for $startDate - $endDate ERROR $e")
                         }
                     }else{
-                        _uiState.value = ReportUiState.ReportError("No collection report for today $startDate - $endDate")
+                        _uiState.value = ReportUiState.ReportError("No collection report for $startDate - $endDate")
                     }
                 }
                 .addOnFailureListener {e->
-                    _uiState.value = ReportUiState.ReportError("No collection report for today $startDate - $endDate $e")
+                    _uiState.value = ReportUiState.ReportError("No collection report for $startDate - $endDate $e")
                 }
         }else{
             _uiState.value = ReportUiState.ReportError("Invalid date format")

@@ -79,6 +79,20 @@ fun String.toTimestamp(): Timestamp? {
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
+fun String.toEndTimestamp(): Timestamp? {
+    return try {
+        val formatter = DateTimeFormatter.ofPattern(dmy)
+        val localDate = LocalDate.parse(this, formatter)
+        val endOfDay = localDate.atTime(LocalTime.MAX) // Max time of day
+        val instant = endOfDay.atZone(ZoneId.systemDefault()).toInstant()
+        Timestamp(Date.from(instant))
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
 internal fun convertZonedDateTimeToTimestamp(zonedDateTime: ZonedDateTime): Timestamp {
     val instant = zonedDateTime.toInstant()
     return Timestamp(Date.from(instant))

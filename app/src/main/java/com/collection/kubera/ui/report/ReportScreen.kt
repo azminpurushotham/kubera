@@ -55,7 +55,6 @@ import com.collection.kubera.ui.theme.headingLabelD
 import com.collection.kubera.ui.theme.labelD
 import com.collection.kubera.ui.theme.primaryLightD
 import com.collection.kubera.utils.dateFormate2
-import com.collection.kubera.utils.getCurrentDate
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.time.LocalDate
@@ -84,14 +83,9 @@ fun ReportScreen(navController: NavHostController) {
             }
         }
     )
-    val startDate = datePickerState.selectedStartDateMillis?.let {
-        isButtonEnabled = true
-        dateFormate2.format(Date(it))
-    }
+    var startDate: String? by remember { mutableStateOf(null) }
+    var endDate: String? by remember {  mutableStateOf(null) }
 
-    val endDate = datePickerState.selectedEndDateMillis?.let {
-        dateFormate2.format(Date(it))
-    }
 
     when (uiState) {
         ReportUiState.Initial -> {}
@@ -142,9 +136,38 @@ fun ReportScreen(navController: NavHostController) {
             colors = DatePickerDefaults.colors(
                 containerColor = MaterialTheme.colorScheme.surface,
             ),
-            onDismissRequest = { showDatePicker = false },
+            onDismissRequest = {
+                startDate = datePickerState.selectedStartDateMillis?.let {
+                    isButtonEnabled = true
+                    dateFormate2.format(Date(it))
+                }
+                endDate = datePickerState.selectedEndDateMillis?.let {
+                    dateFormate2.format(Date(it))
+                }
+                if (startDate != null && endDate == null) {
+                    endDate = startDate
+                }
+                if (startDate == null && endDate != null) {
+                    startDate = endDate
+                }
+                showDatePicker = false
+            },
             confirmButton = {
                 TextButton(onClick = {
+                    startDate = datePickerState.selectedStartDateMillis?.let {
+                        isButtonEnabled = true
+                        dateFormate2.format(Date(it))
+                    }
+                    endDate = datePickerState.selectedEndDateMillis?.let {
+                        dateFormate2.format(Date(it))
+                    }
+                    if (startDate != null && endDate == null) {
+                        endDate = startDate
+                    }
+                    if (startDate == null && endDate != null) {
+                        startDate = endDate
+                    }
+                    Timber.tag("DATE").i("$startDate - $endDate")
                     showDatePicker = false
                 }) {
                     Text("Confirm", color = primaryLightD)
@@ -210,10 +233,10 @@ fun ReportScreen(navController: NavHostController) {
             },
             content = {
                 Text(
-                    if (startDate == null) {
-                        "Select Date Range"
-                    } else {
+                    if (startDate != null && endDate != null) {
                         "$startDate - $endDate"
+                    } else {
+                        "Select Date Range"
                     },
                     fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                     fontWeight = FontWeight(1),
