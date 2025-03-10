@@ -2,10 +2,14 @@ package com.collection.kubera.ui.report
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.collection.kubera.data.BALANCE_COLLECTION
+import com.collection.kubera.data.BalanceAmount
 import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
+import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.states.ReportUiState
 import com.collection.kubera.utils.getCurrentDate
 import com.collection.kubera.utils.toEndTimestamp
@@ -15,7 +19,10 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
 import java.time.LocalDateTime
@@ -24,6 +31,40 @@ import java.util.Date
 
 class ReportViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
+    private val _balance = MutableStateFlow<Long>(0)
+    val balance: StateFlow<Long> get() = _balance
+    init {
+        getBalance()
+    }
+
+
+    internal fun getBalance() {
+        Timber.tag("getBalance").i("getBalance")
+        viewModelScope.launch(Dispatchers.IO) {
+            firestore.collection(BALANCE_COLLECTION)
+                .get()
+                .addOnSuccessListener {
+                    val balanceAmounts = it.documents.mapNotNull { item ->
+                        item.toObject(BalanceAmount::class.java)
+                            ?.apply {
+                                id = item.id
+                            }
+                    }
+                    if (balanceAmounts.isNotEmpty() && balanceAmounts[0].balance > 0) {
+                        Timber.tag("getBalance").i(it.toString())
+                        _balance.value = balanceAmounts[0].balance
+                    } else {
+                        _balance.value = 0L
+                    }
+                }
+                .addOnFailureListener {
+                    Timber.e(it)
+                    _balance.value = 0L
+                    _uiState.value =
+                        ReportUiState.ReportError(it.message ?: "Unable to show balance")
+                }
+        }
+    }
 
     fun todaysReport(path: String, date: String = getCurrentDate()
     ) {

@@ -203,7 +203,8 @@ fun ReportScreen(navController: NavHostController) {
         verticalArrangement = Arrangement.Center, // Vertically center items
         horizontalAlignment = Alignment.Start // Horizontally center items
     ) {
-        Spacer(modifier = Modifier.height(20.dp))
+        BalanceHeader(viewModel)
+        Spacer(modifier = Modifier.height(10.dp))
         Text(
             "Generate Report",
             fontSize = MaterialTheme.typography.titleLarge.fontSize,

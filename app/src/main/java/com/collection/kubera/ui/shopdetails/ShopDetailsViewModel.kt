@@ -87,7 +87,7 @@ class ShopDetailsViewModel : ViewModel() {
                             b = b,
                             selectedOption = selectedOption
                         )
-                        updateTotalBalance(balance, selectedOption)
+                        updateTotalBalance(b.toLong(), selectedOption)
                         updateTodaysCollection(b.toLong(), selectedOption)
                         updateState(ShopDetailUiState.ShopDetailToast("Successfully balance updated"))
                         updateState(ShopDetailUiState.ShopDetailsPopBack("Successfully balance updated"))
@@ -160,6 +160,8 @@ class ShopDetailsViewModel : ViewModel() {
                             } else {
                                 (it[0].balance) - (b)
                             }
+                            Timber.tag("TOTALBALANCE").i(it[0].balance.toString())
+                            Timber.tag("TOTALBALANCE").i(balance.toString())
                             firestore.collection(BALANCE_COLLECTION)
                                 .document(it[0].id!!)
                                 .update(mapOf("balance" to balance))

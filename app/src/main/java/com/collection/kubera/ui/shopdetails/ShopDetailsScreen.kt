@@ -62,6 +62,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -355,8 +356,8 @@ fun ShopDetailsScreen(
                 .background(color = labelBackgroundD),
         ) {
             Text(
-                "Balance Amount : ${shop?.balance ?: 0}",
-                color = if ((shop?.balance ?: 0) > 0) {
+                "Balance Amount : ${(shop?.balance ?: 0L).absoluteValue}",
+                color = if ((shop?.balance ?: 0L) > 0L) {
                     green
                 } else {
                     red

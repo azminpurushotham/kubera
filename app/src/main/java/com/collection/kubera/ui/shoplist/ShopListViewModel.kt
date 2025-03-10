@@ -32,8 +32,6 @@ class ShopListViewModel : ViewModel() {
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
     private val _shopList = MutableStateFlow<List<Shop>>(emptyList())
     val shopList: StateFlow<List<Shop>> get() = _shopList
-    private val _balance = MutableStateFlow(0L)
-    val balance: StateFlow<Long> get() = _balance
     private val _todaysCollection = MutableStateFlow(0L)
     val todaysCollection: StateFlow<Long> get() = _todaysCollection
     private val _todaysCredit = MutableStateFlow(0L)
@@ -86,7 +84,7 @@ class ShopListViewModel : ViewModel() {
                                 id = it.id
                             }
                     }.also {
-                        _balance.value = it[0].balance
+                        _todaysCollection.value = it[0].balance
                         _todaysCredit.value = it[0].credit
                         _todaysDebit.value = it[0].debit
                     }
@@ -289,14 +287,14 @@ class ShopListViewModel : ViewModel() {
                     }
                     if (balanceAmounts.isNotEmpty() && balanceAmounts[0].balance > 0) {
                         Timber.tag("getBalance").i(it.toString())
-                        _balance.value = balanceAmounts[0].balance
+                        _todaysCollection.value = balanceAmounts[0].balance
                     } else {
-                        _balance.value = 0L
+                        _todaysCollection.value = 0L
                     }
                 }
                 .addOnFailureListener {
                     Timber.e(it)
-                    _balance.value = 0L
+                    _todaysCollection.value = 0L
                     _uiState.value =
                         HomeUiState.HomeError(it.message ?: "Unable to show balance")
                 }

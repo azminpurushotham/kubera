@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.math.absoluteValue
 
 class CollectionViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> =
@@ -43,7 +44,7 @@ class CollectionViewModel : ViewModel() {
 
     fun init() {
         getCollectionHistory()
-        getBalance()
+//        getBalance()
         getTodaysCollection()
     }
 

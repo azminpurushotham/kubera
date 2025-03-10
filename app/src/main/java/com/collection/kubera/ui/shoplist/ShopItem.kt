@@ -26,6 +26,7 @@ import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.red
 import com.google.gson.Gson
 import timber.log.Timber
+import kotlin.math.absoluteValue
 
 @Composable
 internal fun ShopItem(
@@ -72,7 +73,7 @@ internal fun ShopItem(
             }
             Column {
                 Text(
-                    (item.balance ?: 0.0).toString(),
+                    ((item.balance ?: 0L).absoluteValue).toString(),
                     fontWeight = FontWeight(500),
                     fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                     color = if ((item.balance ?: 0) > 0) green else red,

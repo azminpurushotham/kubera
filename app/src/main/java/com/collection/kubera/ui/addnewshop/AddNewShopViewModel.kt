@@ -170,8 +170,9 @@ class AddNewShopViewModel : ViewModel() {
                             Timber.tag("updateTodaysCollection").i("Update")
                             val prm = mutableMapOf<String, Any>()
                             val balance =  (list[0].balance) + (b)
+                            val credit =  (list[0].credit) + (b)
                             prm["balance"] = balance
-                            prm["credit"] = balance
+                            prm["credit"] = credit
                             list[0].id?.let { it1 ->
                                 firestore.collection(TODAYS_COLLECTION)
                                     .document(it1)

@@ -58,6 +58,7 @@ import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.onprimaryD
 import com.collection.kubera.ui.theme.red
 import timber.log.Timber
+import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -260,43 +261,38 @@ fun ShopCollectionHistoryScreen(
                     colorFilter = ColorFilter.tint(onprimaryD) // Optional color filter
                 )
             }
-            Card(
-                elevation = CardDefaults.cardElevation(20.dp),
-                shape = RoundedCornerShape(0.dp)
+            Row(
+                modifier = Modifier
+                    .background(color = MaterialTheme.colorScheme.surface)
+                    .padding(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 8.dp,
+                        bottom = 8.dp
+                    )
+                    .fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    modifier = Modifier
-                        .background(color = boxColorD)
-                        .padding(
-                            start = 16.dp,
-                            end = 16.dp,
-                            top = 8.dp,
-                            bottom = 8.dp
-                        )
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            "${shop?.firstName} ${shop?.lastName}",
-                            fontWeight = FontWeight(600),
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Text(
-                            "${shop?.shopName}",
-                            fontWeight = FontWeight(400),
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
+                Column {
                     Text(
-                        balance.toString(),
+                        "${shop?.firstName} ${shop?.lastName}",
+                        fontWeight = FontWeight(600),
+                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Text(
+                        "${shop?.shopName}",
                         fontWeight = FontWeight(400),
-                        fontSize = 30.sp,
-                        color = green,
+                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
+                Text(
+                    balance.absoluteValue.toString(),
+                    fontWeight = FontWeight(400),
+                    fontSize = 30.sp,
+                    color =  if(balance>0){green}else{red},
+                )
             }
 
             Spacer(modifier = Modifier.height(10.dp))
@@ -316,7 +312,8 @@ fun ShopCollectionHistoryScreen(
                                 end = 16.dp,
                                 top = 16.dp,
                                 bottom = 16.dp
-                            ).align(Alignment.Start)
+                            )
+                            .align(Alignment.Start)
                             .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Start,
@@ -348,7 +345,7 @@ fun ShopCollectionHistoryScreen(
                         Spacer(modifier = Modifier.weight(1f))
 
                         Text(
-                            (item.amount ?: 0.0).toString(),
+                            ((item.amount ?: 0L).absoluteValue).toString(),
                             fontWeight = FontWeight(500),
                             fontSize = MaterialTheme.typography.bodyLarge.fontSize,
                             color = if (item.transactionType == "Credit") green else red,

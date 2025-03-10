@@ -30,22 +30,18 @@ import kotlin.math.absoluteValue
 internal fun BalanceHeader(
     viewModel: ShopListViewModel
 ) {
-    val balance by viewModel.balance.collectAsState()
     val todaysCredit by viewModel.todaysCredit.collectAsState()
     val todaysDebit by viewModel.todaysDebit.collectAsState()
     val todaysCollection by viewModel.todaysCollection.collectAsState()
     Card(
-        elevation = CardDefaults.cardElevation(20.dp),
         shape = RoundedCornerShape(0.dp)
     ) {
         Row(
             modifier = Modifier
-                .background(color = boxColorD)
+                .background(color = MaterialTheme.colorScheme.surface)
                 .padding(
                     start = 16.dp,
                     end = 16.dp,
-                    top = 8.dp,
-                    bottom = 8.dp
                 )
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -97,10 +93,10 @@ internal fun BalanceHeader(
                 }
             }
             Text(
-                balance.absoluteValue.toString(),
+                todaysCollection.absoluteValue.toString(),
                 fontWeight = FontWeight(400),
                 fontSize = 30.sp,
-                color = if (balance > 0) green else red,
+                color = if (todaysCollection > 0) green else red,
             )
         }
     }

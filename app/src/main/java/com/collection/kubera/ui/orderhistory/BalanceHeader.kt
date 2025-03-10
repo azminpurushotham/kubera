@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.red
 import kotlin.math.absoluteValue
@@ -30,22 +28,18 @@ import kotlin.math.absoluteValue
 internal fun BalanceHeader(
     viewModel: CollectionViewModel
 ) {
-    val balance by viewModel.balance.collectAsState()
     val todaysCredit by viewModel.todaysCredit.collectAsState()
     val todaysDebit by viewModel.todaysDebit.collectAsState()
     val todaysCollection by viewModel.todaysCollection.collectAsState()
     Card(
-        elevation = CardDefaults.cardElevation(20.dp),
         shape = RoundedCornerShape(0.dp)
     ) {
         Row(
             modifier = Modifier
-                .background(color = boxColorD)
+                .background(color = MaterialTheme.colorScheme.surface)
                 .padding(
                     start = 16.dp,
                     end = 16.dp,
-                    top = 8.dp,
-                    bottom = 8.dp
                 )
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -62,13 +56,6 @@ internal fun BalanceHeader(
                     horizontalArrangement = Arrangement.Start, // Aligns items to the left
                     verticalAlignment = Alignment.Bottom // Aligns items to the bottom
                 ) {
-                    Text(
-                        todaysCollection.absoluteValue.toString(),
-                        fontWeight = FontWeight(400),
-                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                        color = if (todaysCollection > 0) green else red,
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         "Cr:",
                         fontWeight = FontWeight(400),
@@ -97,10 +84,10 @@ internal fun BalanceHeader(
                 }
             }
             Text(
-                balance.absoluteValue.toString(),
+                todaysCollection.absoluteValue.toString(),
                 fontWeight = FontWeight(400),
                 fontSize = 30.sp,
-                color = if (balance > 0) green else red,
+                color = if (todaysCollection > 0) green else red,
             )
         }
     }

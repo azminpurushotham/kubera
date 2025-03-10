@@ -60,7 +60,7 @@ fun CollectionHistoryScreen(
     val onRefresh: () -> Unit = {
         isRefreshing = true
         viewModel.getSwipeShopsCollectionHistory()
-        viewModel.getBalance()
+//        viewModel.getBalance()
         viewModel.getTodaysCollection()
     }
 
