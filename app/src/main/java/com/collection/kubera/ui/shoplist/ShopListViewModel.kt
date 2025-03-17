@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
-import androidx.paging.cachedIn
+import androidx.paging.PagingData
 import com.collection.kubera.data.BALANCE_COLLECTION
 import com.collection.kubera.data.BalanceAmount
 import com.collection.kubera.data.SHOP_COLLECTION
@@ -12,12 +12,14 @@ import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TODAYS_COLLECTION
 import com.collection.kubera.data.TodaysCollections
 import com.collection.kubera.states.HomeUiState
+import com.collection.kubera.utils.FirestorePagingSource
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,18 +41,13 @@ class ShopListViewModel : ViewModel() {
     private val _todaysDebit = MutableStateFlow(0L)
     val todaysDebit: StateFlow<Long> get() = _todaysDebit
     private val firestore = FirebaseFirestore.getInstance()
-    val pageSize = 20 // Number of documents per page
+    val pageSize = 15L // Number of documents per page
     private var lastDocumentSnapshot: DocumentSnapshot? =
         null // Store the last document of the current page
-    private val baseQuery = firestore.collection(SHOP_COLLECTION)
-    val shopFlow = Pager(
-        PagingConfig(
-            pageSize = pageSize,
-            initialLoadSize = pageSize,
-            enablePlaceholders = true
-        ),
-        pagingSourceFactory = { ShopListPagingSource(baseQuery) }
-    ).flow.cachedIn(viewModelScope)
+    val list: Flow<PagingData<DocumentSnapshot>> = Pager(
+        config = PagingConfig(pageSize = pageSize.toInt(), enablePlaceholders = false),
+        pagingSourceFactory = { FirestorePagingSource(firestore, SHOP_COLLECTION,pageSize) }
+    ).flow
 
     fun init() {
 //        getBalance()

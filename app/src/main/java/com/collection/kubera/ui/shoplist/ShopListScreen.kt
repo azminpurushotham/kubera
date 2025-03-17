@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -29,8 +28,11 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.collection.kubera.data.Shop
 import com.collection.kubera.states.HomeUiState
+import com.google.firebase.firestore.DocumentSnapshot
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,8 +48,8 @@ fun ShopListScreen(
 
     val refreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
-    val shops = viewModel.shopFlow.collectAsLazyPagingItems()
-    val shopsList by viewModel.shopList.collectAsState()
+    val list = viewModel.list.collectAsLazyPagingItems()
+    val userPagingItems: LazyPagingItems<DocumentSnapshot> = viewModel.list.collectAsLazyPagingItems()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -140,20 +142,15 @@ fun ShopListScreen(
                 Header(viewModel)
             }
 
-            if(shopsList.isNotEmpty()){
-                items(shopsList) {
-                    ShopItem(navController, it)
-                }
-            }else{
-                items(shops.itemSnapshotList) { shop ->
-                    shop?.let { item ->
-                        ShopItem(navController, item)
-                    }
+            items(userPagingItems.itemCount) { index ->
+                val item = userPagingItems[index]?.toObject(Shop::class.java)
+                item?.let {
+                    ShopItem(navController, item)
                 }
             }
 
             // Handle loading states (optional)
-            shops.apply {
+            list.apply {
                 when {
                     loadState.refresh is LoadState.Loading -> {
                         item {
@@ -173,7 +170,7 @@ fun ShopListScreen(
                         Timber.i("NotLoading")
                     }
                     loadState.refresh is LoadState.Error -> {
-                        val e = shops.loadState.refresh as LoadState.Error
+                        val e = list.loadState.refresh as LoadState.Error
                         item { Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.onPrimary) }
                     }
                 }

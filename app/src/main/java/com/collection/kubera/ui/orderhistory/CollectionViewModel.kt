@@ -2,25 +2,28 @@ package com.collection.kubera.ui.orderhistory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.BALANCE_COLLECTION
-import com.collection.kubera.data.BalanceAmount
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TODAYS_COLLECTION
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
 import com.collection.kubera.data.TodaysCollections
 import com.collection.kubera.states.HomeUiState
+import com.collection.kubera.utils.FirestorePagingSource
 import com.google.android.gms.tasks.Task
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import kotlin.math.absoluteValue
 
 class CollectionViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> =
@@ -39,11 +42,14 @@ class CollectionViewModel : ViewModel() {
     val todaysCredit: StateFlow<Long> get() = _todaysCredit
     private val _todaysDebit = MutableStateFlow(0L)
     val todaysDebit: StateFlow<Long> get() = _todaysDebit
-    val pageLimit = 150L
-
+    val pageLimit = 15L
+    val list: Flow<PagingData<DocumentSnapshot>> = Pager(
+        config = PagingConfig(pageSize = pageLimit.toInt(), enablePlaceholders = false),
+        pagingSourceFactory = { FirestorePagingSource(firestore, TRANSECTION_HISTORY_COLLECTION,pageLimit) }
+    ).flow
 
     fun init() {
-        getCollectionHistory()
+//        getCollectionHistory()
 //        getBalance()
         getTodaysCollection()
     }
@@ -104,34 +110,6 @@ class CollectionViewModel : ViewModel() {
                 .addOnFailureListener { e ->
                     println("Error querying documents: $e")
                     _uiState.value = HomeUiState.HomeError("Error querying documents: $e")
-                }
-        }
-    }
-
-    internal fun getBalance() {
-        Timber.tag("getBalance").i("getBalance")
-        viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection(BALANCE_COLLECTION)
-                .get()
-                .addOnSuccessListener {
-                    val balanceAmounts = it.documents.mapNotNull { item ->
-                        item.toObject(BalanceAmount::class.java)
-                            ?.apply {
-                                id = item.id
-                            }
-                    }
-                    if (balanceAmounts.isNotEmpty() && balanceAmounts[0].balance > 0) {
-                        Timber.tag("getBalance").i(it.toString())
-                        _balance.value = balanceAmounts[0].balance
-                    } else {
-                        _balance.value = 0L
-                    }
-                }
-                .addOnFailureListener {
-                    Timber.e(it)
-                    _balance.value = 0L
-                    _uiState.value =
-                        HomeUiState.HomeError(it.message ?: "Unable to show balance")
                 }
         }
     }

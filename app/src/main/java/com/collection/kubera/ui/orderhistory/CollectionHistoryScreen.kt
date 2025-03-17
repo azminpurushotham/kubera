@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -16,6 +17,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -35,10 +37,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.collection.kubera.R
+import com.collection.kubera.data.CollectionModel
+import com.collection.kubera.data.Shop
 import com.collection.kubera.states.HomeUiState
+import com.collection.kubera.ui.shoplist.Header
+import com.collection.kubera.ui.shoplist.ShopItem
 import com.collection.kubera.ui.theme.backgroundD
 import com.collection.kubera.ui.theme.onprimaryD
+import com.google.firebase.firestore.DocumentSnapshot
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -49,13 +59,15 @@ fun CollectionHistoryScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    val shopList by viewModel.shopList.collectAsState()
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
 
     val refreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
+
+    val list = viewModel.list.collectAsLazyPagingItems()
+    val userPagingItems: LazyPagingItems<DocumentSnapshot> = viewModel.list.collectAsLazyPagingItems()
 
     val onRefresh: () -> Unit = {
         isRefreshing = true
@@ -122,39 +134,70 @@ fun CollectionHistoryScreen(
         isRefreshing = isRefreshing,
         onRefresh = onRefresh,
     ) {
-        Column(
+        LazyColumn(
             modifier = Modifier
-                .verticalScroll(rememberScrollState())
+//                .verticalScroll(rememberScrollState())
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.Center, // Vertically center items
+            verticalArrangement = Arrangement.Top, // Vertically center items
             horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
         ) {
-            Button(
-                colors = ButtonDefaults.buttonColors(backgroundD),
-                onClick = {
-                    showBottomSheet = true
-                },
-                modifier = Modifier
-                    .align(Alignment.End)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.baseline_filter_list_24), // Replace with your drawable
-                    contentDescription = stringResource(R.string.filter),
-                    alignment = Alignment.CenterEnd,
-                    contentScale = ContentScale.Crop, // Adjust image scaling
-                    modifier = Modifier.size(30.dp),
-                    colorFilter = ColorFilter.tint(onprimaryD) // Optional color filter
-                )
-            }
-            BalanceHeader(viewModel)
-            Spacer(modifier = Modifier.height(10.dp))
-            for (item in shopList) {
-                if(item.shopId==null){
-                    Timber.tag("NAME").i(item.shopName)
-                    Timber.tag("ID").i(item.shopId)
+            item {
+                Column {
+                    Button(
+                        colors = ButtonDefaults.buttonColors(backgroundD),
+                        onClick = {
+                            showBottomSheet = true
+                        },
+                        modifier = Modifier
+                            .align(Alignment.End)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.baseline_filter_list_24), // Replace with your drawable
+                            contentDescription = stringResource(R.string.filter),
+                            alignment = Alignment.CenterEnd,
+                            contentScale = ContentScale.Crop, // Adjust image scaling
+                            modifier = Modifier.size(30.dp),
+                            colorFilter = ColorFilter.tint(onprimaryD) // Optional color filter
+                        )
+                    }
+                    BalanceHeader(viewModel)
                 }
-                CollectionItem(navController, item)
             }
+
+            items(userPagingItems.itemCount) { index ->
+                val item = userPagingItems[index]?.toObject(CollectionModel::class.java)
+                item?.let {
+                    CollectionItem(navController, item)
+                }
+            }
+
+            // Handle loading states (optional)
+            list.apply {
+                when {
+                    loadState.refresh is LoadState.Loading -> {
+                        item {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        }
+                    }
+                    loadState.append is LoadState.Loading -> {
+                        item {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        }
+                    }
+                    loadState.append is LoadState.NotLoading ->{
+                        Timber.i("NotLoading")
+                    }
+                    loadState.refresh is LoadState.Error -> {
+                        val e = list.loadState.refresh as LoadState.Error
+                        item { Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.onPrimary) }
+                    }
+                }
+            }
+
         }
     }
 }
