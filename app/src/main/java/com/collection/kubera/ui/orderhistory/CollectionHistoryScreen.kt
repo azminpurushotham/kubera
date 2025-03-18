@@ -5,13 +5,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,10 +38,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.collection.kubera.R
 import com.collection.kubera.data.CollectionModel
-import com.collection.kubera.data.Shop
 import com.collection.kubera.states.HomeUiState
-import com.collection.kubera.ui.shoplist.Header
-import com.collection.kubera.ui.shoplist.ShopItem
 import com.collection.kubera.ui.theme.backgroundD
 import com.collection.kubera.ui.theme.onprimaryD
 import com.google.firebase.firestore.DocumentSnapshot
@@ -122,11 +115,10 @@ fun CollectionHistoryScreen(
     if (showBottomSheet) {
         ShowCollectionSort(
             viewModel,
-            sheetState,
-            {
-                showBottomSheet = false
-            }
-        )
+            sheetState
+        ) {
+            showBottomSheet = false
+        }
     }
 
     PullToRefreshBox(

@@ -17,6 +17,7 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -41,13 +42,19 @@ class ShopListViewModel : ViewModel() {
     private val _todaysDebit = MutableStateFlow(0L)
     val todaysDebit: StateFlow<Long> get() = _todaysDebit
     private val firestore = FirebaseFirestore.getInstance()
-    val pageSize = 15L // Number of documents per page
+    val pageLimit = 15L // Number of documents per page
     private var lastDocumentSnapshot: DocumentSnapshot? =
         null // Store the last document of the current page
-    val list: Flow<PagingData<DocumentSnapshot>> = Pager(
-        config = PagingConfig(pageSize = pageSize.toInt(), enablePlaceholders = false),
-        pagingSourceFactory = { FirestorePagingSource(firestore, SHOP_COLLECTION,pageSize) }
-    ).flow
+
+    private fun createPager(q:Query): Pager<QuerySnapshot, DocumentSnapshot> {
+        return Pager(
+            config = PagingConfig(pageSize = pageLimit.toInt(), enablePlaceholders = false),
+            pagingSourceFactory = { FirestorePagingSource().also {
+                it.setPagination(q,pageLimit)
+            }}
+        )
+    }
+    val list: Flow<PagingData<DocumentSnapshot>> = createPager(firestore.collection(SHOP_COLLECTION)).flow
 
     fun init() {
 //        getBalance()
@@ -159,7 +166,7 @@ class ShopListViewModel : ViewModel() {
         lastDocumentSnapshot = null
         viewModelScope.launch(Dispatchers.IO) {
             var query = firestore.collection(SHOP_COLLECTION)
-                .limit(pageSize.toLong())
+                .limit(pageLimit)
             if (lastDocumentSnapshot != null) {
                 query =
                     query.startAfter(lastDocumentSnapshot!!) // Start after the last document of the previous page
@@ -190,7 +197,7 @@ class ShopListViewModel : ViewModel() {
         Timber.v("getSwipeShopsOnResume")
         viewModelScope.launch(Dispatchers.IO) {
             var query = firestore.collection(SHOP_COLLECTION)
-                .limit(pageSize.toLong())
+                .limit(pageLimit)
             if (lastDocumentSnapshot != null) {
                 query =
                     query.startAfter(lastDocumentSnapshot!!) // Start after the last document of the previous page
@@ -232,8 +239,6 @@ class ShopListViewModel : ViewModel() {
 //                    .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
                     .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
 //                    .whereEqualTo("s_firstName", listOf( shopName.lowercase()))
-                    .limit(10)
-                    .get()
                 val q3 = firestore.collection(SHOP_COLLECTION)
                     .whereGreaterThanOrEqualTo("s_lastName", shopName.lowercase())
                     .whereLessThan("s_lastName", shopName.lowercase())
@@ -241,31 +246,34 @@ class ShopListViewModel : ViewModel() {
                     .limit(10)
                     .get()
 
-
-                Tasks.whenAllComplete(/*q1, */q2/*, q3*/)
-                    .addOnSuccessListener { tasks ->
-                        val combinedResults = mutableListOf<Map<String, Any>>()
-                        tasks.forEach { snapshot ->
-                            (snapshot.result as QuerySnapshot).forEach { document ->
-                                combinedResults.add(document.data ?: emptyMap())
-                                Timber.tag("SEARCH").i("${document.data}")
-                            }
-                        }
-                        val results = tasks.flatMap { task ->
-                            val snapshot = task.result as QuerySnapshot
-                            snapshot.documents
-                        }.distinct()
-                        _shopList.value = results.mapNotNull {
-                            it.toObject(Shop::class.java)
-                                ?.apply {
-                                    id = it.id
-                                }
-                        }
-                    }
-                    .addOnFailureListener { e ->
-                        println("Error querying documents: $e")
-                    }
-                _uiState.value = HomeUiState.HomeSuccess("Success")
+                FirestorePagingSource().also {
+                    it.setPagination(q2,pageLimit)
+                    it.invalidate()
+                }
+//                Tasks.whenAllComplete(/*q1, */q2/*, q3*/)
+//                    .addOnSuccessListener { tasks ->
+//                        val combinedResults = mutableListOf<Map<String, Any>>()
+//                        tasks.forEach { snapshot ->
+//                            (snapshot.result as QuerySnapshot).forEach { document ->
+//                                combinedResults.add(document.data ?: emptyMap())
+//                                Timber.tag("SEARCH").i("${document.data}")
+//                            }
+//                        }
+//                        val results = tasks.flatMap { task ->
+//                            val snapshot = task.result as QuerySnapshot
+//                            snapshot.documents
+//                        }.distinct()
+//                        _shopList.value = results.mapNotNull {
+//                            it.toObject(Shop::class.java)
+//                                ?.apply {
+//                                    id = it.id
+//                                }
+//                        }
+//                    }
+//                    .addOnFailureListener { e ->
+//                        println("Error querying documents: $e")
+//                    }
+//                _uiState.value = HomeUiState.HomeSuccess("Success")
             }
         }
     }

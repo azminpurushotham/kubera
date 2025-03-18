@@ -45,7 +45,9 @@ class CollectionViewModel : ViewModel() {
     val pageLimit = 15L
     val list: Flow<PagingData<DocumentSnapshot>> = Pager(
         config = PagingConfig(pageSize = pageLimit.toInt(), enablePlaceholders = false),
-        pagingSourceFactory = { FirestorePagingSource(firestore, TRANSECTION_HISTORY_COLLECTION,pageLimit) }
+        pagingSourceFactory = {FirestorePagingSource().also {
+            it.setPagination(firestore.collection(TRANSECTION_HISTORY_COLLECTION),pageLimit)
+        }}
     ).flow
 
     fun init() {
