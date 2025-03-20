@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import com.collection.kubera.data.BALANCE_COLLECTION
-import com.collection.kubera.data.BalanceAmount
 import com.collection.kubera.data.SHOP_COLLECTION
 import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TODAYS_COLLECTION
@@ -45,16 +43,23 @@ class ShopListViewModel : ViewModel() {
     val pageLimit = 15L // Number of documents per page
     private var lastDocumentSnapshot: DocumentSnapshot? =
         null // Store the last document of the current page
-
-    private fun createPager(q:Query): Pager<QuerySnapshot, DocumentSnapshot> {
+    private fun createPager(q: Query): Pager<QuerySnapshot, DocumentSnapshot> {
         return Pager(
-            config = PagingConfig(pageSize = pageLimit.toInt(), enablePlaceholders = false),
-            pagingSourceFactory = { FirestorePagingSource().also {
-                it.setPagination(q,pageLimit)
-            }}
+            config = PagingConfig(
+                pageSize = pageLimit.toInt(),
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                FirestorePagingSource(
+                    query = q,
+                    limit = pageLimit
+                )
+            }
         )
     }
-    val list: Flow<PagingData<DocumentSnapshot>> = createPager(firestore.collection(SHOP_COLLECTION)).flow
+
+    var list: Flow<PagingData<DocumentSnapshot>> =
+        createPager(firestore.collection(SHOP_COLLECTION)).flow
 
     fun init() {
 //        getBalance()
@@ -225,7 +230,7 @@ class ShopListViewModel : ViewModel() {
     }
 
     fun getShops(shopName: String) {
-        Timber.v("getShops ${shopName}")
+        Timber.v("getShops $shopName")
         if (shopName.length > 1) {
             _uiState.value = HomeUiState.Searching
             viewModelScope.launch(Dispatchers.IO) {
@@ -233,76 +238,24 @@ class ShopListViewModel : ViewModel() {
                     .whereGreaterThanOrEqualTo("s_shopName", listOf(shopName.lowercase()))
                     .whereLessThan("s_shopName", listOf(shopName.lowercase()))
 //                    .whereEqualTo("s_shopName", listOf( shopName.lowercase()))
-                    .limit(10)
+                    .limit(pageLimit)
                     .get()
                 val q2 = firestore.collection(SHOP_COLLECTION)
 //                    .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
                     .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
+//                    .limit(pageLimit)
+//                    .get()
 //                    .whereEqualTo("s_firstName", listOf( shopName.lowercase()))
                 val q3 = firestore.collection(SHOP_COLLECTION)
                     .whereGreaterThanOrEqualTo("s_lastName", shopName.lowercase())
                     .whereLessThan("s_lastName", shopName.lowercase())
 //                    .whereEqualTo("s_lastName", listOf( shopName.lowercase()))
-                    .limit(10)
+                    .limit(pageLimit)
                     .get()
 
-                FirestorePagingSource().also {
-                    it.setPagination(q2,pageLimit)
-                    it.invalidate()
-                }
-//                Tasks.whenAllComplete(/*q1, */q2/*, q3*/)
-//                    .addOnSuccessListener { tasks ->
-//                        val combinedResults = mutableListOf<Map<String, Any>>()
-//                        tasks.forEach { snapshot ->
-//                            (snapshot.result as QuerySnapshot).forEach { document ->
-//                                combinedResults.add(document.data ?: emptyMap())
-//                                Timber.tag("SEARCH").i("${document.data}")
-//                            }
-//                        }
-//                        val results = tasks.flatMap { task ->
-//                            val snapshot = task.result as QuerySnapshot
-//                            snapshot.documents
-//                        }.distinct()
-//                        _shopList.value = results.mapNotNull {
-//                            it.toObject(Shop::class.java)
-//                                ?.apply {
-//                                    id = it.id
-//                                }
-//                        }
-//                    }
-//                    .addOnFailureListener { e ->
-//                        println("Error querying documents: $e")
-//                    }
-//                _uiState.value = HomeUiState.HomeSuccess("Success")
+                list = createPager(q2).flow
+                _uiState.value = HomeUiState.HomeSuccess("Success")
             }
-        }
-    }
-
-    internal fun getBalance() {
-        Timber.tag("getBalance").i("getBalance")
-        viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection(BALANCE_COLLECTION)
-                .get()
-                .addOnSuccessListener {
-                    val balanceAmounts = it.documents.mapNotNull { item ->
-                        item.toObject(BalanceAmount::class.java)
-                            ?.apply {
-                                id = item.id
-                            }
-                    }
-                    if (balanceAmounts.isNotEmpty() && balanceAmounts[0].balance > 0) {
-                        Timber.tag("getBalance").i(it.toString())
-                        _todaysCollection.value = balanceAmounts[0].balance
-                    } else {
-                        _todaysCollection.value = 0L
-                    }
-                }
-                .addOnFailureListener {
-                    Timber.e(it)
-                    _todaysCollection.value = 0L
-                    _uiState.value =
-                        HomeUiState.HomeError(it.message ?: "Unable to show balance")
-                }
         }
     }
 }

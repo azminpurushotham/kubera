@@ -8,32 +8,27 @@ import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
-class FirestorePagingSource : PagingSource<QuerySnapshot, DocumentSnapshot>() {
-    private var query: Query? = null
-    private var limit: Long? = null
-    fun setPagination(
-        q: Query,
-        l: Long?,
-    ) {
-        this.query = q
-        this.limit = l
-    }
+class FirestorePagingSource(
+    private val query: Query,
+    private val limit: Long,
+) : PagingSource<QuerySnapshot, DocumentSnapshot>() {
+
 
 
     override suspend fun load(params: LoadParams<QuerySnapshot>): LoadResult<QuerySnapshot, DocumentSnapshot> {
         return try {
+            query.limit(limit)
             Timber.tag("load").i(query.toString())
-            val query = limit?.let { query?.limit(it) }
-
-            val currentPage = params.key ?: query?.get()?.await() // Fetch first page or startAfter
+            val currentPage = params.key ?: query.get().await() // Fetch first page or startAfter
             val list = currentPage?.documents?.map { it }
+            Timber.tag("load").i("list SIZE ${list?.size}")
 
             val lastDocument = currentPage?.documents?.lastOrNull()
 
             LoadResult.Page(
                 data = list!!,
                 prevKey = null, // Firestore doesn't support backward pagination
-                nextKey = lastDocument?.let { query?.startAfter(it)?.get()?.await() }
+                nextKey = lastDocument?.let { query.startAfter(it).get().await() }
             )
         } catch (e: Exception) {
             LoadResult.Error(e)
