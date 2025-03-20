@@ -2,7 +2,6 @@ package com.collection.kubera.ui.shoporderhistory
 
 import android.widget.Toast
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,17 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -46,19 +39,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import com.collection.kubera.R
+import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.HomeUiState
-import com.collection.kubera.ui.theme.backgroundD
 import com.collection.kubera.ui.theme.boxColorD
-import com.collection.kubera.ui.theme.green
 import com.collection.kubera.ui.theme.onprimaryD
-import com.collection.kubera.ui.theme.red
+import com.google.firebase.firestore.DocumentSnapshot
 import timber.log.Timber
-import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,9 +62,10 @@ fun ShopCollectionHistoryScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    val shopList by viewModel.collections.collectAsState()
     val shop by viewModel.shop.collectAsState()
     val balance by viewModel.balance.collectAsState()
+    val list = viewModel.list.collectAsLazyPagingItems()
+    val userPagingItems: LazyPagingItems<DocumentSnapshot> = viewModel.list.collectAsLazyPagingItems()
 
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -237,126 +231,60 @@ fun ShopCollectionHistoryScreen(
         isRefreshing = isRefreshing,
         onRefresh = onRefresh,
     ) {
-        Column(
+
+        LazyColumn(
             modifier = Modifier
-                .verticalScroll(rememberScrollState())
+//                .verticalScroll(rememberScrollState())
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.Center, // Vertically center items
-            horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
+            verticalArrangement = Arrangement.Top, // Vertically center items
+            horizontalAlignment = Alignment.End // Horizontally center items
         ) {
-            Button(
-                colors = ButtonDefaults.buttonColors(backgroundD),
-                onClick = {
-                    showBottomSheet = true
-                },
-                modifier = Modifier
-                    .align(Alignment.End)
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.baseline_filter_list_24), // Replace with your drawable
-                    contentDescription = stringResource(R.string.filter),
-                    alignment = Alignment.CenterEnd,
-                    contentScale = ContentScale.Crop, // Adjust image scaling
-                        modifier = Modifier.size(30.dp),
-                    colorFilter = ColorFilter.tint(onprimaryD) // Optional color filter
-                )
+            item {
+                Header(shop, balance)
             }
-            Row(
-                modifier = Modifier
-                    .background(color = MaterialTheme.colorScheme.surface)
-                    .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 8.dp,
-                        bottom = 8.dp
-                    )
-                    .fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        "${shop?.firstName} ${shop?.lastName}",
-                        fontWeight = FontWeight(600),
-                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Text(
-                        "${shop?.shopName}",
-                        fontWeight = FontWeight(400),
-                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
+
+            items(userPagingItems.itemCount) { index ->
+                val item = userPagingItems[index]?.toObject(CollectionModel::class.java)
+                item?.let {
+                    ShopCollectionItem(item)
                 }
-                Text(
-                    balance.absoluteValue.toString(),
-                    fontWeight = FontWeight(400),
-                    fontSize = 30.sp,
-                    color =  if(balance>0){green}else{red},
-                )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-            for (item in shopList) {
-                ElevatedCard(
-                    shape = RoundedCornerShape(0.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = boxColorD,
-                    ),
-                    onClick = {
-
-                    }) {
-                    Row(
-                        modifier = Modifier
-                            .padding(
-                                start = 16.dp,
-                                end = 16.dp,
-                                top = 16.dp,
-                                bottom = 16.dp
+            // Handle loading states (optional)
+            list.apply {
+                when {
+                    loadState.refresh is LoadState.Loading -> {
+                        Timber.i("loadState.refresh")
+                        item {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onPrimary,
                             )
-                            .align(Alignment.Start)
-                            .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Start,
-                    ) {
-                        Text(
-                            item.datedmy,
-                            fontWeight = FontWeight(100),
-                            modifier = Modifier.width(100.dp),
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
-                        Spacer(modifier = Modifier.width(20.dp))
-                        Text(
-                            item.time,
-                            fontWeight = FontWeight(100),
-                            modifier = Modifier.width(100.dp),
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            item.transactionType ?: "",
-                            fontWeight = FontWeight(100),
-                            modifier = Modifier.width(100.dp),
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                            color = if (item.transactionType == "Credit") green else red,
-                        )
-
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        Text(
-                            ((item.amount ?: 0L).absoluteValue).toString(),
-                            fontWeight = FontWeight(500),
-                            fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                            color = if (item.transactionType == "Credit") green else red,
-                        )
+                        }
+                    }
+                    loadState.append is LoadState.Loading -> {
+                        Timber.i("loadState.append")
+                        item {
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        }
+                    }
+                    loadState.append is LoadState.NotLoading ->{
+                        Timber.i("loadState.NotLoading")
+                        Timber.i("NotLoading")
+                    }
+                    loadState.refresh is LoadState.Error -> {
+                        Timber.i("loadState.refresh")
+                        val e = list.loadState.refresh as LoadState.Error
+                        item { Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.onPrimary) }
                     }
                 }
-                Spacer(modifier = Modifier.height(2.dp))
             }
         }
     }
 }
+
+
 
 
 

@@ -13,18 +13,14 @@ class FirestorePagingSource(
     private val limit: Long,
 ) : PagingSource<QuerySnapshot, DocumentSnapshot>() {
 
-
-
     override suspend fun load(params: LoadParams<QuerySnapshot>): LoadResult<QuerySnapshot, DocumentSnapshot> {
         return try {
-            query.limit(limit)
+            Timber.tag("load").i("START")
+            val currentPage = params.key ?: query.limit(limit).get().await() // Fetch first page or startAfter
             Timber.tag("load").i(query.toString())
-            val currentPage = params.key ?: query.get().await() // Fetch first page or startAfter
             val list = currentPage?.documents?.map { it }
             Timber.tag("load").i("list SIZE ${list?.size}")
-
             val lastDocument = currentPage?.documents?.lastOrNull()
-
             LoadResult.Page(
                 data = list!!,
                 prevKey = null, // Firestore doesn't support backward pagination

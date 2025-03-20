@@ -153,6 +153,7 @@ fun ShopListScreen(
             list.apply {
                 when {
                     loadState.refresh is LoadState.Loading -> {
+                        Timber.i("loadState.refresh")
                         item {
                             CircularProgressIndicator(
                                 color = MaterialTheme.colorScheme.onPrimary,
@@ -160,22 +161,24 @@ fun ShopListScreen(
                         }
                     }
                     loadState.append is LoadState.Loading -> {
+                        Timber.i("loadState.append")
                         item {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.onPrimary,
-                        )
-                    }
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                            )
+                        }
                     }
                     loadState.append is LoadState.NotLoading ->{
+                        Timber.i("loadState.NotLoading")
                         Timber.i("NotLoading")
                     }
                     loadState.refresh is LoadState.Error -> {
+                        Timber.i("loadState.refresh")
                         val e = list.loadState.refresh as LoadState.Error
                         item { Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.onPrimary) }
                     }
                 }
             }
-
         }
     }
 }

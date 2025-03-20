@@ -38,7 +38,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.collection.kubera.R
 import com.collection.kubera.data.CollectionModel
-import com.collection.kubera.states.HomeUiState
+import com.collection.kubera.states.CollectionHistoryUiState
 import com.collection.kubera.ui.theme.backgroundD
 import com.collection.kubera.ui.theme.onprimaryD
 import com.google.firebase.firestore.DocumentSnapshot
@@ -70,11 +70,11 @@ fun CollectionHistoryScreen(
     }
 
     when (uiState) {
-        is HomeUiState.Initial -> {
+        is CollectionHistoryUiState.Initial -> {
             viewModel.init()
         }
 
-        HomeUiState.Loading -> {
+        CollectionHistoryUiState.Loading -> {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
@@ -85,28 +85,24 @@ fun CollectionHistoryScreen(
             }
         }
 
-        is HomeUiState.HomeInit -> {
+        is CollectionHistoryUiState.CollectionHistoryUiStateInit -> {
 
         }
 
-        is HomeUiState.Searching -> {
-
-        }
-
-        is HomeUiState.HomeSuccess -> {
+        is CollectionHistoryUiState.CollectionHistoryUiStateSuccess -> {
             isRefreshing = false
             Timber.v("HomeSuccess")
         }
 
-        is HomeUiState.HomeError -> {
+        is CollectionHistoryUiState.CollectionHistoryUiStateError -> {
             Toast.makeText(
                 context,
-                (uiState as HomeUiState.HomeError).errorMessage,
+                (uiState as CollectionHistoryUiState.CollectionHistoryUiStateError).errorMessage,
                 Toast.LENGTH_LONG
             ).show()
         }
 
-        is HomeUiState.Refreshing -> {
+        is CollectionHistoryUiState.Refreshing -> {
             isRefreshing = true
         }
     }
@@ -167,6 +163,7 @@ fun CollectionHistoryScreen(
             list.apply {
                 when {
                     loadState.refresh is LoadState.Loading -> {
+                        Timber.i("loadState.refresh")
                         item {
                             CircularProgressIndicator(
                                 color = MaterialTheme.colorScheme.onPrimary,
@@ -174,6 +171,7 @@ fun CollectionHistoryScreen(
                         }
                     }
                     loadState.append is LoadState.Loading -> {
+                        Timber.i("loadState.append")
                         item {
                             CircularProgressIndicator(
                                 color = MaterialTheme.colorScheme.onPrimary,
@@ -181,9 +179,11 @@ fun CollectionHistoryScreen(
                         }
                     }
                     loadState.append is LoadState.NotLoading ->{
+                        Timber.i("loadState.NotLoading")
                         Timber.i("NotLoading")
                     }
                     loadState.refresh is LoadState.Error -> {
+                        Timber.i("loadState.refresh")
                         val e = list.loadState.refresh as LoadState.Error
                         item { Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.onPrimary) }
                     }

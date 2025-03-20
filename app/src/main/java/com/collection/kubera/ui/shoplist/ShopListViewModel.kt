@@ -6,12 +6,10 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.collection.kubera.data.SHOP_COLLECTION
-import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TODAYS_COLLECTION
 import com.collection.kubera.data.TodaysCollections
 import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.utils.FirestorePagingSource
-import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -31,8 +29,6 @@ class ShopListViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> =
         MutableStateFlow(HomeUiState.Initial)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-    private val _shopList = MutableStateFlow<List<Shop>>(emptyList())
-    val shopList: StateFlow<List<Shop>> get() = _shopList
     private val _todaysCollection = MutableStateFlow(0L)
     val todaysCollection: StateFlow<Long> get() = _todaysCollection
     private val _todaysCredit = MutableStateFlow(0L)
@@ -40,14 +36,12 @@ class ShopListViewModel : ViewModel() {
     private val _todaysDebit = MutableStateFlow(0L)
     val todaysDebit: StateFlow<Long> get() = _todaysDebit
     private val firestore = FirebaseFirestore.getInstance()
-    val pageLimit = 15L // Number of documents per page
-    private var lastDocumentSnapshot: DocumentSnapshot? =
-        null // Store the last document of the current page
+    val pageLimit = 10L // Number of documents per page
     private fun createPager(q: Query): Pager<QuerySnapshot, DocumentSnapshot> {
         return Pager(
             config = PagingConfig(
-                pageSize = pageLimit.toInt(),
-                enablePlaceholders = false
+                pageSize = 1,
+                enablePlaceholders = true
             ),
             pagingSourceFactory = {
                 FirestorePagingSource(
@@ -167,65 +161,15 @@ class ShopListViewModel : ViewModel() {
 
     private fun getSwipeShops() {
         Timber.v("getSwipeShops")
-        _uiState.value = HomeUiState.Refreshing
-        lastDocumentSnapshot = null
-        viewModelScope.launch(Dispatchers.IO) {
-            var query = firestore.collection(SHOP_COLLECTION)
-                .limit(pageLimit)
-            if (lastDocumentSnapshot != null) {
-                query =
-                    query.startAfter(lastDocumentSnapshot!!) // Start after the last document of the previous page
-            }
-            query.get()
-                .addOnSuccessListener { r ->
-                    _shopList.value = r.documents.mapNotNull {
-                        it.toObject(Shop::class.java)
-                            ?.apply {
-                                id = it.id
-                            }
-                    }
-                    lastDocumentSnapshot = if (r.documents.isEmpty()) {
-                        null
-                    } else {
-                        r.documents.last()
-                    }
-                    Timber.tag("SIZE").i("${shopList.value.size}")
-                    _uiState.value = HomeUiState.HomeSuccess("Success")
-                }
-                .addOnFailureListener {
-                    _uiState.value = HomeUiState.HomeError(it.message ?: "Unknown error")
-                }
-        }
+        val query = firestore.collection(SHOP_COLLECTION)
+        list = createPager(query).flow
     }
 
     fun getSwipeShopsOnResume() {
         Timber.v("getSwipeShopsOnResume")
         viewModelScope.launch(Dispatchers.IO) {
-            var query = firestore.collection(SHOP_COLLECTION)
-                .limit(pageLimit)
-            if (lastDocumentSnapshot != null) {
-                query =
-                    query.startAfter(lastDocumentSnapshot!!) // Start after the last document of the previous page
-            }
-            query.get()
-                .addOnSuccessListener { r ->
-                    _shopList.value = r.documents.mapNotNull {
-                        it.toObject(Shop::class.java)
-                            ?.apply {
-                                id = it.id
-                            }
-                    }
-                    lastDocumentSnapshot = if (r.documents.isEmpty()) {
-                        null
-                    } else {
-                        r.documents.last()
-                    }
-                    Timber.tag("SIZE").i("${shopList.value.size}")
-                    _uiState.value = HomeUiState.HomeSuccess("Success")
-                }
-                .addOnFailureListener {
-                    _uiState.value = HomeUiState.HomeError(it.message ?: "Unknown error")
-                }
+            val query = firestore.collection(SHOP_COLLECTION)
+            list = createPager(query).flow
         }
     }
 
