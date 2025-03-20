@@ -43,15 +43,21 @@ class CollectionViewModel : ViewModel() {
     private val _todaysDebit = MutableStateFlow(0L)
     val todaysDebit: StateFlow<Long> get() = _todaysDebit
     val pageLimit = 15L
-    val list: Flow<PagingData<DocumentSnapshot>> = Pager(
-        config = PagingConfig(pageSize = pageLimit.toInt(), enablePlaceholders = false),
-        pagingSourceFactory = {
-            FirestorePagingSource(
-                query = firestore.collection(TRANSECTION_HISTORY_COLLECTION),
-                limit = pageLimit
-            )
-        }
-    ).flow
+    private fun createPager(q: Query): Pager<QuerySnapshot, DocumentSnapshot> {
+        return Pager(
+            config = PagingConfig(
+                pageSize = pageLimit.toInt(),
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                FirestorePagingSource(
+                    query = q,
+                    limit = pageLimit
+                )
+            }
+        )
+    }
+    var list: Flow<PagingData<DocumentSnapshot>> = createPager(firestore.collection(TRANSECTION_HISTORY_COLLECTION)).flow
 
     fun init() {
 //        getCollectionHistory()
@@ -63,59 +69,31 @@ class CollectionViewModel : ViewModel() {
         Timber.v("getCollectionHistory")
         _uiState.value = HomeUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            val query: Task<QuerySnapshot>
+            val query: Query
             if (type == "ASC") {
                 query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                     .orderBy("timestamp", Query.Direction.ASCENDING)
-                    .limit(pageLimit)
-                    .get()
             } else if (type == "DESC") {
                 query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                     .orderBy("timestamp", Query.Direction.DESCENDING)
-                    .limit(pageLimit)
-                    .get()
             } else if (type == "SAZ") {
                 query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                     .orderBy("s_shopName", Query.Direction.ASCENDING)
-                    .limit(pageLimit)
-                    .get()
             } else if (type == "SZA") {
                 query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                     .orderBy("s_shopName", Query.Direction.DESCENDING)
-                    .limit(pageLimit)
-                    .get()
             } else if (type == "UAZ") {
                 query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                     .orderBy("s_firstName", Query.Direction.ASCENDING)
-                    .limit(pageLimit)
-                    .get()
             } else if (type == "UZA") {
                 query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                     .orderBy("s_firstName", Query.Direction.DESCENDING)
-                    .limit(pageLimit)
-                    .get()
             } else {
                 query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                     .orderBy("timestamp", Query.Direction.DESCENDING)
-                    .limit(pageLimit)
-                    .get()
             }
-            query
-                .addOnSuccessListener { results ->
-                    _uiState.value = HomeUiState.HomeSuccess("Success")
-                    _shopList.value = results.mapNotNull {
-                        it.toObject(CollectionModel::class.java)
-                            .apply {
-                                it.data["shopId"]?.let { i ->
-                                    shopId = i as String?
-                                }
-                            }
-                    }
-                }
-                .addOnFailureListener { e ->
-                    println("Error querying documents: $e")
-                    _uiState.value = HomeUiState.HomeError("Error querying documents: $e")
-                }
+
+            list = createPager(q = query).flow
         }
     }
 
