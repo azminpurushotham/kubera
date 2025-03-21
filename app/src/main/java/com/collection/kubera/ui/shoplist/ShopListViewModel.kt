@@ -36,24 +36,23 @@ class ShopListViewModel : ViewModel() {
     private val _todaysDebit = MutableStateFlow(0L)
     val todaysDebit: StateFlow<Long> get() = _todaysDebit
     private val firestore = FirebaseFirestore.getInstance()
-    val pageLimit = 10L // Number of documents per page
-    private fun createPager(q: Query): Pager<QuerySnapshot, DocumentSnapshot> {
+    val BASE_QUERY by lazy {firestore.collection(SHOP_COLLECTION)}
+    private fun createPager(q: Query): Pager<Query, DocumentSnapshot> {
+        Timber.tag("createPager").i("MAIN")
         return Pager(
             config = PagingConfig(
-                pageSize = 1,
+                pageSize = 10,
                 enablePlaceholders = true
             ),
             pagingSourceFactory = {
                 FirestorePagingSource(
                     query = q,
-                    limit = pageLimit
                 )
             }
         )
     }
 
-    var list: Flow<PagingData<DocumentSnapshot>> =
-        createPager(firestore.collection(SHOP_COLLECTION)).flow
+    var list: Flow<PagingData<DocumentSnapshot>> = createPager(BASE_QUERY).flow
 
     fun init() {
 //        getBalance()
@@ -161,15 +160,15 @@ class ShopListViewModel : ViewModel() {
 
     private fun getSwipeShops() {
         Timber.v("getSwipeShops")
-        val query = firestore.collection(SHOP_COLLECTION)
-        list = createPager(query).flow
+        Timber.tag("createPager").i("createPager1")
+        list = createPager(BASE_QUERY).flow
     }
 
     fun getSwipeShopsOnResume() {
         Timber.v("getSwipeShopsOnResume")
         viewModelScope.launch(Dispatchers.IO) {
-            val query = firestore.collection(SHOP_COLLECTION)
-            list = createPager(query).flow
+            Timber.tag("createPager").i("createPager2")
+            list = createPager(BASE_QUERY).flow
         }
     }
 
@@ -182,8 +181,6 @@ class ShopListViewModel : ViewModel() {
                     .whereGreaterThanOrEqualTo("s_shopName", listOf(shopName.lowercase()))
                     .whereLessThan("s_shopName", listOf(shopName.lowercase()))
 //                    .whereEqualTo("s_shopName", listOf( shopName.lowercase()))
-                    .limit(pageLimit)
-                    .get()
                 val q2 = firestore.collection(SHOP_COLLECTION)
 //                    .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
                     .whereGreaterThanOrEqualTo("s_firstName", shopName.lowercase())
@@ -193,10 +190,9 @@ class ShopListViewModel : ViewModel() {
                 val q3 = firestore.collection(SHOP_COLLECTION)
                     .whereGreaterThanOrEqualTo("s_lastName", shopName.lowercase())
                     .whereLessThan("s_lastName", shopName.lowercase())
-//                    .whereEqualTo("s_lastName", listOf( shopName.lowercase()))
-                    .limit(pageLimit)
-                    .get()
+//                    .whereEqualTo("s_lastName", listOf( shopName.lowercase())) 
 
+                Timber.tag("createPager").i("createPager3")
                 list = createPager(q2).flow
                 _uiState.value = HomeUiState.HomeSuccess("Success")
             }

@@ -14,7 +14,6 @@ import com.collection.kubera.utils.FirestorePagingSource
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
-import com.google.firebase.firestore.QuerySnapshot
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,24 +37,26 @@ class CollectionViewModel : ViewModel() {
     val todaysCredit: StateFlow<Long> get() = _todaysCredit
     private val _todaysDebit = MutableStateFlow(0L)
     val todaysDebit: StateFlow<Long> get() = _todaysDebit
-    val pageLimit = 10L
-    private fun createPager(q: Query): Pager<QuerySnapshot, DocumentSnapshot> {
+    val BASE_QUERY by lazy {
+        firestore.collection(TRANSECTION_HISTORY_COLLECTION)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+    }
+
+    private fun createPager(q: Query): Pager<Query, DocumentSnapshot> {
         return Pager(
             config = PagingConfig(
-                pageSize = 1,
+                pageSize = 10,
                 enablePlaceholders = false
             ),
             pagingSourceFactory = {
                 FirestorePagingSource(
                     query = q,
-                    limit = pageLimit
                 )
             }
         )
     }
 
-    var list: Flow<PagingData<DocumentSnapshot>> =
-        createPager(firestore.collection(TRANSECTION_HISTORY_COLLECTION)).flow
+    var list: Flow<PagingData<DocumentSnapshot>> = createPager(BASE_QUERY).flow
 
     fun init() {
 //        getCollectionHistory()
@@ -110,11 +111,7 @@ class CollectionViewModel : ViewModel() {
     fun getSwipeShopsCollectionHistory() {
         Timber.v("getSwipeShopsCollectionHistory")
         _uiState.value = CollectionHistoryUiState.Refreshing
-        viewModelScope.launch(Dispatchers.IO) {
-            val query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-            list = createPager(q = query).flow
-        }
+        list = createPager(q = BASE_QUERY).flow
     }
 
 

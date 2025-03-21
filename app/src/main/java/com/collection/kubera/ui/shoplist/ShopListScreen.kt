@@ -143,6 +143,8 @@ fun ShopListScreen(
             }
 
             items(userPagingItems.itemCount) { index ->
+                Timber.i("itemsSuccess")
+                isRefreshing = false
                 val item = userPagingItems[index]?.toObject(Shop::class.java)
                 item?.let {
                     ShopItem(navController, item)
@@ -151,6 +153,7 @@ fun ShopListScreen(
 
             // Handle loading states (optional)
             list.apply {
+                Timber.tag("LOADSTATE").i(loadState.toString())
                 when {
                     loadState.refresh is LoadState.Loading -> {
                         Timber.i("loadState.refresh")
