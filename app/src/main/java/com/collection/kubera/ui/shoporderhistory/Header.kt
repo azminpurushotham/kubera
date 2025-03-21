@@ -30,7 +30,12 @@ import kotlin.math.absoluteValue
 
 @Composable
 internal fun Header(shop: Shop?, balance: Long) {
-    Column(modifier = Modifier.padding(top = 16.dp, start = 16.dp, end = 16.dp)) {
+    Column(
+        modifier = Modifier
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+            .fillMaxWidth(),
+        horizontalAlignment = Alignment.End
+    ) {
         Image(
             painter = painterResource(id = R.drawable.baseline_filter_list_24), // Replace with your drawable
             contentDescription = stringResource(R.string.filter),

@@ -66,7 +66,6 @@ class ShopDetailsViewModel : ViewModel() {
                     updateState(ShopDetailUiState.ShopDetailError("Error"))
                 }
         }
-
     }
 
     fun updateBalance(id: String?, b: String, selectedOption: String) {

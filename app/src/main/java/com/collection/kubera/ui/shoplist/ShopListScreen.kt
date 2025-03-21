@@ -145,9 +145,10 @@ fun ShopListScreen(
             items(userPagingItems.itemCount) { index ->
                 Timber.i("itemsSuccess")
                 isRefreshing = false
-                val item = userPagingItems[index]?.toObject(Shop::class.java)
-                item?.let {
-                    ShopItem(navController, item)
+                userPagingItems[index]?.toObject(Shop::class.java)?.apply{
+                    id = userPagingItems[index]?.id.toString()
+                }?.also {
+                    ShopItem(navController, it)
                 }
             }
 

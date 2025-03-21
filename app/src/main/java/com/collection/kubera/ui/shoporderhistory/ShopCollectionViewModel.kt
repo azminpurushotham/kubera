@@ -26,10 +26,7 @@ class ShopCollectionViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
     private val _shop = MutableStateFlow<Shop?>(null)
     val shop: StateFlow<Shop?> get() = _shop
-    val BASE_QUERY by lazy { firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-            .whereEqualTo("shopId", shop.value?.id)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-    }
+    lateinit var BASE_QUERY: Query
 
     private fun createPager(q: Query): Pager<Query, DocumentSnapshot> {
         return Pager(
@@ -45,14 +42,11 @@ class ShopCollectionViewModel : ViewModel() {
         )
     }
 
-    var list: Flow<PagingData<DocumentSnapshot>> =
-        createPager(BASE_QUERY).flow
+    var list: Flow<PagingData<DocumentSnapshot>> = createPager(BASE_QUERY).flow
 
     fun getSwipeShopsCollectionHistory() {
         Timber.v("getSwipeShopsCollectionHistory")
-        if ((shop.value?.id?.length ?:0)  > 1) {
-            list = createPager(q = BASE_QUERY).flow
-        }
+        list = createPager(q = BASE_QUERY).flow
     }
 
     fun getCollectionHistory() {
@@ -63,5 +57,9 @@ class ShopCollectionViewModel : ViewModel() {
     fun setShop(shop: Shop) {
         _shop.value = shop
         _balance.value = _shop.value?.balance ?: 0
+        BASE_QUERY = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
+            .whereEqualTo("shopId", _shop.value?.id)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+        list = createPager(BASE_QUERY).flow
     }
 }

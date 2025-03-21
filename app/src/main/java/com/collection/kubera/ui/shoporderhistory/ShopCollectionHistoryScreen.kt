@@ -51,6 +51,7 @@ import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.onprimaryD
 import com.google.firebase.firestore.DocumentSnapshot
+import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -237,7 +238,7 @@ fun ShopCollectionHistoryScreen(
 //                .verticalScroll(rememberScrollState())
                 .fillMaxSize(),
             verticalArrangement = Arrangement.Top, // Vertically center items
-            horizontalAlignment = Alignment.End // Horizontally center items
+            horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
         ) {
             item {
                 Header(shop, balance)
@@ -250,34 +251,24 @@ fun ShopCollectionHistoryScreen(
                 }
             }
 
-            // Handle loading states (optional)
-            list.apply {
-                when {
-                    loadState.refresh is LoadState.Loading -> {
-                        Timber.i("loadState.refresh")
-                        item {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.onPrimary,
-                            )
-                        }
-                    }
-                    loadState.append is LoadState.Loading -> {
-                        Timber.i("loadState.append")
-                        item {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.onPrimary,
-                            )
-                        }
-                    }
-                    loadState.append is LoadState.NotLoading ->{
-                        Timber.i("loadState.NotLoading")
-                        Timber.i("NotLoading")
-                    }
-                    loadState.refresh is LoadState.Error -> {
-                        Timber.i("loadState.refresh")
-                        val e = list.loadState.refresh as LoadState.Error
-                        item { Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.onPrimary) }
-                    }
+            // Show Loader at the Bottom During Load More
+            item {
+                if (userPagingItems.loadState.refresh is LoadState.Loading) {
+                    Timber.i("loadState.refresh")
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
+                else if (userPagingItems.loadState.append is LoadState.Loading) {
+                    Timber.i("loadState.append")
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                    )
+                }
+                else if (userPagingItems.loadState.refresh is LoadState.Error) {
+                    Timber.i("loadState.Error")
+                    val e = list.loadState.refresh as LoadState.Error
+                    Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.error)
                 }
             }
         }

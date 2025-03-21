@@ -159,8 +159,6 @@ fun CollectionHistoryScreen(
                 }
             }
 
-            Timber.tag("LOAD_STATE").i("${userPagingItems.loadState}")
-
             // Show Loader at the Bottom During Load More
             item {
                 if (userPagingItems.loadState.refresh is LoadState.Loading) {
@@ -174,17 +172,12 @@ fun CollectionHistoryScreen(
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.onPrimary,
                     )
-                    Toast.makeText(context, "Loading", Toast.LENGTH_SHORT).show()
                 }
                else if (userPagingItems.loadState.refresh is LoadState.Error) {
                     Timber.i("loadState.Error")
                     val e = list.loadState.refresh as LoadState.Error
                     Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.error)
                 }
-            }
-
-            item {
-                Text("TEST TEXT")
             }
         }
     }

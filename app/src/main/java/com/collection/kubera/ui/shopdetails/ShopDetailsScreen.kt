@@ -59,9 +59,6 @@ import com.collection.kubera.ui.theme.onHintD
 import com.collection.kubera.ui.theme.red
 import com.collection.kubera.utils.PreferenceHelper
 import com.google.gson.Gson
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import timber.log.Timber
 import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -134,11 +131,10 @@ fun ShopDetailsScreen(
             balance,
             isEnabled,
             viewModel,
-            shop,
-            {
-                showBottomSheet = false
-            }
-        )
+            shop
+        ) {
+            showBottomSheet = false
+        }
     }
 
     @Composable
