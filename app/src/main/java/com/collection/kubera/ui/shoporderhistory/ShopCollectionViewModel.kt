@@ -16,17 +16,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import timber.log.Timber
+import javax.inject.Inject
 
-class ShopCollectionViewModel : ViewModel() {
+class ShopCollectionViewModel @Inject constructor(prm:Shop) : ViewModel() {
     private val _uiState: MutableStateFlow<HomeUiState> =
         MutableStateFlow(HomeUiState.Initial)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
     private val _balance = MutableStateFlow<Long>(0)
     val balance: StateFlow<Long> get() = _balance
     private val firestore = FirebaseFirestore.getInstance()
-    private val _shop = MutableStateFlow<Shop?>(null)
+    private val _shop = MutableStateFlow<Shop?>(prm)
     val shop: StateFlow<Shop?> get() = _shop
-    lateinit var BASE_QUERY: Query
+    private val BASEQUERY = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
+        .whereEqualTo("shopId", prm.id)
+        .orderBy("timestamp", Query.Direction.DESCENDING)
 
     private fun createPager(q: Query): Pager<Query, DocumentSnapshot> {
         return Pager(
@@ -42,24 +45,16 @@ class ShopCollectionViewModel : ViewModel() {
         )
     }
 
-    var list: Flow<PagingData<DocumentSnapshot>> = createPager(BASE_QUERY).flow
+    var list: Flow<PagingData<DocumentSnapshot>> = createPager(BASEQUERY).flow
 
     fun getSwipeShopsCollectionHistory() {
         Timber.v("getSwipeShopsCollectionHistory")
-        list = createPager(q = BASE_QUERY).flow
+        list = createPager(q = BASEQUERY).flow
     }
 
-    fun getCollectionHistory() {
-        Timber.v("getCollectionHistory ${shop ?: "NONE"}")
-        list = createPager(q = BASE_QUERY).flow
-    }
 
     fun setShop(shop: Shop) {
         _shop.value = shop
         _balance.value = _shop.value?.balance ?: 0
-        BASE_QUERY = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-            .whereEqualTo("shopId", _shop.value?.id)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-        list = createPager(BASE_QUERY).flow
     }
 }

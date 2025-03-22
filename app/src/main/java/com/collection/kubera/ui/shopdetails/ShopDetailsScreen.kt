@@ -428,9 +428,9 @@ fun ShopDetailsScreen(
         }
         Button(
             onClick = {
-//                navController.navigate("${SHOP_COLLECTION_HISTORY}?${Gson().toJson(shop)}") {
-//                    popUpTo(SHOP_DETAILS){inclusive = false}
-//                }
+                navController.navigate("${SHOP_COLLECTION_HISTORY}?${Gson().toJson(shop)}") {
+                    popUpTo(SHOP_DETAILS){inclusive = false}
+                }
             },
             shape = RoundedCornerShape(5.dp),
             modifier = Modifier

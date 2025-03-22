@@ -39,6 +39,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
@@ -50,8 +52,8 @@ import com.collection.kubera.data.Shop
 import com.collection.kubera.states.HomeUiState
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.onprimaryD
+import com.collection.kubera.ui.updatecredentials.UpdateCredentialsViewModel
 import com.google.firebase.firestore.DocumentSnapshot
-import org.intellij.lang.annotations.JdkConstants.HorizontalAlignment
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,7 +61,7 @@ import timber.log.Timber
 fun ShopCollectionHistoryScreen(
     prm: Shop,
     navController: NavHostController,
-    viewModel: ShopCollectionViewModel = viewModel()
+    viewModel: ShopCollectionViewModel = viewModel(factory = ViewModelFactory(prm))
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -82,7 +84,6 @@ fun ShopCollectionHistoryScreen(
     when (uiState) {
         is HomeUiState.Initial -> {
             viewModel.setShop(prm)
-            viewModel.getCollectionHistory()
         }
 
         HomeUiState.Loading -> {
@@ -275,9 +276,15 @@ fun ShopCollectionHistoryScreen(
     }
 }
 
-
-
-
+class ViewModelFactory(private val shop: Shop) : ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(ShopCollectionViewModel::class.java)) {
+            return ShopCollectionViewModel(shop) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
 
 
 

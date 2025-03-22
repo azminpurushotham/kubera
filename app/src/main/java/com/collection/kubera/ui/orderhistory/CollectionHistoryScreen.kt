@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
@@ -165,12 +166,14 @@ fun CollectionHistoryScreen(
                     Timber.i("loadState.refresh")
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(10.dp)
                     )
                 }
                else if (userPagingItems.loadState.append is LoadState.Loading) {
                     Timber.i("loadState.append")
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(10.dp)
                     )
                 }
                else if (userPagingItems.loadState.refresh is LoadState.Error) {

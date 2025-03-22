@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.ui.theme.boxColorD
@@ -35,7 +36,7 @@ internal fun ShopCollectionItem(item: CollectionModel) {
         onClick = {
 
         }) {
-        Row(
+        Column(
             modifier = Modifier
                 .padding(
                     start = 16.dp,
@@ -44,18 +45,48 @@ internal fun ShopCollectionItem(item: CollectionModel) {
                     bottom = 16.dp
                 )
                 .align(Alignment.Start)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.Start,
-        ) {
-            Column {
+                .fillMaxWidth(),){
+            Row(
+                verticalAlignment = Alignment.Top,
+                horizontalArrangement = Arrangement.Start,
+            ) {
+                Row (
+                    modifier = Modifier.weight(1.5f),
+                    horizontalArrangement = Arrangement.Start
+                    ){
+                    Text(
+                        item.datedmy,
+                        fontWeight = FontWeight(100),
+                        fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        item.time,
+                        fontWeight = FontWeight(100),
+                        fontSize = MaterialTheme.typography.bodyMedium.fontSize,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                Spacer(modifier = Modifier.width(10.dp))
                 Text(
-                    item.datedmy,
+                    item.transactionType ?: "",
                     fontWeight = FontWeight(100),
-                    modifier = Modifier.width(100.dp),
+                    modifier = Modifier.weight(.5f),
                     fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                    color = MaterialTheme.colorScheme.onPrimary
+                    color = if (item.transactionType == "Credit") green else red,
                 )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    ((item.amount ?: 0L).absoluteValue).toString(),
+                    fontWeight = FontWeight(500),
+                    modifier = Modifier.weight(1f),
+                    textAlign = TextAlign.End,
+                    fontSize = MaterialTheme.typography.bodyLarge.fontSize,
+                    color = if (item.transactionType == "Credit") green else red,
+                )
+            }
+            Row {
                 Text(
                     "Collected By : ${item.collectedBy}",
                     fontWeight = FontWeight(400),
@@ -63,31 +94,6 @@ internal fun ShopCollectionItem(item: CollectionModel) {
                     color = MaterialTheme.colorScheme.onPrimary
                 )
             }
-            Spacer(modifier = Modifier.width(20.dp))
-            Text(
-                item.time,
-                fontWeight = FontWeight(100),
-                modifier = Modifier.width(100.dp),
-                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                item.transactionType ?: "",
-                fontWeight = FontWeight(100),
-                modifier = Modifier.width(100.dp),
-                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                color = if (item.transactionType == "Credit") green else red,
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Text(
-                ((item.amount ?: 0L).absoluteValue).toString(),
-                fontWeight = FontWeight(500),
-                fontSize = MaterialTheme.typography.bodyLarge.fontSize,
-                color = if (item.transactionType == "Credit") green else red,
-            )
         }
     }
     Spacer(modifier = Modifier.height(2.dp))

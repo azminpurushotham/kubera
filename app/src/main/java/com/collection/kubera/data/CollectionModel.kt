@@ -77,7 +77,7 @@ data class CollectionModel(
     var time: String = ""
         get() {
             val date = timestamp?.toDate()
-            val formatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+            val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
             return formatter.format(date)
         }
 

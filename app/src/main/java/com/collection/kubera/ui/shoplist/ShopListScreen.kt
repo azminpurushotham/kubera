@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -152,35 +154,26 @@ fun ShopListScreen(
                 }
             }
 
-            // Handle loading states (optional)
-            list.apply {
-                Timber.tag("LOADSTATE").i(loadState.toString())
-                when {
-                    loadState.refresh is LoadState.Loading -> {
-                        Timber.i("loadState.refresh")
-                        item {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.onPrimary,
-                            )
-                        }
-                    }
-                    loadState.append is LoadState.Loading -> {
-                        Timber.i("loadState.append")
-                        item {
-                            CircularProgressIndicator(
-                                color = MaterialTheme.colorScheme.onPrimary,
-                            )
-                        }
-                    }
-                    loadState.append is LoadState.NotLoading ->{
-                        Timber.i("loadState.NotLoading")
-                        Timber.i("NotLoading")
-                    }
-                    loadState.refresh is LoadState.Error -> {
-                        Timber.i("loadState.refresh")
-                        val e = list.loadState.refresh as LoadState.Error
-                        item { Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.onPrimary) }
-                    }
+            // Show Loader at the Bottom During Load More
+            item {
+                if (userPagingItems.loadState.refresh is LoadState.Loading) {
+                    Timber.i("loadState.refresh")
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+                else if (userPagingItems.loadState.append is LoadState.Loading) {
+                    Timber.i("loadState.append")
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
+                else if (userPagingItems.loadState.refresh is LoadState.Error) {
+                    Timber.i("loadState.Error")
+                    val e = list.loadState.refresh as LoadState.Error
+                    Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.error)
                 }
             }
         }
