@@ -1,5 +1,6 @@
 package com.collection.kubera.ui
 
+import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -216,7 +217,9 @@ fun AppNavGraph(
             }
 
             composable(AllDestinations.REPORT) {
-                ReportScreen(navController)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    ReportScreen(navController)
+                }
             }
         }
     }

@@ -63,9 +63,8 @@ import java.util.Date
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReportScreen(navController: NavHostController) {
+fun ReportScreen(navController: NavHostController,viewModel: ReportViewModel = viewModel()) {
     val context = LocalContext.current
-    val viewModel: ReportViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState(ReportUiState.Initial)
     var isButtonEnabled by remember { mutableStateOf(false) }
     val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)

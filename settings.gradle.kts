@@ -1,3 +1,5 @@
+import org.jetbrains.annotations.ApiStatus.Experimental
+
 pluginManagement {
     repositories {
         google {
@@ -11,6 +13,7 @@ pluginManagement {
         gradlePluginPortal()
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
