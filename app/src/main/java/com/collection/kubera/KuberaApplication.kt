@@ -26,13 +26,9 @@ import timber.log.Timber
 
 
 class KuberaApplication : Application() {
-    companion object {
-        const val JETNEWS_APP_URI = "https://developer.android.com/jetnews"
-    }
 
     override fun onCreate() {
         super.onCreate()
-        println("KuberaApplication")
 
         FirebaseApp.initializeApp(this)?.let {
             Log.d("FirebaseInit", "Firebase successfully initialized")
@@ -42,7 +38,7 @@ class KuberaApplication : Application() {
     }
 
 
-    fun installProvider() {
+    private fun installProvider() {
         try {
             ProviderInstaller.installIfNeeded(applicationContext)
         } catch (e: GooglePlayServicesRepairableException) {
