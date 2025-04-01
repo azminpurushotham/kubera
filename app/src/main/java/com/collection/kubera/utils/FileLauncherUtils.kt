@@ -21,8 +21,10 @@ val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_D
 
 fun isTreeUriPersisted(context: Context): Boolean {
     val uriPermissionList = context.contentResolver.persistedUriPermissions
-    val status = uriPermissionList.isNotEmpty() && uriPermissionList[0].isReadPermission && uriPermissionList[0].isWritePermission
-    Timber.i("uriPermissionList -> ${uriPermissionList.isNotEmpty()} uriPermissionList[0].isReadPermission -> ${uriPermissionList[0].isReadPermission} uriPermissionList[0].isWritePermission -> ${uriPermissionList[0].isWritePermission}")
+    val r = if(uriPermissionList.isNotEmpty()) uriPermissionList[0].isReadPermission else false
+    val w = if(uriPermissionList.isNotEmpty()) uriPermissionList[0].isWritePermission else false
+    val status = uriPermissionList.isNotEmpty() && r && w
+    Timber.i("uriPermissionList -> ${uriPermissionList.isNotEmpty()} uriPermissionList[0].isReadPermission -> $r uriPermissionList[0].isWritePermission -> $w")
     return status
 }
 
@@ -35,14 +37,12 @@ fun showDialogueForFileLauncher(
         .apply {
             setTitle("Important")
             setMessage("Select a folder to store reports")
+            setCancelable(false)
             setPositiveButton("OK") { dialog, _ ->
                 dialog.dismiss() // Close the dialog
                 openDocumentTreeLauncher.launch(Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
                     addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
                 })
-            }
-            setNegativeButton("Cancel") { dialog, _ ->
-                dialog.dismiss() // Close the dialog
             }
             create()
         }.show()
