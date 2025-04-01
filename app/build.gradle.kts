@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.generativeai)
     implementation(libs.icons)
     implementation(libs.timber)
+    implementation(libs.treessence)
     implementation(libs.gson)
     implementation(libs.accompanist)
     implementation(libs.navigation.animation)

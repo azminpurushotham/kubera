@@ -39,7 +39,7 @@ internal fun ShopItem(
             containerColor = boxColorD,
         ),
         onClick = {
-            Timber.v("SHOP_DETAILS")
+            Timber.i("SHOP_DETAILS")
             navController.navigate("$SHOP_DETAILS?${Gson().toJson(item)}") {
                 popUpTo(SHOP_LIST) {
                     inclusive = false

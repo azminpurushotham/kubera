@@ -21,13 +21,16 @@ val path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_D
 
 fun isTreeUriPersisted(context: Context): Boolean {
     val uriPermissionList = context.contentResolver.persistedUriPermissions
-    return uriPermissionList.isNotEmpty() && uriPermissionList[0].isReadPermission && uriPermissionList[0].isWritePermission
+    val status = uriPermissionList.isNotEmpty() && uriPermissionList[0].isReadPermission && uriPermissionList[0].isWritePermission
+    Timber.i("uriPermissionList -> ${uriPermissionList.isNotEmpty()} uriPermissionList[0].isReadPermission -> ${uriPermissionList[0].isReadPermission} uriPermissionList[0].isWritePermission -> ${uriPermissionList[0].isWritePermission}")
+    return status
 }
 
 fun showDialogueForFileLauncher(
     context: Context,
     openDocumentTreeLauncher: ActivityResultLauncher<Intent>
 ) {
+    Timber.i("showDialogueForFileLauncher")
     AlertDialog.Builder(context)
         .apply {
             setTitle("Important")
@@ -49,6 +52,7 @@ fun showDialogueForFileLauncher(
     context: Context,
     openDocumentTreeLauncher: ManagedActivityResultLauncher<Intent, ActivityResult>
 ) {
+    Timber.i("showDialogueForFileLauncher")
     AlertDialog.Builder(context)
         .apply {
             setTitle("Important")
@@ -67,6 +71,8 @@ fun showDialogueForFileLauncher(
 }
 
 fun createDirectory(uri: Uri, context: Context) {
+    Timber.i("createDirectory")
+    Timber.i("URI -> $uri")
     try {
         val directoryName = context.getString(R.string.app_name)
         val newDirUri = DocumentsContract.createDocument(
@@ -77,7 +83,7 @@ fun createDirectory(uri: Uri, context: Context) {
         )
 
         if (newDirUri != null) {
-            Timber.v("DirectoryCreation", "Directory created: $directoryName")
+            Timber.i("DirectoryCreation", "Directory created: $directoryName")
         } else {
             Timber.e("DirectoryCreation", "Failed to create directory")
         }
@@ -93,6 +99,8 @@ inline fun <reified T> writeCsvFile(
     list: List<T>,
     schema: CsvSchema,
 ) {
+    Timber.i("PATH -> $path")
+    Timber.i("fileName -> $fileName")
     val dir = File(path)
     val file = File(dir, fileName)
     val csvMapper = CsvMapper().apply {

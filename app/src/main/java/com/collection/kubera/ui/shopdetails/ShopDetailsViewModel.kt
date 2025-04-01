@@ -16,6 +16,7 @@ import com.collection.kubera.utils.USER_ID
 import com.collection.kubera.utils.USER_NAME
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,12 +44,13 @@ class ShopDetailsViewModel : ViewModel() {
 
     fun setShop(model: Shop) {
         _shop.value = model
+        Timber.tag("setShop").i(Gson().toJson(model))
     }
 
     fun getShopDetails(
         id: String
     ) {
-        Timber.v("getShopDetails")
+        Timber.i("getShopDetails")
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(SHOP_COLLECTION)
                 .document(id)
@@ -69,6 +71,7 @@ class ShopDetailsViewModel : ViewModel() {
     }
 
     fun updateBalance(id: String?, b: String, selectedOption: String) {
+        Timber.tag("updateBalance").i("id -> $id b -> $b selectedOption -> $selectedOption")
         id?.let {
             _uiState.value = ShopDetailUiState.Loading
             val balance = if (selectedOption == "Credit") {
@@ -76,6 +79,7 @@ class ShopDetailsViewModel : ViewModel() {
             } else {
                 (shop.value?.balance ?: 0L) - (b.toLong())
             }
+            Timber.tag("updateBalance").i("balance -> $balance")
             viewModelScope.launch(Dispatchers.IO) {
                 firestore.collection(SHOP_COLLECTION)
                     .document(it)
@@ -98,14 +102,17 @@ class ShopDetailsViewModel : ViewModel() {
     }
 
     private fun insertCollectionHistory(id: String?, b: String, selectedOption: String) {
+        Timber.tag("insertCollectionHistory").i("id -> $id b-> $b selectedOption -> $selectedOption")
         id?.let {
             val balance = if (selectedOption == "Credit") {
                 b
             } else {
                 "-${b}"
             }
+            Timber.tag("insertCollectionHistory").i("balance -> $balance")
             viewModelScope.launch(Dispatchers.IO) {
                 val shop = shop.value
+                Timber.tag("insertCollectionHistory").i("shop -> $shop")
                 val prm = CollectionModel().apply {
                     if (shop?.id?.isEmpty() != true) {
                         this.shopId = shop?.id!!
@@ -133,8 +140,10 @@ class ShopDetailsViewModel : ViewModel() {
                 Timber.tag("insertCollectionHistory").i(prm.toString())
                 firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                     .add(prm).addOnSuccessListener {
+                        Timber.tag("insertCollectionHistory").i("addOnSuccessListener Success")
                         updateState(ShopDetailUiState.ShopDetailToast("Successfully collection history updated"))
                     }.addOnFailureListener {
+                        Timber.tag("insertCollectionHistory").i("addOnFailureListener Error")
                         updateState(ShopDetailUiState.ShopDetailToast("Collection history not updated"))
                     }
             }
@@ -161,6 +170,7 @@ class ShopDetailsViewModel : ViewModel() {
                             }
                             Timber.tag("TOTALBALANCE").i(it[0].balance.toString())
                             Timber.tag("TOTALBALANCE").i(balance.toString())
+                            Timber.tag("ID").i(it[0].id!!)
                             firestore.collection(BALANCE_COLLECTION)
                                 .document(it[0].id!!)
                                 .update(mapOf("balance" to balance))
@@ -195,19 +205,21 @@ class ShopDetailsViewModel : ViewModel() {
                         if (list.isNotEmpty()) {
                             Timber.tag("updateTodaysCollection").i("Update")
                             val prm = mutableMapOf<String, Any>()
-                            val balance = if (selectedOption == "Credit") {
-                                (list[0].balance) + (b)
-                            } else {
-                                (list[0].balance) - (b)
+                            var balance = 0L
+                            if (selectedOption == "Credit") {
+                                    balance =  (list[0].balance) + (b)
+                            } else if(selectedOption == "Debit") {
+                                    balance =  (list[0].balance) - (b)
                             }
                             prm["balance"] = balance
                             if (selectedOption == "Credit") {
                                 prm["credit"] = (list[0].credit) + b
-                            }
-                            if (selectedOption == "Debit") {
+                            }else if (selectedOption == "Debit") {
                                 prm["debit"] = (list[0].debit) + b
                             }
+                            Timber.tag("updateTodaysCollection").i(prm.toString())
                             list[0].id?.let { it1 ->
+                                Timber.tag("updateTodaysCollection").i(it1)
                                 firestore.collection(TODAYS_COLLECTION)
                                     .document(it1)
                                     .update(prm)
@@ -241,7 +253,7 @@ class ShopDetailsViewModel : ViewModel() {
         if (selectedOption == "Debit") {
             prm.debit = b
         }
-
+        Timber.tag("insertTodaysCollection").i(prm.toString())
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(TODAYS_COLLECTION)
                 .add(prm)

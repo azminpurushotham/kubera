@@ -42,7 +42,7 @@ class AddNewShopViewModel : ViewModel() {
         secondPhoneNumber: String?,
         mailId: String?
     ) {
-        Timber.v("saveShopDetails")
+        Timber.i("saveShopDetails")
         _uiState.value = AddNewShopUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             val prm = Shop().apply {
@@ -63,6 +63,7 @@ class AddNewShopViewModel : ViewModel() {
                 this.timestamp = Timestamp.now()
                 this.status = true
             }
+            Timber.i(prm.toString())
             firestore.collection(SHOP_COLLECTION)
                 .add(prm).addOnSuccessListener {
                     prm.apply { id = it.id }
@@ -71,19 +72,23 @@ class AddNewShopViewModel : ViewModel() {
                     )
                     prm.balance?.let { it1 -> updateTotalBalance(it1) }
                     balance?.let { it1 -> updateTodaysCollection(it1.toLong()) }
-                    _uiState.value =
-                        AddNewShopUiState.AddNewShopSuccess("New Shop Added Successfully")
+                    val message = "New Shop Added Successfully"
+                    Timber.i(message)
+                    _uiState.value = AddNewShopUiState.AddNewShopSuccess(message)
                 }.addOnFailureListener {
+                    val message = "Shop is not added,please try again"
+                    Timber.i(message)
                     _uiState.value =
-                        AddNewShopUiState.AddNewShopError("Shop is not added,please try again")
+                        AddNewShopUiState.AddNewShopError(message)
                     _uiState.value =
-                        AddNewShopUiState.AddNewShopCompleted("Shop is not added,please try again")
+                        AddNewShopUiState.AddNewShopCompleted(message)
                 }
         }
 
     }
 
     private fun insertCollectionHistory(shop: Shop) {
+        Timber.tag("insertCollectionHistory").i("insertCollectionHistory")
         viewModelScope.launch(Dispatchers.IO) {
             val prm = CollectionModel().apply {
                 if (shop.id.isNotEmpty()) {
@@ -110,12 +115,15 @@ class AddNewShopViewModel : ViewModel() {
                 this.timestamp = Timestamp.now()
                 this.transactionType = "Credit"
             }
+            Timber.i(prm.toString())
             firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                 .add(prm).addOnSuccessListener {
                     Timber.tag("Success").i("Collection history updated")
                 }.addOnFailureListener {
+                    val message = "Collection history not updated"
+                    Timber.e(message)
                     _uiState.value =
-                        AddNewShopUiState.AddNewShopError("Collection history not updated")
+                        AddNewShopUiState.AddNewShopError(message)
                 }
         }
     }
@@ -135,6 +143,7 @@ class AddNewShopViewModel : ViewModel() {
                     }.also {
                         if (it.isNotEmpty()) {
                             val balance = (it[0].balance) + b
+                            Timber.i("balance -> $balance")
                             firestore.collection(BALANCE_COLLECTION)
                                 .document(it[0].id!!)
                                 .update(mapOf("balance" to balance))
@@ -174,6 +183,8 @@ class AddNewShopViewModel : ViewModel() {
                             prm["balance"] = balance
                             prm["credit"] = credit
                             list[0].id?.let { it1 ->
+                                Timber.tag("updateTodaysCollection").i(it1)
+                                Timber.tag("updateTodaysCollection").i("prm -> $prm")
                                 firestore.collection(TODAYS_COLLECTION)
                                     .document(it1)
                                     .update(prm)
@@ -204,6 +215,7 @@ class AddNewShopViewModel : ViewModel() {
         prm.credit = b
 
         viewModelScope.launch(Dispatchers.IO) {
+            Timber.i(prm.toString())
             firestore.collection(TODAYS_COLLECTION)
                 .add(prm)
                 .addOnSuccessListener {

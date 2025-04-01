@@ -1,8 +1,16 @@
 package com.collection.kubera.utils
 
+import android.content.Context
 import android.icu.text.SimpleDateFormat
+import android.os.Environment
+import com.collection.kubera.R
 import com.google.firebase.Timestamp
+import fr.bipi.treessence.common.filters.NoFilter
+import fr.bipi.treessence.common.formatter.LogcatFormatter
+import fr.bipi.treessence.console.SystemLogTree
+import fr.bipi.treessence.file.FileLoggerTree
 import timber.log.Timber
+import java.io.File
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
@@ -15,6 +23,11 @@ val dmy = "dd-MM-yyyy"
 val dmyh = "dd-MM-yyyy HH:mm:ss"
 val dateFormate = SimpleDateFormat(dmyh)
 val dateFormate2 = SimpleDateFormat(dmy)
+
+var commonTimberDir: String? = null
+var commonTimberTree: FileLoggerTree? = null
+var timberDir: String? = null
+var timberTree: FileLoggerTree? = null
 
 internal fun getTodayStartAndEndTime(zoneId: ZoneId = ZoneId.systemDefault()): Pair<Timestamp, Timestamp> {
     // 1. Get Today's Date in the specified Time Zone
@@ -82,4 +95,43 @@ fun String.toEndTimestamp(): Timestamp? {
 internal fun convertZonedDateTimeToTimestamp(zonedDateTime: ZonedDateTime): Timestamp {
     val instant = zonedDateTime.toInstant()
     return Timestamp(Date.from(instant))
+}
+
+fun checkIfDirectoryExists(dir: String): Boolean {
+    return File(dir).exists()
+}
+
+internal fun manualFileLogs(context: Context) {
+    /* FOR LOGGING IN FILE*/
+    var file = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)}/${context.getString(R.string.app_name)}/Logs/${getCurrentDate()}"
+    Timber.tag("manualFileLogs").i(file)
+    if (!checkIfDirectoryExists(file)
+    ) {
+        timberDir = null
+        timberTree = null
+    }
+
+    if (timberDir == null) {
+        file = "${Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)}/${
+            context.getString(R.string.app_name)
+        }/Logs/${getCurrentDate()}/"
+        Timber.tag("manualFileLogs").i(file)
+        timberDir = file
+    }
+
+    if (timberTree == null) {
+        timberTree =
+            FileLoggerTree.Builder()
+                .withFileName("${context.getString(R.string.app_name)}_log")
+                .withDirName(timberDir!!)
+                .withFilter(NoFilter.INSTANCE)
+                .withFormatter(LogcatFormatter.INSTANCE)
+                .withSizeLimit((1024 * 1024) * 3) // 3 MB
+                .withFileLimit(100)
+                .appendToFile(true)
+                .build()
+        Timber.plant(SystemLogTree())
+        Timber.plant(Timber.DebugTree())
+        Timber.plant(timberTree!!)
+    }
 }

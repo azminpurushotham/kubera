@@ -55,16 +55,19 @@ class ShopListViewModel : ViewModel() {
     var list: Flow<PagingData<DocumentSnapshot>> = createPager(BASE_QUERY).flow
 
     fun init() {
+        Timber.i("init")
 //        getBalance()
         getTodaysCollectionLogic()
     }
 
     fun onResume() {
+        Timber.i("onResume")
 //        getBalance()
         getTodaysCollectionLogic()
     }
 
     fun onRefresh() {
+        Timber.i("onRefresh")
         getSwipeShops()
 //        getBalance()
         getTodaysCollectionLogic()
@@ -75,7 +78,7 @@ class ShopListViewModel : ViewModel() {
     }
 
     private fun getTodaysCollection() {
-        Timber.v("getTodaysBalance")
+        Timber.i("getTodaysBalance")
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(TODAYS_COLLECTION)
                 .get()
@@ -89,6 +92,7 @@ class ShopListViewModel : ViewModel() {
                         _todaysCollection.value = it[0].balance
                         _todaysCredit.value = it[0].credit
                         _todaysDebit.value = it[0].debit
+                        Timber.tag("getTodaysBalance").i("_todaysCollection.value  -> ${_todaysCollection.value} _todaysCredit.value -> ${_todaysCredit.value} _todaysDebit.value -> ${_todaysDebit.value}")
                     }
                 }
                 .addOnFailureListener {
@@ -101,7 +105,7 @@ class ShopListViewModel : ViewModel() {
     }
 
     private fun clearTodaysCollectionLogic() {
-        Timber.v("clearTodaysCollectionLogic")
+        Timber.i("clearTodaysCollectionLogic")
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(TODAYS_COLLECTION)
                 .get()
@@ -113,6 +117,7 @@ class ShopListViewModel : ViewModel() {
                             }
                     }.also {
                         if (it.isNotEmpty()) {
+                            Timber.i(it.toString())
                             val cd = formatFirestoreTimestamp(it[0].timestamp)
                             val n = formatFirestoreTimestamp(Timestamp.now())
                             if (cd != n) {
@@ -124,14 +129,15 @@ class ShopListViewModel : ViewModel() {
                     }
                 }
                 .addOnFailureListener {
-                    _uiState.value = HomeUiState.HomeError(
-                        it.message ?: "Something went wrong,Please refresh the page"
-                    )
+                    val message = it.message ?: "Something went wrong,Please refresh the page"
+                    Timber.i(message)
+                    _uiState.value = HomeUiState.HomeError(message)
                 }
         }
     }
 
     private fun clearPreviousDaysCollections() {
+        Timber.i("clearPreviousDaysCollections")
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(TODAYS_COLLECTION)
                 .get()
@@ -159,13 +165,13 @@ class ShopListViewModel : ViewModel() {
 
 
     private fun getSwipeShops() {
-        Timber.v("getSwipeShops")
+        Timber.i("getSwipeShops")
         Timber.tag("createPager").i("createPager1")
         list = createPager(BASE_QUERY).flow
     }
 
     fun getSwipeShopsOnResume() {
-        Timber.v("getSwipeShopsOnResume")
+        Timber.i("getSwipeShopsOnResume")
         viewModelScope.launch(Dispatchers.IO) {
             Timber.tag("createPager").i("createPager2")
             list = createPager(BASE_QUERY).flow
@@ -173,7 +179,7 @@ class ShopListViewModel : ViewModel() {
     }
 
     fun getShops(shopName: String) {
-        Timber.v("getShops $shopName")
+        Timber.i("getShops $shopName")
         if (shopName.length > 1) {
             _uiState.value = HomeUiState.Searching
             viewModelScope.launch(Dispatchers.IO) {
@@ -192,7 +198,7 @@ class ShopListViewModel : ViewModel() {
                     .whereLessThan("s_lastName", shopName.lowercase())
 //                    .whereEqualTo("s_lastName", listOf( shopName.lowercase())) 
 
-                Timber.tag("createPager").i("createPager3")
+                Timber.tag("getShops").i("createPager3 $q2")
                 list = createPager(q2).flow
                 _uiState.value = HomeUiState.HomeSuccess("Success")
             }

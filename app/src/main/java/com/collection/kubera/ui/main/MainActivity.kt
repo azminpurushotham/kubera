@@ -9,6 +9,7 @@ import com.collection.kubera.ui.AppNavGraph
 import com.collection.kubera.ui.theme.KuberaTheme
 import com.collection.kubera.utils.createDirectory
 import com.collection.kubera.utils.isTreeUriPersisted
+import com.collection.kubera.utils.manualFileLogs
 import com.collection.kubera.utils.showDialogueForFileLauncher
 import timber.log.Timber
 
@@ -34,12 +35,15 @@ class MainActivity : ComponentActivity() {
                     )
                     contentResolver.takePersistableUriPermission(uri, takeFlags)
                     createDirectory(uri,this@MainActivity)
+                    manualFileLogs(this)
                 }
             }
         }
 
         if (!isTreeUriPersisted(this@MainActivity)) {
             showDialogueForFileLauncher(this@MainActivity,openDocumentTreeLauncher)
+        }else{
+            manualFileLogs(this)
         }
     }
 }

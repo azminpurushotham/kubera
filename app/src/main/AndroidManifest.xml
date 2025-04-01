@@ -16,6 +16,7 @@
         android:name=".KuberaApplication"
         android:theme="@style/Theme.Kubera"
         tools:targetApi="31">
+
         <activity
             android:name=".ui.main.MainActivity"
             android:exported="true"

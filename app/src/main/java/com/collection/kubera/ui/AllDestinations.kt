@@ -10,6 +10,7 @@ import com.collection.kubera.ui.AllDestinations.REPORT
 import com.collection.kubera.ui.AllDestinations.SHOP_COLLECTION_HISTORY
 import com.collection.kubera.ui.AllDestinations.SHOP_DETAILS
 import com.collection.kubera.ui.AllDestinations.UPDATE_SHOP
+import timber.log.Timber
 
 object AllDestinations {
     const val SHOP_LIST = "Shop List"
@@ -25,34 +26,40 @@ object AllDestinations {
 
 class AppNavigationActions(private val navController: NavHostController) {
     fun navigateToShopList() {
+        Timber.i("navigateToShopList")
         navController.navigate(SHOP_LIST) {
             popUpTo(SHOP_LIST){inclusive = false}
         }
     }
     fun navigateToCollectionHistory() {
+        Timber.i("navigateToCollectionHistory")
         navController.navigate(COLLECTION_HISTORY) {
             popUpTo(COLLECTION_HISTORY){inclusive = false}
         }
     }
 
     fun navigateToShopCollectionHistory() {
+        Timber.i("navigateToShopCollectionHistory")
         navController.navigate(SHOP_COLLECTION_HISTORY) {
             popUpTo(SHOP_COLLECTION_HISTORY){inclusive = false}
         }
     }
 
     fun navigateToProfile() {
+        Timber.i("navigateToProfile")
         navController.navigate(PROFILE) {
             popUpTo(SHOP_LIST){inclusive = false}
         }
     }
 
     fun navigateToReport() {
+        Timber.i("navigateToReport")
         navController.navigate(REPORT) {
             popUpTo(SHOP_LIST){inclusive = false}
         }
     }
     fun navigateToAddNewShop() {
+        Timber.i("navigateToAddNewShop")
         navController.navigate(ADD_NEW_SHOP) {
             launchSingleTop = true
             popUpTo(SHOP_LIST)
@@ -60,6 +67,7 @@ class AppNavigationActions(private val navController: NavHostController) {
     }
 
     fun navigateToUpdateShop(model: String?) {
+        Timber.i("navigateToUpdateShop")
         navController.navigate("${UPDATE_SHOP}?$model") {
             launchSingleTop = true
             popUpTo(SHOP_DETAILS)
@@ -67,11 +75,13 @@ class AppNavigationActions(private val navController: NavHostController) {
     }
 
     fun navigateToLogOut() {
+        Timber.i("navigateToLogOut")
         navController.navigate(LOGOUT) {
             popUpTo(LOGOUT)
         }
     }
     fun navigateToShopDetails() {
+        Timber.i("navigateToShopDetails")
         navController.navigate(SHOP_DETAILS) {
             launchSingleTop = true
             popUpTo(SHOP_LIST)

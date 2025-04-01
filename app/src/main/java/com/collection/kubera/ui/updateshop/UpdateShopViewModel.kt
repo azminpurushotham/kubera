@@ -39,7 +39,7 @@ class UpdateShopViewModel : ViewModel() {
         secondPhoneNumber: String?,
         mailId: String?
     ) {
-        Timber.v("saveShopDetails")
+        Timber.i("saveShopDetails")
         _uiState.value = UpdateShopUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             val ud = mutableMapOf<String,Any>()
@@ -94,31 +94,8 @@ class UpdateShopViewModel : ViewModel() {
 
     }
 
-    fun getShopDetails(
-        id: String
-    ) {
-        Timber.v("getShopDetails")
-        updateState(UpdateShopUiState.Loading)
-        viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection(SHOP_COLLECTION)
-                .document(id)
-                .get()
-                .addOnSuccessListener { result ->
-                    if (result.data?.isNotEmpty() == true) {
-                        _shop.value = result.toObject(Shop::class.java)
-                            ?.apply {
-                                this.id = id
-                            }
-                    }
-                    updateState(UpdateShopUiState.ShopDetailSuccess("Success"))
-                }.addOnFailureListener {
-                    updateState(UpdateShopUiState.ShopDetailError("Error"))
-                }
-        }
-
-    }
-
     fun setShop(model: Shop) {
         _shop.value = model
+        Timber.i("Shop -> $model")
     }
 }

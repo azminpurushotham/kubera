@@ -112,7 +112,7 @@ fun ShopListScreen(
 
         is HomeUiState.HomeSuccess -> {
             isRefreshing = false
-            Timber.v("HomeSuccess")
+            Timber.i("HomeSuccess")
         }
 
         is HomeUiState.HomeError -> {

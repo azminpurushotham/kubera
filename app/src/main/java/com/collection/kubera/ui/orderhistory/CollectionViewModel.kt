@@ -61,11 +61,13 @@ class CollectionViewModel : ViewModel() {
     fun init() {
 //        getCollectionHistory()
 //        getBalance()
+        Timber.i("init")
         getTodaysCollection()
     }
 
     fun getCollectionHistory(type: String? = null) {
-        Timber.v("getCollectionHistory")
+        Timber.i("getCollectionHistory")
+        Timber.i("type -> $type")
         viewModelScope.launch(Dispatchers.IO) {
             val query: Query
             when (type) {
@@ -104,19 +106,20 @@ class CollectionViewModel : ViewModel() {
                         .orderBy("timestamp", Query.Direction.DESCENDING)
                 }
             }
+            Timber.i(query.toString())
             list = createPager(q = query).flow
         }
     }
 
     fun getSwipeShopsCollectionHistory() {
-        Timber.v("getSwipeShopsCollectionHistory")
+        Timber.i("getSwipeShopsCollectionHistory")
         _uiState.value = CollectionHistoryUiState.Refreshing
         list = createPager(q = BASE_QUERY).flow
     }
 
 
     internal fun getTodaysCollection() {
-        Timber.v("getTodaysCollection")
+        Timber.i("getTodaysCollection")
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(TODAYS_COLLECTION)
                 .get()
@@ -124,6 +127,7 @@ class CollectionViewModel : ViewModel() {
                     querySnapshot.documents.mapNotNull {
                         it.toObject(TodaysCollections::class.java)
                             ?.apply {
+                                Timber.tag("addOnSuccessListener").i(it.id)
                                 id = it.id
                             }
                     }.also {
@@ -131,14 +135,15 @@ class CollectionViewModel : ViewModel() {
                             _todaysCollection.value = it[0].balance
                             _todaysCredit.value = it[0].credit
                             _todaysDebit.value = it[0].debit
+                            Timber.tag("addOnSuccessListener").i("_todaysCollection.value -> ${_todaysCollection.value} _todaysCredit.value -> ${_todaysCredit.value} _todaysDebit.value -> ${_todaysDebit.value}")
                         }
                     }
                 }
                 .addOnFailureListener {
+                    val error = it.message ?: "Something went wrong,Please refresh the page"
                     _todaysCollection.value = 0L
-                    _uiState.value = CollectionHistoryUiState.CollectionHistoryUiStateError(
-                        it.message ?: "Something went wrong,Please refresh the page"
-                    )
+                    _uiState.value = CollectionHistoryUiState.CollectionHistoryUiStateError(error)
+                    Timber.tag("addOnFailureListener").i(error)
                 }
         }
     }

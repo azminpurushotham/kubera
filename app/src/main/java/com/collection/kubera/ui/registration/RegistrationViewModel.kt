@@ -24,7 +24,7 @@ class RegistrationViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
 
     fun getUsers() {
-        Timber.v("getUsers")
+        Timber.i("getUsers")
         _uiState.value = RegistrationUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             val snapshot = firestore.collection("user")
@@ -39,7 +39,7 @@ class RegistrationViewModel : ViewModel() {
     }
 
     fun login(userName: String, password: String) {
-        Timber.v("login")
+        Timber.i("login")
         _uiState.value = RegistrationUiState.Loading
         users.value.indexOfFirst { (it.username.equals(userName) && it.password.equals(password)) }
             .also { result ->

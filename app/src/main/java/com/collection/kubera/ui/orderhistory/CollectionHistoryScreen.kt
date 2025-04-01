@@ -92,7 +92,7 @@ fun CollectionHistoryScreen(
 
         is CollectionHistoryUiState.CollectionHistoryUiStateSuccess -> {
             isRefreshing = false
-            Timber.v("HomeSuccess")
+            Timber.i("HomeSuccess")
         }
 
         is CollectionHistoryUiState.CollectionHistoryUiStateError -> {

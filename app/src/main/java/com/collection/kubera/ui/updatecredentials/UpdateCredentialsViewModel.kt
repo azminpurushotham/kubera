@@ -20,6 +20,7 @@ class UpdateCredentialsViewModel(val userCredentials: User) : ViewModel() {
     val firestore = FirebaseFirestore.getInstance()
 
     init {
+        Timber.i("init")
         _uiState.value =  UpdateCredentialsUiState.UserCredentials(userCredentials)
     }
 

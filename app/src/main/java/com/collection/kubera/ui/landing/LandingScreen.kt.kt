@@ -17,6 +17,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.collection.kubera.ui.login.LoginActivity
 import com.collection.kubera.ui.main.MainActivity
 import com.collection.kubera.utils.PreferenceHelper
+import timber.log.Timber
 
 @Preview
 @Composable
@@ -26,6 +27,7 @@ fun LandingScreen(
     val context = LocalContext.current
     val pref = PreferenceHelper.getPrefs(context)
     val isLoggedIn = landingViewModel.checkLoginStatus(pref)
+    Timber.tag("isLoggedIn").i("isLoggedIn -> $isLoggedIn")
 
     if(isLoggedIn){
         context.startActivity(Intent(context, MainActivity::class.java))

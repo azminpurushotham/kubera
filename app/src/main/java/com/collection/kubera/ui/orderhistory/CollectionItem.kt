@@ -49,7 +49,7 @@ internal fun CollectionItem(
             containerColor = boxColorD,
         ),
         onClick = {
-            Timber.v("SHOP_DETAILS")
+            Timber.i("SHOP_DETAILS")
             if((item.shopId?:"").isNotEmpty()){
                 navController.navigate("$SHOP_DETAILS/${item.shopId}") {
                     popUpTo(TRANSECTION_HISTORY_COLLECTION) {

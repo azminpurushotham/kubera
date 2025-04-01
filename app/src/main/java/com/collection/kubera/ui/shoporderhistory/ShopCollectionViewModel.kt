@@ -46,9 +46,8 @@ class ShopCollectionViewModel @Inject constructor(prm:Shop) : ViewModel() {
     }
 
     var list: Flow<PagingData<DocumentSnapshot>> = createPager(BASEQUERY).flow
-
     fun getSwipeShopsCollectionHistory() {
-        Timber.v("getSwipeShopsCollectionHistory")
+        Timber.i("getSwipeShopsCollectionHistory")
         list = createPager(q = BASEQUERY).flow
     }
 
@@ -56,5 +55,7 @@ class ShopCollectionViewModel @Inject constructor(prm:Shop) : ViewModel() {
     fun setShop(shop: Shop) {
         _shop.value = shop
         _balance.value = _shop.value?.balance ?: 0
+        Timber.i("_shop.value -> ${_shop.value}")
+        Timber.i("_balance.value -> ${_balance.value}")
     }
 }

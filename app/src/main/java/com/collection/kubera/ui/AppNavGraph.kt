@@ -1,6 +1,4 @@
 package com.collection.kubera.ui
-
-import android.os.Build
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,7 +14,6 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Report
 import androidx.compose.material.icons.filled.TextSnippet
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.DrawerState
@@ -177,9 +174,11 @@ fun AppNavGraph(
             modifier = modifier.padding(it)
         ) {
             composable(AllDestinations.SHOP_LIST) {
+                Timber.i("ShopListScreen")
                 ShopListScreen(navController)
             }
             composable(AllDestinations.COLLECTION_HISTORY) {
+                Timber.i("CollectionHistoryScreen")
                 CollectionHistoryScreen(navController)
             }
             composable("${AllDestinations.SHOP_COLLECTION_HISTORY}?{model}") { backStackEntry ->
@@ -187,10 +186,13 @@ fun AppNavGraph(
                 shop?.let { s->
                     Timber.tag("SHOP_COLLECTION_HISTORY").d("shop: $s")
                     val prm = Gson().fromJson(s, Shop::class.java)
+                    Timber.i("ShopCollectionHistoryScreen")
+                    Timber.i(prm.toString())
                     ShopCollectionHistoryScreen(prm, navController)
                 }
             }
             composable(AllDestinations.ADD_NEW_SHOP) {
+                Timber.i("AddNewShopScreen")
                 AddNewShopScreen(navController)
             }
             composable("${AllDestinations.SHOP_DETAILS}?{model}") { backStackEntry ->
@@ -198,12 +200,14 @@ fun AppNavGraph(
                 shop?.let { s->
                     Timber.tag("SHOP_DETAILS").d("shop: $s")
                     val prm = Gson().fromJson(s, Shop::class.java)
+                    Timber.i("ShopDetailsScreen -> $prm")
                     ShopDetailsScreen(null,prm, navController)
                 }
             }
             composable("${AllDestinations.SHOP_DETAILS}/{shopId}") { backStackEntry ->
                 val shop = backStackEntry.arguments?.getString("shopId")
                 shop?.let { s->
+                    Timber.i("ShopDetailsScreen -> $s")
                     ShopDetailsScreen(s,null, navController)
                 }
             }
@@ -212,14 +216,14 @@ fun AppNavGraph(
                 shop?.let { s->
                     Timber.tag("UPDATE_SHOP").d("shop: $s")
                     val prm = Gson().fromJson(s, Shop::class.java)
+                    Timber.i("UpdateShopScreen -> $prm")
                     UpdateShopScreen(prm, navController)
                 }
             }
 
             composable(AllDestinations.REPORT) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    ReportScreen(navController)
-                }
+                Timber.i("ReportScreen")
+                ReportScreen(navController)
             }
         }
     }
@@ -254,6 +258,8 @@ fun BottomAppBarItem(
 }
 
 fun getIcon(currentRoute: String): ImageVector {
+    Timber.i("getIcon")
+    Timber.i(currentRoute)
     when (currentRoute) {
         AllDestinations.SHOP_LIST -> return Icons.Default.Menu
     }
@@ -261,6 +267,8 @@ fun getIcon(currentRoute: String): ImageVector {
 }
 
 fun getTitle(currentRoute: String): String {
+    Timber.i("getTitle")
+    Timber.i(currentRoute)
     if (currentRoute.contains(AllDestinations.SHOP_DETAILS)) {
         return "Details"
     }

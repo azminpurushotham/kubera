@@ -56,10 +56,12 @@ class ReportViewModel(private val application: Context) : ViewModel() {
                     } else {
                         _balance.value = 0L
                     }
+                    Timber.tag("_balance.value").i(_balance.value.toString())
                 }
                 .addOnFailureListener {
                     Timber.e(it)
                     _balance.value = 0L
+                    Timber.tag("_balance.value").i(_balance.value.toString())
                     _uiState.value =
                         ReportUiState.ReportError(it.message ?: "Unable to show balance")
                 }
@@ -110,16 +112,24 @@ class ReportViewModel(private val application: Context) : ViewModel() {
                                 list = r,
                                 schema = schema
                             )
-                            _uiState.value = ReportUiState.ReportSuccess("Today's $date report generated successfully")
+                            val message = "Today's $date report generated successfully"
+                            _uiState.value = ReportUiState.ReportSuccess(message)
+                            Timber.i(message)
                         } catch (e: Exception) {
-                            _uiState.value = ReportUiState.ReportError("Failed to create today's report $date ERROR $e")
+                            val message = "Failed to create today's report $date ERROR $e"
+                            Timber.i(message)
+                            _uiState.value = ReportUiState.ReportError(message)
                         }
                     }else{
-                        _uiState.value = ReportUiState.ReportError("No collection report for today $date")
+                        val message = "No collection report for today $date"
+                        Timber.i(message)
+                        _uiState.value = ReportUiState.ReportError(message)
                     }
             }
             .addOnFailureListener {e->
-                _uiState.value = ReportUiState.ReportError("No collection report for today $date $e")
+                val message = "No collection report for today $date $e"
+                Timber.i(message)
+                _uiState.value = ReportUiState.ReportError(message)
             }
     }
 
@@ -127,6 +137,7 @@ class ReportViewModel(private val application: Context) : ViewModel() {
     fun generateReport(path: String, startDate: String, endDate: String) {
         Timber.i("generateReport")
         _uiState.value = ReportUiState.Loading
+        val fileName = "$startDate-$endDate.csv"
         val dir = File(path)
         if (!dir.exists()) {
             if(!dir.mkdirs()){
@@ -155,23 +166,33 @@ class ReportViewModel(private val application: Context) : ViewModel() {
                         Timber.tag("generateReportSIZE").i(r.size.toString())
                         try {
                             writeCsvFile(
-                                fileName = "$startDate-$endDate.csv",
+                                fileName = fileName,
                                 dir.absolutePath,
                                 list = r,
                                 schema = schema
                             )
-                            _uiState.value = ReportUiState.ReportSuccess("$startDate - $endDate report generated successfully")
+                            val message = "$fileName report generated successfully"
+                            Timber.i(message)
+                            _uiState.value = ReportUiState.ReportSuccess(message)
                         } catch (e: Exception) {
-                            _uiState.value = ReportUiState.ReportError("Failed to create report for $startDate - $endDate ERROR $e")
+                            val message = "Failed to create report for $fileName ERROR $e"
+                            Timber.i(message)
+                            _uiState.value = ReportUiState.ReportError(message)
                         }
                     }else{
-                        _uiState.value = ReportUiState.ReportError("No collection report for $startDate - $endDate")
+                        val message = "No collection report for $fileName"
+                        Timber.i(message)
+                        _uiState.value = ReportUiState.ReportError(message)
                     }
                 }
                 .addOnFailureListener {e->
-                    _uiState.value = ReportUiState.ReportError("No collection report for $startDate - $endDate $e")
+                    val message = "No collection report for $fileName $e"
+                    Timber.i(message)
+                    _uiState.value = ReportUiState.ReportError(message)
                 }
         }else{
+            val message = "Invalid date format"
+            Timber.i(message)
             _uiState.value = ReportUiState.ReportError("Invalid date format")
         }
 
@@ -183,7 +204,9 @@ class ReportViewModel(private val application: Context) : ViewModel() {
         val dir = File(path)
         if (!dir.exists()) {
             if(!dir.mkdirs()){
-                _uiState.value = ReportUiState.ReportError("Directories not created ${dir.name}")
+                val message = "Directories not created ${dir.name}"
+                Timber.i(message)
+                _uiState.value = ReportUiState.ReportError(message)
             }
         }
         val schema = getShopsSchema()
@@ -204,7 +227,9 @@ class ReportViewModel(private val application: Context) : ViewModel() {
                             list = r,
                             schema = schema
                         )
-                        _uiState.value = ReportUiState.ReportSuccess("AllShops report generated successfully")
+                        val message = "AllShops report generated successfully"
+                        Timber.i(message)
+                        _uiState.value = ReportUiState.ReportSuccess(message)
                     }catch (e: FileNotFoundException) {
                         Timber.tag("FileNotFoundException").i("DELETE -> ${dir.delete()}")
                         if(!dir.delete()){

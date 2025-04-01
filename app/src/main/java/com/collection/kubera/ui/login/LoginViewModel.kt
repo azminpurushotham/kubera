@@ -27,7 +27,7 @@ class LoginViewModel : ViewModel() {
 
     fun login(userName: String, password: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            Timber.v("login")
+            Timber.i("login")
             _uiState.value = LoginUiState.Loading
             firestore.collection("user")
                 .whereEqualTo("username", userName)
@@ -39,11 +39,11 @@ class LoginViewModel : ViewModel() {
                             pref?.set(PASSWORD,password)
                             pref?.set(ISLOGGEDIN,true)
                             pref?.set(USER_ID,document.id)
-                            Timber.v("Document found: ${document.id}")
+                            Timber.i("Document found: ${document.id}")
                             _uiState.value = LoginUiState.LoginSuccess("Successfully logged in")
                         }
                     } else {
-                        Timber.v("No matching documents found.")
+                        Timber.i("No matching documents found.")
                         _uiState.value = LoginUiState.LoginFiled("Please enter correct credentials")
                     }
                 }.addOnFailureListener {
