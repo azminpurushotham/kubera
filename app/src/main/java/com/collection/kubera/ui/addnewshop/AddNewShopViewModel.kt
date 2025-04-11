@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import kotlin.math.abs
 
 class AddNewShopViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<AddNewShopUiState> =
@@ -50,7 +51,7 @@ class AddNewShopViewModel : ViewModel() {
                 if (shopName.isNotEmpty()) this.s_shopName = shopName.lowercase()
                 if (location.isNotEmpty()) this.location = location
                 if ((landmark ?: "").isNotEmpty()) this.landmark = landmark!!
-                if ((balance ?: "").isNotEmpty()) this.balance = (balance ?: "0").toLong()
+                if ((balance ?: "0").isNotEmpty()) this.balance = (balance ?: "0").toLong()
                 if (firstName.isNotEmpty()) this.firstName = firstName
                 if (firstName.isNotEmpty()) this.s_firstName = firstName.lowercase()
                 if ((lastName ?: "").isNotEmpty()) this.lastName = lastName!!
@@ -67,11 +68,13 @@ class AddNewShopViewModel : ViewModel() {
             firestore.collection(SHOP_COLLECTION)
                 .add(prm).addOnSuccessListener {
                     prm.apply { id = it.id }
-                    insertCollectionHistory(
-                        prm
-                    )
-                    prm.balance?.let { it1 -> updateTotalBalance(it1) }
-                    balance?.let { it1 -> updateTodaysCollection(it1.toLong()) }
+                    if((prm.balance?:0L)!=0L){
+                        insertCollectionHistory(
+                            prm
+                        )
+                        prm.balance?.let { it1 -> updateTotalBalance(it1) }
+                        balance?.let { it1 -> updateTodaysCollection(it1.toLong()) }
+                    }
                     val message = "New Shop Added Successfully"
                     Timber.i(message)
                     _uiState.value = AddNewShopUiState.AddNewShopSuccess(message)
@@ -96,7 +99,7 @@ class AddNewShopViewModel : ViewModel() {
                 }
                 if (shop.shopName.isNotEmpty()) this.shopName = shop.shopName
                 if (shop.shopName.isNotEmpty()) this.s_shopName = shop.shopName.lowercase()
-                if ((shop.balance ?: 0) > 1) this.amount = shop.balance
+                if ((shop.balance ?: 0L) != 1L) this.amount = shop.balance
                 if (shop.firstName.isNotEmpty()) this.firstName = shop.firstName
                 if (shop.firstName.isNotEmpty()) this.s_firstName = shop.firstName.lowercase()
                 if ((shop.lastName ?: "").isNotEmpty()) this.lastName = shop.lastName
@@ -113,9 +116,9 @@ class AddNewShopViewModel : ViewModel() {
                 this.collectedById = pref?.getString(USER_ID, null)
                 this.collectedBy = pref?.getString(USER_NAME, null) ?: "Admin"
                 this.timestamp = Timestamp.now()
-                this.transactionType = "Credit"
+                this.transactionType = if((this.amount?:0L)>0L) "Credit" else if((this.amount?:0L)<0L) "Debit" else null
             }
-            Timber.i(prm.toString())
+            Timber.tag("insertCollectionHistory").i(prm.toString())
             firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                 .add(prm).addOnSuccessListener {
                     Timber.tag("Success").i("Collection history updated")
@@ -165,6 +168,7 @@ class AddNewShopViewModel : ViewModel() {
 
     private fun updateTodaysCollection(b: Long) {
         Timber.tag("updateTodaysCollection").i("updateTodaysCollection")
+        Timber.tag("updateTodaysCollection").i("balance $b")
         viewModelScope.launch(Dispatchers.IO) {
             firestore.collection(TODAYS_COLLECTION)
                 .get()
@@ -178,10 +182,19 @@ class AddNewShopViewModel : ViewModel() {
                         if (list.isNotEmpty()) {
                             Timber.tag("updateTodaysCollection").i("Update")
                             val prm = mutableMapOf<String, Any>()
-                            val balance =  (list[0].balance) + (b)
-                            val credit =  (list[0].credit) + (b)
+                            val tb = list[0].balance
+                            val tc = list[0].credit
+                            val td = list[0].debit
+                            Timber.tag("updateTodaysCollection").i("tb -> $tb tc -> $tc td -> $td b -> $b")
+                            val balance = if(b>0L) tb + b else if(b<0L) tb-b else tb
+                            if(b>0L){
+                                prm["credit"] = tc + b
+                            }
+                            if(b<0L){
+                                prm["debit"] = td - b
+                            }
                             prm["balance"] = balance
-                            prm["credit"] = credit
+                            Timber.tag("updateTodaysCollection").i("prm -> $prm")
                             list[0].id?.let { it1 ->
                                 Timber.tag("updateTodaysCollection").i(it1)
                                 Timber.tag("updateTodaysCollection").i("prm -> $prm")
@@ -212,7 +225,12 @@ class AddNewShopViewModel : ViewModel() {
         Timber.tag("insertTodaysCollection").i("Add new Entry")
         val prm = TodaysCollections()
         prm.balance = b
-        prm.credit = b
+        if(b>0L){
+            prm.credit = b
+        }
+        if(b<0L){
+            prm.debit = b
+        }
 
         viewModelScope.launch(Dispatchers.IO) {
             Timber.i(prm.toString())

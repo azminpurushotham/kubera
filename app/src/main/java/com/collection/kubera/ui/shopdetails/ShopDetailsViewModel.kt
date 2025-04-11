@@ -211,11 +211,12 @@ class ShopDetailsViewModel : ViewModel() {
                             } else if(selectedOption == "Debit") {
                                     balance =  (list[0].balance) - (b)
                             }
+                            Timber.tag("updateTodaysCollection").i("balance -> $balance")
                             prm["balance"] = balance
                             if (selectedOption == "Credit") {
                                 prm["credit"] = (list[0].credit) + b
                             }else if (selectedOption == "Debit") {
-                                prm["debit"] = (list[0].debit) + b
+                                prm["debit"] = (list[0].debit) - b
                             }
                             Timber.tag("updateTodaysCollection").i(prm.toString())
                             list[0].id?.let { it1 ->
@@ -246,12 +247,13 @@ class ShopDetailsViewModel : ViewModel() {
     private fun insertTodaysCollection(b: Long, selectedOption: String) {
         Timber.tag("insertTodaysCollection").i("Add new Entry")
         val prm = TodaysCollections()
-        prm.balance = b
         if (selectedOption == "Credit") {
             prm.credit = b
+            prm.balance = b
         }
         if (selectedOption == "Debit") {
-            prm.debit = b
+            prm.debit = -b
+            prm.balance = -b
         }
         Timber.tag("insertTodaysCollection").i(prm.toString())
         viewModelScope.launch(Dispatchers.IO) {

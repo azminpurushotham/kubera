@@ -65,7 +65,7 @@ fun AddNewShopScreen(
     var location by remember { mutableStateOf("") }
     var isLocationError by rememberSaveable { mutableStateOf(false) }
     var landmark by remember { mutableStateOf("") }
-    var balance by remember { mutableStateOf("") }
+    var balance : String? by remember { mutableStateOf(null) }
     var isBalanceError by rememberSaveable { mutableStateOf(false) }
     var balanceError by rememberSaveable { mutableStateOf("") }
     var isLandmarkError by rememberSaveable { mutableStateOf(false) }
@@ -127,7 +127,7 @@ fun AddNewShopScreen(
 
     fun validateBalance() {
         try {
-            balance.toLong()
+            balance?.toLong()
             balanceError = ""
             isBalanceError = false
         } catch (e: Exception) {
@@ -305,7 +305,7 @@ fun AddNewShopScreen(
 //        )
 
         OutlinedTextField(
-            value = balance,
+            value = balance?:"",
             onValueChange = {
                 if (it.length <= 10) {
                     balance = it
