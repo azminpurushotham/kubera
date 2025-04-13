@@ -516,7 +516,7 @@ fun AddNewShopScreen(
         Spacer(modifier = Modifier.height(20.dp))
         Button(
             onClick = {
-                viewModel.saveShopDetails(
+                viewModel.addShopDetails(
                     shopName,
                     location,
                     landmark,

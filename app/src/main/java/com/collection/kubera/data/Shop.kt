@@ -10,34 +10,43 @@ import java.text.SimpleDateFormat
 import java.util.Locale
 
 data class Shop(
+    @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     @field:JsonProperty("Id")
     var id: String = "",
     @field:JsonProperty("ShopName")
     var shopName: String = "",
+    @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     @field:JsonProperty("ShopNameL")
     var s_shopName: String = "",
+    @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     @field:JsonProperty("Location")
     var location: String = "",
+    @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     @field:JsonProperty("Landmark")
     var landmark: String? = "",
     @field:JsonProperty("FirstName")
     var firstName: String = "",
+    @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     @field:JsonProperty("FirstNameL")
     var s_firstName: String = "",
     @field:JsonProperty("LastName")
     var lastName: String = "",
+    @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     @field:JsonProperty("LastNameL")
     var s_lastName: String = "",
     @field:JsonProperty("PhoneNumber")
     var phoneNumber: String? = null,
+    @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     @field:JsonProperty("SecondaryPhoneNumber")
     var secondPhoneNumber: String? = null,
+    @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     @field:JsonProperty("MailId")
     var mailId: String = "",
     @field:JsonProperty("Balance")
     var balance: Long? = null,
     @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     var timestamp: Timestamp? = null,
+    @field:JsonIgnore // Ignore this property during JSON/CSV processing issue with Timestamp parsing
     @field:JsonProperty("Status")
     var status: Boolean = true,
 ) : Parcelable {

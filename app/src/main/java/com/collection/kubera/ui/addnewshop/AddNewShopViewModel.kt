@@ -22,7 +22,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import kotlin.math.abs
 
 class AddNewShopViewModel : ViewModel() {
     private val _uiState: MutableStateFlow<AddNewShopUiState> =
@@ -32,7 +31,7 @@ class AddNewShopViewModel : ViewModel() {
     private val firestore = FirebaseFirestore.getInstance()
     var pref: SharedPreferences? = null
 
-    fun saveShopDetails(
+    fun addShopDetails(
         shopName: String,
         location: String,
         landmark: String?,
@@ -43,7 +42,7 @@ class AddNewShopViewModel : ViewModel() {
         secondPhoneNumber: String?,
         mailId: String?
     ) {
-        Timber.i("saveShopDetails")
+        Timber.i("addShopDetails")
         _uiState.value = AddNewShopUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
             val prm = Shop().apply {
@@ -91,7 +90,7 @@ class AddNewShopViewModel : ViewModel() {
     }
 
     private fun insertCollectionHistory(shop: Shop) {
-        Timber.tag("insertCollectionHistory").i("insertCollectionHistory")
+        Timber.i("insertCollectionHistory")
         viewModelScope.launch(Dispatchers.IO) {
             val prm = CollectionModel().apply {
                 if (shop.id.isNotEmpty()) {
@@ -99,7 +98,7 @@ class AddNewShopViewModel : ViewModel() {
                 }
                 if (shop.shopName.isNotEmpty()) this.shopName = shop.shopName
                 if (shop.shopName.isNotEmpty()) this.s_shopName = shop.shopName.lowercase()
-                if ((shop.balance ?: 0L) != 1L) this.amount = shop.balance
+                if ((shop.balance ?: 0L) != 0L) this.amount = shop.balance
                 if (shop.firstName.isNotEmpty()) this.firstName = shop.firstName
                 if (shop.firstName.isNotEmpty()) this.s_firstName = shop.firstName.lowercase()
                 if ((shop.lastName ?: "").isNotEmpty()) this.lastName = shop.lastName
@@ -118,7 +117,7 @@ class AddNewShopViewModel : ViewModel() {
                 this.timestamp = Timestamp.now()
                 this.transactionType = if((this.amount?:0L)>0L) "Credit" else if((this.amount?:0L)<0L) "Debit" else null
             }
-            Timber.tag("insertCollectionHistory").i(prm.toString())
+            Timber.i("insertCollectionHistory -> $prm")
             firestore.collection(TRANSECTION_HISTORY_COLLECTION)
                 .add(prm).addOnSuccessListener {
                     Timber.tag("Success").i("Collection history updated")
@@ -180,24 +179,24 @@ class AddNewShopViewModel : ViewModel() {
                             }
                     }.also { list ->
                         if (list.isNotEmpty()) {
-                            Timber.tag("updateTodaysCollection").i("Update")
+                            Timber.i("Update")
                             val prm = mutableMapOf<String, Any>()
                             val tb = list[0].balance
                             val tc = list[0].credit
                             val td = list[0].debit
-                            Timber.tag("updateTodaysCollection").i("tb -> $tb tc -> $tc td -> $td b -> $b")
-                            val balance = if(b>0L) tb + b else if(b<0L) tb-b else tb
+                            Timber.i("updateTodaysCollection tb -> $tb tc -> $tc td -> $td b -> $b")
+                            val balance = if(b>0L) tb + b else if(b<0L) tb+b else tb
                             if(b>0L){
                                 prm["credit"] = tc + b
                             }
                             if(b<0L){
-                                prm["debit"] = td - b
+                                prm["debit"] = td + b
                             }
                             prm["balance"] = balance
-                            Timber.tag("updateTodaysCollection").i("prm -> $prm")
+                            Timber.i("updateTodaysCollection prm -> $prm")
                             list[0].id?.let { it1 ->
-                                Timber.tag("updateTodaysCollection").i(it1)
-                                Timber.tag("updateTodaysCollection").i("prm -> $prm")
+                                Timber.i("updateTodaysCollection -> $it1")
+                                Timber.i("prm -> $prm")
                                 firestore.collection(TODAYS_COLLECTION)
                                     .document(it1)
                                     .update(prm)
@@ -231,7 +230,7 @@ class AddNewShopViewModel : ViewModel() {
         if(b<0L){
             prm.debit = b
         }
-
+        Timber.i(prm.toString())
         viewModelScope.launch(Dispatchers.IO) {
             Timber.i(prm.toString())
             firestore.collection(TODAYS_COLLECTION)
