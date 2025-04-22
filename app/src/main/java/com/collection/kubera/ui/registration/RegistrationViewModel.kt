@@ -2,6 +2,7 @@ package com.collection.kubera.ui.registration
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.collection.kubera.data.USER_COLLECTION
 import com.collection.kubera.data.User
 import com.collection.kubera.states.RegistrationUiState
 import com.google.firebase.firestore.FirebaseFirestore
@@ -27,7 +28,7 @@ class RegistrationViewModel : ViewModel() {
         Timber.i("getUsers")
         _uiState.value = RegistrationUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            val snapshot = firestore.collection("user")
+            val snapshot = firestore.collection(USER_COLLECTION)
                 .orderBy("username", Query.Direction.ASCENDING)
                 .get().await()
             _users.value = snapshot.documents.mapNotNull {

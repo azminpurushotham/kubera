@@ -3,6 +3,7 @@ package com.collection.kubera.ui.login
 import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.collection.kubera.data.USER_COLLECTION
 import com.collection.kubera.states.LoginUiState
 import com.collection.kubera.utils.ISLOGGEDIN
 import com.collection.kubera.utils.PASSWORD
@@ -29,10 +30,11 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             Timber.i("login")
             _uiState.value = LoginUiState.Loading
-            firestore.collection("user")
+            firestore.collection(USER_COLLECTION)
                 .whereEqualTo("username", userName)
                 .whereEqualTo("password", password)
-                .get().addOnSuccessListener {  querySnapshot ->
+                .get()
+                .addOnSuccessListener {  querySnapshot ->
                     if (!querySnapshot.isEmpty) {
                         for (document in querySnapshot.documents) {
                             pref?.set(USER_NAME,userName)
@@ -46,7 +48,8 @@ class LoginViewModel : ViewModel() {
                         Timber.i("No matching documents found.")
                         _uiState.value = LoginUiState.LoginFiled("Please enter correct credentials")
                     }
-                }.addOnFailureListener {
+                }
+                .addOnFailureListener {
                     _uiState.value = LoginUiState.LoginFiled("Please enter correct credentials")
                 }
         }

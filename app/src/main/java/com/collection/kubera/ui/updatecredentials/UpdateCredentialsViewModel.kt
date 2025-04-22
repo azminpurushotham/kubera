@@ -2,6 +2,7 @@ package com.collection.kubera.ui.updatecredentials
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.collection.kubera.data.USER_COLLECTION
 import com.collection.kubera.data.User
 import com.collection.kubera.states.UpdateCredentialsUiState
 import com.google.firebase.firestore.FirebaseFirestore
@@ -44,7 +45,7 @@ class UpdateCredentialsViewModel(val userCredentials: User) : ViewModel() {
 
         _uiState.value = UpdateCredentialsUiState.Loading
         viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection("user").document(userCredentials.id)
+            firestore.collection(USER_COLLECTION).document(userCredentials.id)
                 .update("username", userName, "password", password)
                 .addOnSuccessListener {
                     Timber.tag("userCredentials").v(Gson().toJson(userCredentials))

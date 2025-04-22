@@ -1,4 +1,5 @@
 package com.collection.kubera.ui
+import android.provider.ContactsContract.Profile
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,6 +47,7 @@ import androidx.navigation.compose.rememberNavController
 import com.collection.kubera.data.Shop
 import com.collection.kubera.ui.addnewshop.AddNewShopScreen
 import com.collection.kubera.ui.orderhistory.CollectionHistoryScreen
+import com.collection.kubera.ui.profile.ProfileScreen
 import com.collection.kubera.ui.report.ReportScreen
 import com.collection.kubera.ui.shoporderhistory.ShopCollectionHistoryScreen
 import com.collection.kubera.ui.shopdetails.ShopDetailsScreen
@@ -161,6 +163,7 @@ fun AppNavGraph(
                         iconResId = Icons.Default.Person,
                         label = "Profile",
                         onClick = {
+                            navigationActions.navigateToProfile()
                         }
                     )
                 }
@@ -220,10 +223,13 @@ fun AppNavGraph(
                     UpdateShopScreen(prm, navController)
                 }
             }
-
             composable(AllDestinations.REPORT) {
                 Timber.i("ReportScreen")
                 ReportScreen(navController)
+            }
+            composable(AllDestinations.PROFILE) {
+                Timber.i("Profile")
+                ProfileScreen()
             }
         }
     }

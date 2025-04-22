@@ -1,4 +1,5 @@
 package com.collection.kubera.data
+const val USER_COLLECTION = "user"
 const val BALANCE_COLLECTION = "balance"
 const val TODAYS_COLLECTION = "todays_collection"
 const val SHOP_COLLECTION = "shop"
