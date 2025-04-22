@@ -271,7 +271,7 @@ class ReportViewModel(private val application: Context) : ViewModel() {
 //            .addColumn("SecondaryPhoneNumber")
 //            .addColumn("MailId")
 //            .addColumn("CollectedById")
-//            .addColumn("stability")
+            .addColumn("stability")
             .build()
     }
 
@@ -293,7 +293,7 @@ class ReportViewModel(private val application: Context) : ViewModel() {
 //            .addColumn("SecondaryPhoneNumber")
 //            .addColumn("MailId")
 //            .addColumn("Status")
-//            .addColumn("stability")
+            .addColumn("stability")
             .build()
     }
 

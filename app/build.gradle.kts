@@ -15,7 +15,7 @@ android {
         minSdk = 30
         targetSdk = 34
         versionCode = 1
-        versionName = "1.4"
+        versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -39,6 +39,18 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+    }
+
+    applicationVariants.all {
+        outputs.all {
+            val appName = rootProject.name
+            val versionName = versionName
+            val versionCode = versionCode
+            val flavor = flavorName
+
+            (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
+                "$appName-v$versionName($versionCode)-$flavor.apk"
+        }
     }
 }
 
