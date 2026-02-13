@@ -37,7 +37,7 @@ internal fun Header(
             value = shopName,
             onValueChange = {
                 shopName = it
-                viewModel.getShops(shopName)
+                viewModel.onSearchQueryChanged(shopName)
             },
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = MaterialTheme.colorScheme.onSurface,
@@ -58,7 +58,7 @@ internal fun Header(
             trailingIcon = {
                 val icon = Icons.Filled.Search
                 IconButton(onClick = {
-                    viewModel.getShops(shopName)
+                    viewModel.onSearchQueryChanged(shopName)
                 }) {
                     Icon(
                         imageVector = icon,

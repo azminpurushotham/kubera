@@ -86,6 +86,7 @@ dependencies {
     implementation(libs.firebase.analytics.ktx)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.firestore.ktx)
+    implementation(libs.coroutines.play.services)
     implementation(libs.play.services.base)
 //    implementation(libs.play.services.provider)
 
