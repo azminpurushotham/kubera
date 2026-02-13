@@ -17,19 +17,37 @@
 package com.collection.kubera
 
 import android.app.Application
-//import com.collection.kubera.data.AppContainer
-//import com.collection.kubera.data.AppContainerImpl
+import android.util.Log
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException
+import com.google.android.gms.common.GooglePlayServicesRepairableException
+import com.google.android.gms.security.ProviderInstaller
+import com.google.firebase.FirebaseApp
+import timber.log.Timber
+
 
 class KuberaApplication : Application() {
-    companion object {
-        const val JETNEWS_APP_URI = "https://developer.android.com/jetnews"
-    }
-
-    // AppContainer instance used by the rest of classes to obtain dependencies
-//    lateinit var container: AppContainer
 
     override fun onCreate() {
         super.onCreate()
-//        container = AppContainerImpl(this)
+
+        FirebaseApp.initializeApp(this)?.let {
+            Log.d("FirebaseInit", "Firebase successfully initialized")
+        }
+        installProvider()
+        Timber.plant(Timber.DebugTree())
+    }
+
+
+    private fun installProvider() {
+        try {
+            ProviderInstaller.installIfNeeded(applicationContext)
+        } catch (e: GooglePlayServicesRepairableException) {
+            // Prompt user to update Google Play Services
+        } catch (e: GooglePlayServicesNotAvailableException) {
+            // Handle case where Google Play Services is not available
+        } catch (e: Exception) {
+            // Log unexpected errors
+            e.printStackTrace()
+        }
     }
 }

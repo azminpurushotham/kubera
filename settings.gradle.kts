@@ -1,3 +1,5 @@
+import org.jetbrains.annotations.ApiStatus.Experimental
+
 pluginManagement {
     repositories {
         google {
@@ -9,16 +11,19 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+        maven("https://jitpack.io") // Add JitPack repository
     }
 }
+
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         google()
         mavenCentral()
+        maven("https://jitpack.io") // Add JitPack repository
     }
 }
 
-rootProject.name = "kubera"
+rootProject.name ="kashflowclt"
 include(":app")
  
