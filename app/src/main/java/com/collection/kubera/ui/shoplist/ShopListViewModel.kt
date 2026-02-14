@@ -1,8 +1,9 @@
 package com.collection.kubera.ui.shoplist
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.FlowPreview
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.FlowPreview
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.collection.kubera.data.Result
@@ -25,12 +26,14 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
 @OptIn(FlowPreview::class)
-class ShopListViewModel(
+@HiltViewModel
+class ShopListViewModel @Inject constructor(
     private val shopRepository: ShopRepository,
     private val todaysCollectionRepository: TodaysCollectionRepository,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+    private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Initial)

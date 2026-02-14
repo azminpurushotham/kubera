@@ -11,8 +11,10 @@ import com.collection.kubera.utils.createDirectory
 import com.collection.kubera.utils.isTreeUriPersisted
 import com.collection.kubera.utils.manualFileLogs
 import com.collection.kubera.utils.showDialogueForFileLauncher
+import dagger.hilt.android.AndroidEntryPoint
 import timber.log.Timber
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.android.libraries.mapsplatform.secrets.gradle.plugin)
     alias(libs.plugins.google.services)
+    alias(libs.plugins.hilt.android)
+    kotlin("kapt")
 }
 
 android {
@@ -88,10 +90,17 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.coroutines.play.services)
     implementation(libs.play.services.base)
-//    implementation(libs.play.services.provider)
 
     implementation(libs.navigation.compose)
     implementation(libs.androidx.room.common)
     implementation(libs.androidx.paging)
     implementation(libs.csv)
+
+    implementation(libs.hilt.android)
+    implementation(libs.hilt.navigation.compose)
+    kapt(libs.hilt.android.compiler)
+}
+
+kapt {
+    correctErrorTypes = true
 }

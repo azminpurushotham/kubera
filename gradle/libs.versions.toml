@@ -27,6 +27,7 @@ paging = "3.2.1"
 csv = "2.15.0"
 treessecene = "1.1.2"
 coroutinesPlayServices = "1.10.0"
+hilt = "2.57.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -64,6 +65,9 @@ swiperefreshlayout = {group="androidx.compose.foundation",name="foundation",vers
 androidx-paging = { group = "androidx.paging", name = "paging-compose", version.ref = "paging" }
 csv = {group="com.fasterxml.jackson.dataformat",name="jackson-dataformat-csv",version.ref="csv"}
 treessence= {group="com.github.bastienpaulfr",name="Treessence",version.ref="treessecene"}
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-android-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version = "1.2.0" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
@@ -71,3 +75,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-android-libraries-mapsplatform-secrets-gradle-plugin = { id = "com.google.android.libraries.mapsplatform.secrets-gradle-plugin", version.ref = "googleAndroidLibrariesMapsplatformSecretsGradlePlugin" }
 google-services = {id="com.google.gms.google-services",version.ref ="googleServices"}
+hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }

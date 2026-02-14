@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
@@ -42,9 +42,7 @@ import timber.log.Timber
 @Composable
 fun ShopListScreen(
     navController: NavHostController,
-    viewModel: ShopListViewModel = viewModel(
-        factory = remember { ShopListViewModelFactory() }
-    )
+    viewModel: ShopListViewModel = hiltViewModel()
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     var lifecycleState by remember { mutableStateOf(Lifecycle.Event.ON_CREATE) }
@@ -91,6 +89,12 @@ fun ShopListScreen(
         viewModel.onRefresh()
     }
 
+    LaunchedEffect(userPagingItems.loadState.refresh) {
+        if (userPagingItems.loadState.refresh !is LoadState.Loading) {
+            isRefreshing = false
+        }
+    }
+
     when (uiState) {
         HomeUiState.Loading -> {
             Box(
@@ -105,7 +109,7 @@ fun ShopListScreen(
         is HomeUiState.HomeInit,
         is HomeUiState.HomeError,
         HomeUiState.Initial,
-        HomeUiState.Searching -> isRefreshing = false
+        HomeUiState.Searching -> { /* isRefreshing cleared by loadState */ }
     }
 
     PullToRefreshBox(
@@ -123,7 +127,6 @@ fun ShopListScreen(
             }
 
             items(userPagingItems.itemCount) { index ->
-                isRefreshing = false
                 userPagingItems[index]?.toObject(Shop::class.java)?.apply {
                     id = userPagingItems[index]?.id.toString()
                 }?.let { ShopItem(navController, it) }
