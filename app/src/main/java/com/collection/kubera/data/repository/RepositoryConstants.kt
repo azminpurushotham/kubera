@@ -23,4 +23,7 @@ object RepositoryConstants {
     const val PROFILE_USERNAME_EMPTY = "Username cannot be empty"
     const val PROFILE_PASSWORD_EMPTY = "Password cannot be empty"
     const val PROFILE_PASSWORD_MISMATCH = "Passwords do not matching"
+
+    const val LOGIN_SUCCESS_MESSAGE = "Successfully logged in"
+    const val LOGIN_CREDENTIALS_ERROR = "Please enter correct credentials"
 }

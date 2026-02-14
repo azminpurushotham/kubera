@@ -1,61 +1,63 @@
 package com.collection.kubera.ui.login
 
-import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.USER_COLLECTION
+import com.collection.kubera.data.Result
+import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.data.repository.UserPreferencesRepository
+import com.collection.kubera.data.repository.UserRepository
 import com.collection.kubera.states.LoginUiState
-import com.collection.kubera.utils.ISLOGGEDIN
-import com.collection.kubera.utils.PASSWORD
-import com.collection.kubera.utils.PreferenceHelper.set
-import com.collection.kubera.utils.USER_ID
-import com.collection.kubera.utils.USER_NAME
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.Dispatchers
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
-class LoginViewModel : ViewModel() {
-    private val _uiState: MutableStateFlow<LoginUiState> =
-        MutableStateFlow(LoginUiState.Initial)
-    val uiState: StateFlow<LoginUiState> =
-        _uiState.asStateFlow()
-    private val firestore = FirebaseFirestore.getInstance()
-    var pref : SharedPreferences? = null
+@HiltViewModel
+class LoginViewModel @Inject constructor(
+    private val userRepository: UserRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val dispatcher: CoroutineDispatcher
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Initial)
+    val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<LoginUiEvent>()
+    val uiEvent: SharedFlow<LoginUiEvent> = _uiEvent.asSharedFlow()
 
     fun login(userName: String, password: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            Timber.i("login")
-            _uiState.value = LoginUiState.Loading
-            firestore.collection(USER_COLLECTION)
-                .whereEqualTo("username", userName)
-                .whereEqualTo("password", password)
-                .get()
-                .addOnSuccessListener {  querySnapshot ->
-                    if (!querySnapshot.isEmpty) {
-                        for (document in querySnapshot.documents) {
-                            pref?.set(USER_NAME,userName)
-                            pref?.set(PASSWORD,password)
-                            pref?.set(ISLOGGEDIN,true)
-                            pref?.set(USER_ID,document.id)
-                            Timber.i("Document found: ${document.id}")
-                            _uiState.value = LoginUiState.LoginSuccess("Successfully logged in")
-                        }
-                    } else {
-                        Timber.i("No matching documents found.")
-                        _uiState.value = LoginUiState.LoginFiled("Please enter correct credentials")
+        Timber.d("login")
+        _uiState.value = LoginUiState.Loading
+        viewModelScope.launch(dispatcher) {
+            when (val result = userRepository.login(userName, password)) {
+                is Result.Success -> {
+                    result.data?.let { userId ->
+                        userPreferencesRepository.saveLoginState(userId, userName, password)
+                        _uiEvent.tryEmit(LoginUiEvent.ShowSuccess(RepositoryConstants.LOGIN_SUCCESS_MESSAGE))
+                        _uiEvent.tryEmit(LoginUiEvent.NavigateToMain)
+                    } ?: run {
+                        _uiEvent.tryEmit(
+                            LoginUiEvent.ShowError(RepositoryConstants.LOGIN_CREDENTIALS_ERROR)
+                        )
                     }
                 }
-                .addOnFailureListener {
-                    _uiState.value = LoginUiState.LoginFiled("Please enter correct credentials")
+                is Result.Error -> {
+                    _uiEvent.tryEmit(
+                        LoginUiEvent.ShowError(
+                            result.exception.message
+                                ?: RepositoryConstants.LOGIN_CREDENTIALS_ERROR
+                        )
+                    )
                 }
+            }
+            _uiState.value = LoginUiState.Initial
         }
-    }
-
-    fun setPreference(pref: SharedPreferences) {
-        this.pref = pref
     }
 }

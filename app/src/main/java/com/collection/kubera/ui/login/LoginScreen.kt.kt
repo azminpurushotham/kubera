@@ -1,5 +1,6 @@
 package com.collection.kubera.ui.login
 
+import android.app.Activity
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +27,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,23 +44,18 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.collection.kubera.states.LoginUiState
 import com.collection.kubera.ui.main.MainActivity
 import com.collection.kubera.ui.registration.RegistrationActivity
 import com.collection.kubera.ui.theme.KuberaTheme
 import com.collection.kubera.ui.theme.onHintD
-import com.collection.kubera.utils.ISLOGGEDIN
-import com.collection.kubera.utils.PASSWORD
-import com.collection.kubera.utils.PreferenceHelper
-import com.collection.kubera.utils.PreferenceHelper.set
-import com.collection.kubera.utils.USER_ID
-import com.collection.kubera.utils.USER_NAME
+import kotlinx.coroutines.flow.collectLatest
 
 @Preview
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = viewModel()
+    viewModel: LoginViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     var userName by remember { mutableStateOf("") }
@@ -73,7 +70,22 @@ fun LoginScreen(
     val uiState by viewModel.uiState.collectAsState()
     var isEnabled by remember { mutableStateOf(false) }
 
-    val pref = PreferenceHelper.getPrefs(context)
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is LoginUiEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
+                is LoginUiEvent.ShowSuccess -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
+                is LoginUiEvent.NavigateToMain -> {
+                    context.startActivity(Intent(context, MainActivity::class.java))
+                    (context as? Activity)?.finish()
+                }
+            }
+        }
+    }
 
     fun validateUserName(userName: String) {
         isErrorUserName = userName.length < userNameCharacterLimit
@@ -87,65 +99,21 @@ fun LoginScreen(
         isEnabled = !isErrorUserName && !isErrorPassword
     }
 
-
     KuberaTheme {
         Scaffold(content = { paddingValues ->
-            // Page content goes here
             Column(
                 modifier = Modifier
                     .padding(paddingValues)
                     .padding(20.dp)
                     .fillMaxSize(),
-                verticalArrangement = Arrangement.Center, // Vertically center items
-                horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 when (uiState) {
                     LoginUiState.Loading -> {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                     }
-
-                    is LoginUiState.Initial -> {
-                        viewModel.setPreference(pref)
-                    }
-
-                    is LoginUiState.LoginFiled -> {
-                        Toast.makeText(
-                            context,
-                            (uiState as LoginUiState.LoginFiled).message,
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-
-                    is LoginUiState.LoginSuccess -> {
-                        Toast.makeText(
-                            context,
-                            (uiState as LoginUiState.LoginSuccess).message,
-                            Toast.LENGTH_LONG
-                        ).show()
-                        context.startActivity(Intent(context, MainActivity::class.java))
-                        val currentActivity = context as? MainActivity
-                        currentActivity?.finish()
-                    }
-
-                    is LoginUiState.PasswordError -> {
-                        Toast.makeText(
-                            context,
-                            (uiState as LoginUiState.PasswordError).message,
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-
-                    is LoginUiState.UserCredentials -> {
-
-                    }
-
-                    is LoginUiState.UserNameError -> {
-                        Toast.makeText(
-                            context,
-                            (uiState as LoginUiState.UserNameError).message,
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
+                    LoginUiState.Initial -> { /* Idle */ }
                 }
 
                 Text("Login", fontWeight = FontWeight(600), fontSize = 24.sp)

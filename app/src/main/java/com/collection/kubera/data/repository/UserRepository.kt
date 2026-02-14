@@ -9,6 +9,7 @@ import timber.log.Timber
 
 interface UserRepository {
     suspend fun getUserById(id: String): Result<User?>
+    suspend fun login(username: String, password: String): Result<String?>
     suspend fun updateUserCredentials(userId: String, username: String, password: String): Result<Unit>
 }
 
@@ -18,6 +19,26 @@ class UserRepositoryImpl(
 
     private val userCollection
         get() = firestore.collection(USER_COLLECTION)
+
+    override suspend fun login(username: String, password: String): Result<String?> {
+        return try {
+            Timber.d("login")
+            val querySnapshot = userCollection
+                .whereEqualTo("username", username)
+                .whereEqualTo("password", password)
+                .get()
+                .await()
+            val userId = if (!querySnapshot.isEmpty) {
+                querySnapshot.documents.firstOrNull()?.id
+            } else {
+                null
+            }
+            Result.Success(userId)
+        } catch (e: Exception) {
+            Timber.e(e, "login failed")
+            Result.Error(e)
+        }
+    }
 
     override suspend fun getUserById(id: String): Result<User?> {
         return try {
