@@ -200,7 +200,11 @@ fun ShopCollectionHistoryScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
-                Header(shop, balance)
+                Header(
+                    shop = shop,
+                    balance = balance,
+                    onFilterClick = { showBottomSheet = true }
+                )
             }
 
             items(userPagingItems.itemCount) { index ->

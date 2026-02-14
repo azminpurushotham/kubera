@@ -2,6 +2,7 @@ package com.collection.kubera.ui.shoporderhistory
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,7 +30,11 @@ import kotlin.math.absoluteValue
 
 
 @Composable
-internal fun Header(shop: Shop?, balance: Long) {
+internal fun Header(
+    shop: Shop?,
+    balance: Long,
+    onFilterClick: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .padding(top = 16.dp, start = 16.dp, end = 16.dp)
@@ -37,12 +42,14 @@ internal fun Header(shop: Shop?, balance: Long) {
         horizontalAlignment = Alignment.End
     ) {
         Image(
-            painter = painterResource(id = R.drawable.baseline_filter_list_24), // Replace with your drawable
+            painter = painterResource(id = R.drawable.baseline_filter_list_24),
             contentDescription = stringResource(R.string.filter),
             alignment = Alignment.CenterEnd,
-            contentScale = ContentScale.Crop, // Adjust image scaling
-            modifier = Modifier.size(30.dp),
-            colorFilter = ColorFilter.tint(onprimaryD) // Optional color filter
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(30.dp)
+                .clickable { onFilterClick() },
+            colorFilter = ColorFilter.tint(onprimaryD)
         )
     }
     Row(
