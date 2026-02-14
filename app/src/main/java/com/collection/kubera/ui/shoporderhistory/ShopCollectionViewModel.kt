@@ -1,61 +1,66 @@
 package com.collection.kubera.ui.shoporderhistory
 
 import androidx.lifecycle.ViewModel
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
+import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.collection.kubera.data.Shop
-import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
-import com.collection.kubera.states.HomeUiState
-import com.collection.kubera.utils.FirestorePagingSource
+import com.collection.kubera.data.repository.TransactionHistoryRepository
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
-class ShopCollectionViewModel @Inject constructor(prm:Shop) : ViewModel() {
-    private val _uiState: MutableStateFlow<HomeUiState> =
-        MutableStateFlow(HomeUiState.Initial)
-    val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
-    private val _balance = MutableStateFlow<Long>(0)
-    val balance: StateFlow<Long> get() = _balance
-    private val firestore = FirebaseFirestore.getInstance()
-    private val _shop = MutableStateFlow<Shop?>(prm)
-    val shop: StateFlow<Shop?> get() = _shop
-    private val BASEQUERY = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-        .whereEqualTo("shopId", prm.id)
-        .orderBy("timestamp", Query.Direction.DESCENDING)
+@HiltViewModel
+class ShopCollectionViewModel @Inject constructor(
+    private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val dispatcher: CoroutineDispatcher
+) : ViewModel() {
 
-    private fun createPager(q: Query): Pager<Query, DocumentSnapshot> {
-        return Pager(
-            config = PagingConfig(
-                pageSize = 10,
-                enablePlaceholders = false
-            ),
-            pagingSourceFactory = {
-                FirestorePagingSource(
-                    query = q
-                )
-            }
-        )
-    }
+    private val _shop = MutableStateFlow<Shop?>(null)
+    val shop: StateFlow<Shop?> = _shop.asStateFlow()
 
-    var list: Flow<PagingData<DocumentSnapshot>> = createPager(BASEQUERY).flow
-    fun getSwipeShopsCollectionHistory() {
-        Timber.i("getSwipeShopsCollectionHistory")
-        list = createPager(q = BASEQUERY).flow
-    }
+    private val _balance = MutableStateFlow<Long>(0L)
+    val balance: StateFlow<Long> = _balance.asStateFlow()
 
+    private val _listFlow = MutableStateFlow(
+        transactionHistoryRepository
+            .getShopCollectionHistoryPagingFlow("")
+            .cachedIn(viewModelScope)
+    )
+    val listFlow: StateFlow<Flow<PagingData<DocumentSnapshot>>> = _listFlow.asStateFlow()
 
-    fun setShop(shop: Shop) {
+    private val _uiEvent = MutableSharedFlow<ShopCollectionUiEvent>()
+    val uiEvent: SharedFlow<ShopCollectionUiEvent> = _uiEvent.asSharedFlow()
+
+    fun init(shop: Shop) {
+        Timber.d("init shop=${shop.id}")
         _shop.value = shop
-        _balance.value = _shop.value?.balance ?: 0
-        Timber.i("_shop.value -> ${_shop.value}")
-        Timber.i("_balance.value -> ${_balance.value}")
+        _balance.value = shop.balance ?: 0L
+        viewModelScope.launch(dispatcher) {
+            _listFlow.value = transactionHistoryRepository
+                .getShopCollectionHistoryPagingFlow(shop.id)
+                .cachedIn(viewModelScope)
+        }
+    }
+
+    fun onRefresh() {
+        Timber.d("onRefresh")
+        _shop.value?.let { currentShop ->
+            viewModelScope.launch(dispatcher) {
+                _listFlow.value = transactionHistoryRepository
+                    .getShopCollectionHistoryPagingFlow(currentShop.id)
+                    .cachedIn(viewModelScope)
+            }
+        }
     }
 }

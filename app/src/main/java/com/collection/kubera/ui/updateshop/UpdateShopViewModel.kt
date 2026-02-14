@@ -1,31 +1,43 @@
 package com.collection.kubera.ui.updateshop
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.SHOP_COLLECTION
+import com.collection.kubera.data.Result
 import com.collection.kubera.data.Shop
+import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.data.repository.ShopRepository
 import com.collection.kubera.states.UpdateShopUiState
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.Dispatchers
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
-class UpdateShopViewModel : ViewModel() {
-    private val _uiState: MutableStateFlow<UpdateShopUiState> =
-        MutableStateFlow(UpdateShopUiState.Initial)
-    val uiState: StateFlow<UpdateShopUiState> =
-        _uiState.asStateFlow()
+@HiltViewModel
+class UpdateShopViewModel @Inject constructor(
+    private val shopRepository: ShopRepository,
+    private val dispatcher: CoroutineDispatcher
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow<UpdateShopUiState>(UpdateShopUiState.Initial)
+    val uiState: StateFlow<UpdateShopUiState> = _uiState.asStateFlow()
+
     private val _shop = MutableStateFlow<Shop?>(null)
-    val shop: StateFlow<Shop?> get() = _shop
-    private val firestore = FirebaseFirestore.getInstance()
+    val shop: StateFlow<Shop?> = _shop.asStateFlow()
 
-    private fun updateState(newState: UpdateShopUiState) {
-        if (_uiState.value != newState) {
-            _uiState.value = newState
-        }
+    private val _uiEvent = MutableSharedFlow<UpdateShopUiEvent>()
+    val uiEvent: SharedFlow<UpdateShopUiEvent> = _uiEvent.asSharedFlow()
+
+    fun init(shop: Shop) {
+        Timber.d("init shop=${shop.id}")
+        _shop.value = shop
     }
 
     fun saveShopDetails(
@@ -39,63 +51,63 @@ class UpdateShopViewModel : ViewModel() {
         secondPhoneNumber: String?,
         mailId: String?
     ) {
-        Timber.i("saveShopDetails")
-        _uiState.value = UpdateShopUiState.Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            val ud = mutableMapOf<String,Any>()
-            if ((shopName ?: "").isNotEmpty()) {
-                ud["shopName"] = shopName!!
-                ud["s_shopName"] = shopName.lowercase()
-            }
-            if ((firstName ?: "").isNotEmpty()) {
-                ud["firstName"] = firstName!!
-                ud["s_firstName"] = firstName.lowercase()
-            }
-            if ((lastName ?: "").isNotEmpty()) {
-                ud["lastName"] = lastName!!
-                ud["s_lastName"] = lastName.lowercase()
-            }
-            if ((balance ?: "").isNotEmpty()) {
-                ud["balance"] = balance!!.toLong()
-            }
-            if ((location ?: "").isNotEmpty()) {
-                ud["location"] = location!!
-            }
-            if ((landmark ?: "").isNotEmpty()) {
-                ud["landmark"] = landmark!!
-            }
-            if ((phoneNumber ?: "").isNotEmpty()) {
-                ud["phoneNumber"] = phoneNumber!!
-            }
-            if ((secondPhoneNumber ?: "").isNotEmpty()) {
-                ud["secondPhoneNumber"] = secondPhoneNumber!!
-            }
-            if ((mailId ?: "").isNotEmpty()) {
-                ud["mailId"] = mailId!!
-            }
-            ud["timestamp"] = Timestamp.now()
-            shop.value?.status?.let { ud.put("status", it) }
+        Timber.d("saveShopDetails")
+        val currentShop = _shop.value ?: return
 
-            Timber.tag("UPDATE").i(ud.toString())
-            shop.value?.id?.let {
-                firestore.collection(SHOP_COLLECTION)
-                    .document(it)
-                    .update(ud).addOnSuccessListener {
-                        _uiState.value =
-                            UpdateShopUiState.UpdateShopSuccess("Shop details updated successfully")
-                    }.addOnFailureListener {
-                        _uiState.value =
-                            UpdateShopUiState.UpdateShopError("Shop details is not updated,please try again")
-                        _uiState.value =
-                            UpdateShopUiState.UpdateShopCompleted("Shop details is not updated,please try again")
-                    }
+        val updates = mutableMapOf<String, Any>()
+        if ((shopName ?: "").isNotEmpty()) {
+            updates["shopName"] = shopName!!
+            updates["s_shopName"] = shopName.lowercase()
+        }
+        if ((firstName ?: "").isNotEmpty()) {
+            updates["firstName"] = firstName!!
+            updates["s_firstName"] = firstName.lowercase()
+        }
+        if ((lastName ?: "").isNotEmpty()) {
+            updates["lastName"] = lastName!!
+            updates["s_lastName"] = lastName.lowercase()
+        }
+        if ((balance ?: "").isNotEmpty()) {
+            updates["balance"] = balance!!.toLong()
+        }
+        if ((location ?: "").isNotEmpty()) {
+            updates["location"] = location!!
+        }
+        if ((landmark ?: "").isNotEmpty()) {
+            updates["landmark"] = landmark!!
+        }
+        if ((phoneNumber ?: "").isNotEmpty()) {
+            updates["phoneNumber"] = phoneNumber!!
+        }
+        if ((secondPhoneNumber ?: "").isNotEmpty()) {
+            updates["secondPhoneNumber"] = secondPhoneNumber!!
+        }
+        if ((mailId ?: "").isNotEmpty()) {
+            updates["mailId"] = mailId!!
+        }
+        updates["timestamp"] = Timestamp.now()
+        updates["status"] = currentShop.status
+
+        _uiState.value = UpdateShopUiState.Loading
+        viewModelScope.launch(dispatcher) {
+            when (val result = shopRepository.updateShop(currentShop.id, updates)) {
+                is Result.Success -> {
+                    _uiState.value = UpdateShopUiState.Initial
+                    _uiEvent.tryEmit(
+                        UpdateShopUiEvent.ShowSuccess(RepositoryConstants.UPDATE_SHOP_SUCCESS_MESSAGE)
+                    )
+                    _uiEvent.tryEmit(UpdateShopUiEvent.NavigateBack)
+                }
+                is Result.Error -> {
+                    _uiState.value = UpdateShopUiState.Initial
+                    _uiEvent.tryEmit(
+                        UpdateShopUiEvent.ShowError(
+                            result.exception.message
+                                ?: RepositoryConstants.UPDATE_SHOP_ERROR_MESSAGE
+                        )
+                    )
+                }
             }
         }
-
-    }
-
-    fun setShop(model: Shop) {
-        _shop.value = model
-        Timber.i("Shop -> $model")
     }
 }

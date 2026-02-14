@@ -25,6 +25,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,18 +42,24 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.collection.kubera.data.User
 import com.collection.kubera.states.UpdateCredentialsUiState
 import com.collection.kubera.ui.login.LoginActivity
 import com.collection.kubera.ui.theme.KuberaTheme
 import com.collection.kubera.ui.theme.onHintD
+import kotlinx.coroutines.flow.collectLatest
 
 @Preview
 @Composable
-fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<UpdateCredentialsViewModel>()) {
+fun UpdateCredentialsScreen(
+    user: User,
+    viewModel: UpdateCredentialsViewModel = hiltViewModel()
+) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    var userName by remember { mutableStateOf("") }
+
+    var userName by remember(user) { mutableStateOf(user.username) }
     var isErrorUserName by rememberSaveable { mutableStateOf(false) }
     val userNameCharacterLimit = 5
 
@@ -67,6 +74,27 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
 
     var isEnabled by remember { mutableStateOf(false) }
 
+    LaunchedEffect(user) {
+        viewModel.init(user)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is UpdateCredentialsUiEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
+                is UpdateCredentialsUiEvent.ShowSuccess -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
+                is UpdateCredentialsUiEvent.NavigateToLogin -> {
+                    context.startActivity(Intent(context, LoginActivity::class.java))
+                    (context as? Activity)?.finish()
+                }
+            }
+        }
+    }
+
     fun validateUserName(userName: String) {
         isErrorUserName = userName.length < userNameCharacterLimit
     }
@@ -75,65 +103,32 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
         isErrorPassword = password.length < passwordCharacterLimit
     }
 
-    fun validateConfirmPassword(password: String) {
+    fun validateConfirmPassword(confirmPassword: String) {
         isErrorConfirmPassword = confirmPassword.length < passwordCharacterLimit
     }
 
     fun enableButton() {
-        isEnabled = !isErrorUserName && !isErrorPassword
-    }
-
-    when (uiState) {
-        is UpdateCredentialsUiState.Initial -> {
-
-        }
-
-        is UpdateCredentialsUiState.Loading -> {
-
-        }
-
-        is UpdateCredentialsUiState.UserCredentials->{
-            userName = (uiState as UpdateCredentialsUiState.UserCredentials).user.username
-        }
-
-        is UpdateCredentialsUiState.UpdationSuccess -> {
-            Toast.makeText(
-                context,
-                (uiState as UpdateCredentialsUiState.UpdationSuccess).message,
-                Toast.LENGTH_LONG
-            ).show()
-            val intent  = Intent(context,LoginActivity::class.java)
-            context.startActivity(intent)
-            val currentActivity = context as? Activity
-            currentActivity?.finish()
-        }
-
-        is UpdateCredentialsUiState.UpdationFiled -> {
-            Toast.makeText(
-                context,
-                (uiState as UpdateCredentialsUiState.UpdationFiled).message,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-
-        is UpdateCredentialsUiState.ConfirmPasswordError ->{}
-        is UpdateCredentialsUiState.PasswordError -> {}
-        is UpdateCredentialsUiState.PasswordMismatchError -> {}
-        is UpdateCredentialsUiState.UserNameError -> {}
+        isEnabled = !isErrorUserName && !isErrorPassword && !isErrorConfirmPassword
     }
 
     KuberaTheme {
         Scaffold(
             content = { paddingValues ->
-                // Page content goes here
                 Column(
                     modifier = Modifier
                         .padding(paddingValues)
                         .padding(20.dp)
                         .fillMaxSize(),
-                    verticalArrangement = Arrangement.Center, // Vertically center items
-                    horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    when (uiState) {
+                        is UpdateCredentialsUiState.Loading -> {
+                            // Show loading indicator if needed - could add CircularProgressIndicator
+                        }
+                        else -> { /* Idle */ }
+                    }
+
                     Text(
                         "Change Credentials",
                         fontWeight = FontWeight(600),
@@ -177,7 +172,7 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
                             }
                         },
                     )
-                    Spacer(modifier = Modifier.height(10.dp)) // Adds 16dp space
+                    Spacer(modifier = Modifier.height(10.dp))
                     OutlinedTextField(
                         value = password,
                         onValueChange = {
@@ -262,12 +257,6 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
                                     text = "Limit: ${confirmPassword.length}/$passwordCharacterLimit",
                                     color = MaterialTheme.colorScheme.error
                                 )
-                            } else if (uiState is UpdateCredentialsUiState.PasswordMismatchError) {
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = (uiState as UpdateCredentialsUiState.PasswordMismatchError).message,
-                                    color = MaterialTheme.colorScheme.error
-                                )
                             }
                         },
                     )
@@ -282,9 +271,9 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
                         },
                         shape = RoundedCornerShape(5.dp),
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = isEnabled, // Control button's enabled state
+                        enabled = isEnabled,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
+                            containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
                             contentColor = if (isEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
                         )
                     ) {
@@ -294,10 +283,4 @@ fun UpdateCredentialsScreen(viewModel :UpdateCredentialsViewModel = viewModel<Up
             }
         )
     }
-
-
 }
-
-
-
-

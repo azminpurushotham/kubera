@@ -27,6 +27,7 @@ enum class TransactionSortType(val code: String) {
 
 interface TransactionHistoryRepository {
     fun getTransactionHistoryPagingFlow(sortType: TransactionSortType): Flow<PagingData<DocumentSnapshot>>
+    fun getShopCollectionHistoryPagingFlow(shopId: String): Flow<PagingData<DocumentSnapshot>>
 }
 
 class TransactionHistoryRepositoryImpl(
@@ -66,5 +67,19 @@ class TransactionHistoryRepositoryImpl(
     override fun getTransactionHistoryPagingFlow(sortType: TransactionSortType): Flow<PagingData<DocumentSnapshot>> {
         Timber.d("getTransactionHistoryPagingFlow sortType=${sortType.code}")
         return createPager(sortType).flow
+    }
+
+    override fun getShopCollectionHistoryPagingFlow(shopId: String): Flow<PagingData<DocumentSnapshot>> {
+        Timber.d("getShopCollectionHistoryPagingFlow shopId=$shopId")
+        val query = collection
+            .whereEqualTo("shopId", shopId)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+        return Pager(
+            config = PagingConfig(
+                pageSize = RepositoryConstants.TRANSACTION_HISTORY_PAGE_SIZE,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = { FirestorePagingSource(query = query) }
+        ).flow
     }
 }

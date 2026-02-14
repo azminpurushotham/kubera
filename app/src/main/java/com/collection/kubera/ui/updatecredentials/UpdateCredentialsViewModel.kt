@@ -2,27 +2,41 @@ package com.collection.kubera.ui.updatecredentials
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.USER_COLLECTION
+import com.collection.kubera.data.Result
 import com.collection.kubera.data.User
+import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.data.repository.UserRepository
 import com.collection.kubera.states.UpdateCredentialsUiState
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.gson.Gson
-import kotlinx.coroutines.Dispatchers
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
-class UpdateCredentialsViewModel(val userCredentials: User) : ViewModel() {
-    private val _uiState: MutableStateFlow<UpdateCredentialsUiState> =
-        MutableStateFlow(UpdateCredentialsUiState.Initial)
+@HiltViewModel
+class UpdateCredentialsViewModel @Inject constructor(
+    private val userRepository: UserRepository,
+    private val dispatcher: CoroutineDispatcher
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow<UpdateCredentialsUiState>(UpdateCredentialsUiState.Initial)
     val uiState: StateFlow<UpdateCredentialsUiState> = _uiState.asStateFlow()
-    val firestore = FirebaseFirestore.getInstance()
 
-    init {
-        Timber.i("init")
-        _uiState.value =  UpdateCredentialsUiState.UserCredentials(userCredentials)
+    private val _uiEvent = MutableSharedFlow<UpdateCredentialsUiEvent>()
+    val uiEvent: SharedFlow<UpdateCredentialsUiEvent> = _uiEvent.asSharedFlow()
+
+    private var userCredentials: User? = null
+
+    fun init(user: User) {
+        Timber.d("init")
+        userCredentials = user
+        _uiState.value = UpdateCredentialsUiState.UserCredentials(user)
     }
 
     fun updateCredentials(
@@ -30,34 +44,54 @@ class UpdateCredentialsViewModel(val userCredentials: User) : ViewModel() {
         password: String,
         confirmPassword: String
     ) {
-        if (userName.isEmpty()) {
-            _uiState.value = UpdateCredentialsUiState.UserNameError("Username cannot be empty")
-            return
+        when {
+            userName.isEmpty() -> {
+                _uiEvent.tryEmit(
+                    UpdateCredentialsUiEvent.ShowError(RepositoryConstants.PROFILE_USERNAME_EMPTY)
+                )
+                return
+            }
+            password.isEmpty() -> {
+                _uiEvent.tryEmit(
+                    UpdateCredentialsUiEvent.ShowError(RepositoryConstants.PROFILE_PASSWORD_EMPTY)
+                )
+                return
+            }
+            password != confirmPassword -> {
+                _uiEvent.tryEmit(
+                    UpdateCredentialsUiEvent.ShowError(RepositoryConstants.PROFILE_PASSWORD_MISMATCH)
+                )
+                return
+            }
         }
-        if (password.isEmpty()) {
-            _uiState.value = UpdateCredentialsUiState.PasswordError("Password cannot be empty")
-        }
-        if (password != confirmPassword) {
-            _uiState.value =
-                UpdateCredentialsUiState.PasswordMismatchError("Passwords do not matching")
+
+        val user = userCredentials
+        if (user == null) {
+            _uiEvent.tryEmit(
+                UpdateCredentialsUiEvent.ShowError(RepositoryConstants.PROFILE_USER_DETAILS_ERROR)
+            )
             return
         }
 
         _uiState.value = UpdateCredentialsUiState.Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection(USER_COLLECTION).document(userCredentials.id)
-                .update("username", userName, "password", password)
-                .addOnSuccessListener {
-                    Timber.tag("userCredentials").v(Gson().toJson(userCredentials))
-                    _uiState.value =
-                        UpdateCredentialsUiState.UpdationSuccess("Credentials updated successfully")
+        viewModelScope.launch(dispatcher) {
+            when (val result = userRepository.updateUserCredentials(user.id, userName, password)) {
+                is Result.Success -> {
+                    _uiState.value = UpdateCredentialsUiState.Initial
+                    _uiEvent.tryEmit(
+                        UpdateCredentialsUiEvent.ShowSuccess(RepositoryConstants.PROFILE_CREDENTIALS_UPDATED)
+                    )
+                    _uiEvent.tryEmit(UpdateCredentialsUiEvent.NavigateToLogin)
                 }
-                .addOnFailureListener { exception ->
-                    Timber.tag("exception").e(exception)
-                    Timber.tag("userCredentials").v(Gson().toJson(userCredentials))
-                    _uiState.value =
-                        UpdateCredentialsUiState.UpdationFiled("Failed to update credentials\n ${exception.message}")
+                is Result.Error -> {
+                    _uiState.value = UpdateCredentialsUiState.Initial
+                    _uiEvent.tryEmit(
+                        UpdateCredentialsUiEvent.ShowError(
+                            "${RepositoryConstants.PROFILE_UPDATE_FAILED}\n${result.exception.message}"
+                        )
+                    )
                 }
+            }
         }
     }
 }

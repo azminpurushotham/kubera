@@ -15,6 +15,9 @@ object RepositoryConstants {
 
     const val ADD_SHOP_SUCCESS_MESSAGE = "New Shop Added Successfully"
     const val ADD_SHOP_ERROR_MESSAGE = "Shop is not added, please try again"
+
+    const val UPDATE_SHOP_SUCCESS_MESSAGE = "Shop details updated successfully"
+    const val UPDATE_SHOP_ERROR_MESSAGE = "Shop details is not updated, please try again"
     const val COLLECTION_HISTORY_NOT_UPDATED = "Collection history not updated"
 
     const val PROFILE_USER_DETAILS_ERROR = "Something went wrong with this user details"

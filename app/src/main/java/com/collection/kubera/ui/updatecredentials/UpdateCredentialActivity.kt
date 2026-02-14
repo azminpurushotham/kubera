@@ -1,7 +1,6 @@
 package com.collection.kubera.ui.updatecredentials
 
 import android.app.Activity
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -16,58 +15,44 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.collection.kubera.data.User
 import com.collection.kubera.ui.theme.KuberaTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class UpdateCredentialActivity : ComponentActivity() {
+
     @Composable
     fun StatusBarWithPlatformApi() {
         val activity = LocalContext.current as Activity
         val view = LocalView.current
-        val statusBarColor = MaterialTheme.colorScheme.primary // Color from color scheme
+        val statusBarColor = MaterialTheme.colorScheme.primary
         val darkIcons = MaterialTheme.colorScheme.primary.luminance() > 0.5f
 
-        activity.window.statusBarColor = statusBarColor.toArgb() // Set status bar color
-        WindowInsetsControllerCompat(activity.window, view).isAppearanceLightStatusBars = darkIcons // Adjust icon color
+        activity.window.statusBarColor = statusBarColor.toArgb()
+        WindowInsetsControllerCompat(activity.window, view).isAppearanceLightStatusBars = darkIcons
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        savedInstanceState?.getString("userName")
         val userCredentials: User? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             intent.getParcelableExtra("userCredentials", User::class.java)
         } else {
-            @Suppress("DEPRECATION") // Suppress warning for deprecated method
+            @Suppress("DEPRECATION")
             intent.getParcelableExtra("userCredentials")
         }
         setContent {
             KuberaTheme {
                 StatusBarWithPlatformApi()
-                // A surface container using the 'background' color from the theme
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    userCredentials?.let {
-                        val viewModel: UpdateCredentialsViewModel = viewModel(
-                            factory = ViewModelFactory(userCredentials)
-                        )
-                        UpdateCredentialsScreen(viewModel)
+                    userCredentials?.let { user ->
+                        UpdateCredentialsScreen(user = user)
                     }
                 }
             }
         }
-    }
-}
-class ViewModelFactory(private val param: User) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(UpdateCredentialsViewModel::class.java)) {
-            return UpdateCredentialsViewModel(param) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

@@ -22,6 +22,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,12 +36,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.UpdateShopUiState
 import com.collection.kubera.ui.AllDestinations
 import com.collection.kubera.ui.theme.headingLabelD
+import kotlinx.coroutines.flow.collectLatest
 import com.collection.kubera.ui.theme.onHintD
 import timber.log.Timber
 
@@ -48,7 +50,7 @@ import timber.log.Timber
 fun UpdateShopScreen(
     model: Shop,
     navController: NavHostController? = null,
-    viewModel: UpdateShopViewModel = viewModel()
+    viewModel: UpdateShopViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -80,6 +82,28 @@ fun UpdateShopScreen(
     var isMailIdFormateError by rememberSaveable { mutableStateOf(false) }
     val shop by viewModel.shop.collectAsState()
 
+    LaunchedEffect(model) {
+        viewModel.init(model)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is UpdateShopUiEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+                is UpdateShopUiEvent.ShowSuccess -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+                is UpdateShopUiEvent.NavigateBack -> {
+                    navController?.popBackStack(
+                        route = AllDestinations.SHOP_LIST,
+                        inclusive = false
+                    )
+                }
+            }
+        }
+    }
 
     fun validateShopName(shopName: String) {
         isShopNameError = shopName.length < characterLimit
@@ -164,57 +188,14 @@ fun UpdateShopScreen(
                         || phoneL
                         || secondPhoneL)
     }
-    when (uiState) {
-        is UpdateShopUiState.Initial -> {
-            viewModel.setShop(model)
-        }
-
-        UpdateShopUiState.Loading -> {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onPrimary,
-                )
-            }
-        }
-
-        is UpdateShopUiState.UpdateShopInit -> {
-
-        }
-
-        is UpdateShopUiState.UpdateShopSuccess -> {
-            isEnabled = false
-            Toast.makeText(
-                context,
-                (uiState as UpdateShopUiState.UpdateShopSuccess).outputText,
-                Toast.LENGTH_SHORT
-            ).show()
-            navController?.popBackStack(
-                route = AllDestinations.SHOP_LIST,
-                inclusive = false
+    if (uiState == UpdateShopUiState.Loading) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.onPrimary,
             )
-        }
-
-        is UpdateShopUiState.UpdateShopError -> {
-            Toast.makeText(
-                context,
-                (uiState as UpdateShopUiState.UpdateShopError).errorMessage,
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-
-        is UpdateShopUiState.UpdateShopCompleted -> {
-
-        }
-
-        is UpdateShopUiState.ShopDetailError -> {
-
-        }
-
-        is UpdateShopUiState.ShopDetailSuccess -> {
-
         }
     }
 
@@ -480,9 +461,7 @@ fun UpdateShopScreen(
             onValueChange = {
                 if (it.length <= phoneNumberLimit) {
                     secondPhoneNumber = it.trim()
-                    if (secondPhoneNumber!!.isNotEmpty()) {
-                        validateSecondPhoneNumber()
-                    }
+                    validateSecondPhoneNumber()
                 }
                 enableButton()
             },

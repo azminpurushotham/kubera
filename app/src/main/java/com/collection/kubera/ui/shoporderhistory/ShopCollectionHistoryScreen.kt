@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +25,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,9 +41,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
@@ -49,80 +49,55 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.collection.kubera.R
 import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.Shop
-import com.collection.kubera.states.HomeUiState
+import com.collection.kubera.ui.theme.KuberaTheme
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.onprimaryD
-import com.collection.kubera.ui.updatecredentials.UpdateCredentialsViewModel
 import com.google.firebase.firestore.DocumentSnapshot
-import timber.log.Timber
+import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShopCollectionHistoryScreen(
     prm: Shop,
     navController: NavHostController,
-    viewModel: ShopCollectionViewModel = viewModel(factory = ViewModelFactory(prm))
+    viewModel: ShopCollectionViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val uiState by viewModel.uiState.collectAsState()
     val shop by viewModel.shop.collectAsState()
     val balance by viewModel.balance.collectAsState()
-    val list = viewModel.list.collectAsLazyPagingItems()
-    val userPagingItems: LazyPagingItems<DocumentSnapshot> = viewModel.list.collectAsLazyPagingItems()
+    val listFlow by viewModel.listFlow.collectAsState()
+    val userPagingItems: LazyPagingItems<DocumentSnapshot> = listFlow.collectAsLazyPagingItems()
 
-    val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState()
 
     val refreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
-    val onRefresh: () -> Unit = {
-        isRefreshing = true
-        viewModel.getSwipeShopsCollectionHistory()
-        viewModel.setShop(prm)
+
+    LaunchedEffect(prm) {
+        viewModel.init(prm)
     }
 
-    when (uiState) {
-        is HomeUiState.Initial -> {
-            viewModel.setShop(prm)
-        }
-
-        HomeUiState.Loading -> {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
-            ) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onPrimary,
-                )
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is ShopCollectionUiEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
             }
         }
-
-        is HomeUiState.HomeInit -> {
-
-        }
-
-        is HomeUiState.Searching -> {
-
-        }
-
-        is HomeUiState.HomeSuccess -> {
-            isRefreshing = false
-            Timber.i("HomeSuccess")
-        }
-
-        is HomeUiState.HomeError -> {
-            Toast.makeText(
-                context,
-                (uiState as HomeUiState.HomeError).errorMessage,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-
-        is HomeUiState.Refreshing -> {
-            isRefreshing = true
-        }
     }
 
+    val onRefresh = {
+        isRefreshing = true
+        viewModel.onRefresh()
+    }
+
+    LaunchedEffect(userPagingItems.loadState.refresh) {
+        if (userPagingItems.loadState.refresh !is LoadState.Loading) {
+            isRefreshing = false
+        }
+    }
 
     if (showBottomSheet) {
         ModalBottomSheet(
@@ -154,13 +129,9 @@ fun ShopCollectionHistoryScreen(
                             color = MaterialTheme.colorScheme.onPrimary,
                             fontSize = MaterialTheme.typography.titleMedium.fontSize,
                         )
-
-                        Spacer(modifier = Modifier.weight(1f)) // Spacer to fill the space
-
-                        Row{
-                            Button(onClick = {
-
-                            }) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        Row {
+                            Button(onClick = { }) {
                                 Text(
                                     "A - Z",
                                     color = MaterialTheme.colorScheme.onPrimary,
@@ -168,10 +139,7 @@ fun ShopCollectionHistoryScreen(
                                 )
                             }
                             Spacer(modifier = Modifier.width(60.dp))
-                            Button(
-                                onClick = {
-
-                                }) {
+                            Button(onClick = { }) {
                                 Text(
                                     "Z - A",
                                     color = MaterialTheme.colorScheme.onPrimary,
@@ -193,13 +161,10 @@ fun ShopCollectionHistoryScreen(
                             color = MaterialTheme.colorScheme.onPrimary,
                             fontSize = MaterialTheme.typography.titleMedium.fontSize,
                         )
-                        Spacer(modifier = Modifier.weight(1f)) // Spacer to fill the space
-                        Button(
-                            onClick = {
-
-                            }) {
+                        Spacer(modifier = Modifier.weight(1f))
+                        Button(onClick = { }) {
                             Image(
-                                painter = painterResource(id = R.drawable.baseline_arrow_upward_24), // Replace with your drawable
+                                painter = painterResource(id = R.drawable.baseline_arrow_upward_24),
                                 contentDescription = stringResource(R.string.filter),
                                 alignment = Alignment.CenterEnd,
                                 contentScale = ContentScale.Crop,
@@ -207,12 +172,10 @@ fun ShopCollectionHistoryScreen(
                             )
                         }
                         Spacer(modifier = Modifier.width(60.dp))
-                        Button(onClick = {
-
-                        }) {
+                        Button(onClick = { }) {
                             Image(
                                 modifier = Modifier.rotate(180f),
-                                painter = painterResource(id = R.drawable.baseline_arrow_upward_24), // Replace with your drawable
+                                painter = painterResource(id = R.drawable.baseline_arrow_upward_24),
                                 contentDescription = stringResource(R.string.filter),
                                 alignment = Alignment.CenterEnd,
                                 contentScale = ContentScale.Crop,
@@ -222,9 +185,7 @@ fun ShopCollectionHistoryScreen(
                     }
                 }
             },
-            onDismissRequest = {
-                showBottomSheet = false
-            },
+            onDismissRequest = { showBottomSheet = false },
         )
     }
 
@@ -233,13 +194,10 @@ fun ShopCollectionHistoryScreen(
         isRefreshing = isRefreshing,
         onRefresh = onRefresh,
     ) {
-
         LazyColumn(
-            modifier = Modifier
-//                .verticalScroll(rememberScrollState())
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Top, // Vertically center items
-            horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
                 Header(shop, balance)
@@ -252,39 +210,27 @@ fun ShopCollectionHistoryScreen(
                 }
             }
 
-            // Show Loader at the Bottom During Load More
             item {
-                if (userPagingItems.loadState.refresh is LoadState.Loading) {
-                    Timber.i("loadState.refresh")
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                    )
-                }
-                else if (userPagingItems.loadState.append is LoadState.Loading) {
-                    Timber.i("loadState.append")
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                    )
-                }
-                else if (userPagingItems.loadState.refresh is LoadState.Error) {
-                    Timber.i("loadState.Error")
-                    val e = list.loadState.refresh as LoadState.Error
-                    Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.error)
+                when {
+                    userPagingItems.loadState.refresh is LoadState.Loading -> {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    }
+                    userPagingItems.loadState.append is LoadState.Loading -> {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.onPrimary,
+                        )
+                    }
+                    userPagingItems.loadState.refresh is LoadState.Error -> {
+                        val e = userPagingItems.loadState.refresh as LoadState.Error
+                        Text(
+                            "Error: ${e.error.localizedMessage}",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
             }
         }
     }
 }
-
-class ViewModelFactory(private val shop: Shop) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ShopCollectionViewModel::class.java)) {
-            return ShopCollectionViewModel(shop) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}
-
-
-
