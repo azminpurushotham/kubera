@@ -25,6 +25,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,17 +43,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.collection.kubera.ui.login.LoginActivity
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.collection.kubera.ui.theme.KuberaTheme
 import com.collection.kubera.ui.theme.onHintD
-import com.collection.kubera.utils.PreferenceHelper
-import com.collection.kubera.utils.USER_ID
-
+import kotlinx.coroutines.flow.collectLatest
 
 @Preview
 @Composable
-fun ProfileScreen(viewModel :ProfileViewModel = viewModel<ProfileViewModel>()) {
+fun ProfileScreen(viewModel: ProfileViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     var userName by remember { mutableStateOf("") }
@@ -70,7 +68,24 @@ fun ProfileScreen(viewModel :ProfileViewModel = viewModel<ProfileViewModel>()) {
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
     var isEnabled by remember { mutableStateOf(false) }
-    val pref = PreferenceHelper.getPrefs(context)
+    var hasLoadedUser by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.init()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is ProfileUiEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
+                is ProfileUiEvent.ShowSuccess -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
 
     val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         context.packageManager.getPackageInfo(
@@ -81,9 +96,9 @@ fun ProfileScreen(viewModel :ProfileViewModel = viewModel<ProfileViewModel>()) {
         context.packageManager.getPackageInfo(context.packageName, 0)
     }
 
-    val versionName  by remember { mutableStateOf(packageInfo.versionName)}
-    val versionCode by remember { mutableStateOf(packageInfo.longVersionCode)}
-    val appName  = context.applicationInfo.loadLabel(context.packageManager).toString()
+    val versionName by remember { mutableStateOf(packageInfo.versionName) }
+    val versionCode by remember { mutableStateOf(packageInfo.longVersionCode) }
+    val appName = context.applicationInfo.loadLabel(context.packageManager).toString()
 
     fun validateUserName() {
         isErrorUserName = userName.length < userNameCharacterLimit
@@ -105,60 +120,43 @@ fun ProfileScreen(viewModel :ProfileViewModel = viewModel<ProfileViewModel>()) {
         isEnabled = !isErrorUserName && !isErrorPassword && !isErrorPasswordMismatch
     }
 
-    when (uiState) {
-        is ProfileUiState.Initial -> {
-            pref.getString(USER_ID,"")?.let {id->
-                viewModel.getUserDetails(id)
+    LaunchedEffect(uiState) {
+        when (val state = uiState) {
+            is ProfileUiState.UserCredentials -> {
+                if (!hasLoadedUser) {
+                    userName = state.user.username
+                    password = state.user.password
+                    hasLoadedUser = true
+                }
             }
+            else -> { }
         }
+    }
 
-        is ProfileUiState.Loading -> {
+    when (uiState) {
+        is ProfileUiState.Initial -> { /* Init triggers getUserDetails via LaunchedEffect */ }
+        is ProfileUiState.Loading -> { /* Loading indicator could be shown */ }
+        is ProfileUiState.UserCredentials,
+        is ProfileUiState.UserNameError,
+        is ProfileUiState.PasswordError,
+        is ProfileUiState.PasswordMismatchError -> { /* Handled */ }
+    }
 
-        }
-
-        is ProfileUiState.UserCredentials->{
-            userName = (uiState as ProfileUiState.UserCredentials).user.username
-            password = (uiState as ProfileUiState.UserCredentials).user.password
-        }
-
-        is ProfileUiState.UpdationSuccess -> {
-            Toast.makeText(
-                context,
-                (uiState as ProfileUiState.UpdationSuccess).message,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-
-        is ProfileUiState.UpdationFiled -> {
-            Toast.makeText(
-                context,
-                (uiState as ProfileUiState.UpdationFiled).message,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-
-        is ProfileUiState.ConfirmPasswordError ->{}
-        is ProfileUiState.PasswordError -> {}
-        is ProfileUiState.PasswordMismatchError -> {}
-        is ProfileUiState.UserNameError -> {}
-        is ProfileUiState.Error -> Toast.makeText(
-            context,
-            (uiState as ProfileUiState.Error).message,
-            Toast.LENGTH_LONG
-        ).show()
+    val passwordMismatchMessage = when (uiState) {
+        is ProfileUiState.PasswordMismatchError -> (uiState as ProfileUiState.PasswordMismatchError).message
+        else -> null
     }
 
     KuberaTheme {
         Scaffold(
             content = { paddingValues ->
-                // Page content goes here
                 Column(
                     modifier = Modifier
                         .padding(paddingValues)
                         .padding(20.dp)
                         .fillMaxSize(),
-                    verticalArrangement = Arrangement.Top, // Vertically center items
-                    horizontalAlignment = Alignment.Start // Horizontally center items
+                    verticalArrangement = Arrangement.Top,
+                    horizontalAlignment = Alignment.Start
                 ) {
                     Text(
                         "User Details",
@@ -197,7 +195,7 @@ fun ProfileScreen(viewModel :ProfileViewModel = viewModel<ProfileViewModel>()) {
                             }
                         },
                     )
-                    Spacer(modifier = Modifier.height(10.dp)) // Adds 16dp space
+                    Spacer(modifier = Modifier.height(10.dp))
                     OutlinedTextField(
                         value = password,
                         onValueChange = {
@@ -260,7 +258,7 @@ fun ProfileScreen(viewModel :ProfileViewModel = viewModel<ProfileViewModel>()) {
                         ),
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
-                        isError = isErrorConfirmPassword,
+                        isError = isErrorConfirmPassword || isErrorPasswordMismatch,
                         modifier = Modifier.fillMaxWidth(),
                         visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                         trailingIcon = {
@@ -282,10 +280,10 @@ fun ProfileScreen(viewModel :ProfileViewModel = viewModel<ProfileViewModel>()) {
                                     text = "Limit: ${confirmPassword.length}/$passwordCharacterLimit",
                                     color = MaterialTheme.colorScheme.error
                                 )
-                            } else if (isErrorPasswordMismatch) {
+                            } else if (isErrorPasswordMismatch && passwordMismatchMessage != null) {
                                 Text(
                                     modifier = Modifier.fillMaxWidth(),
-                                    text = (uiState as ProfileUiState.PasswordMismatchError).message,
+                                    text = passwordMismatchMessage,
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -302,9 +300,9 @@ fun ProfileScreen(viewModel :ProfileViewModel = viewModel<ProfileViewModel>()) {
                         },
                         shape = RoundedCornerShape(5.dp),
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = isEnabled, // Control button's enabled state
+                        enabled = isEnabled,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
+                            containerColor = if (isEnabled) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.primary,
                             contentColor = if (isEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
                         )
                     ) {
@@ -323,7 +321,3 @@ fun ProfileScreen(viewModel :ProfileViewModel = viewModel<ProfileViewModel>()) {
         )
     }
 }
-
-
-
-

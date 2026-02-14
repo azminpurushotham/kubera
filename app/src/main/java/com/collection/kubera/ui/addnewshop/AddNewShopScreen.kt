@@ -22,6 +22,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,19 +37,19 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.collection.kubera.states.AddNewShopUiState
 import com.collection.kubera.ui.AllDestinations
 import com.collection.kubera.ui.theme.headingLabelD
 import com.collection.kubera.ui.theme.onHintD
-import com.collection.kubera.utils.PreferenceHelper
+import kotlinx.coroutines.flow.collectLatest
 
 @Preview
 @Composable
 fun AddNewShopScreen(
     navController: NavHostController? = null,
-    viewModel: AddNewShopViewModel = viewModel()
+    viewModel: AddNewShopViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
@@ -78,7 +79,26 @@ fun AddNewShopScreen(
     var mailId by remember { mutableStateOf("") }
     var isMailIdError by rememberSaveable { mutableStateOf(false) }
     var isMailIdFormateError by rememberSaveable { mutableStateOf(false) }
-    val pref = PreferenceHelper.getPrefs(context)
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is AddNewShopUiEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+                is AddNewShopUiEvent.ShowSuccess -> {
+                    isEnabled = false
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+                is AddNewShopUiEvent.NavigateBack -> {
+                    navController?.popBackStack(
+                        route = AllDestinations.SHOP_LIST,
+                        inclusive = false
+                    )
+                }
+            }
+        }
+    }
 
     fun validateShopName(shopName: String) {
         isShopNameError = shopName.length < characterLimit
@@ -152,10 +172,7 @@ fun AddNewShopScreen(
 //                && !isMailIdError
     }
     when (uiState) {
-        is AddNewShopUiState.Initial -> {
-            viewModel.setPreference(pref)
-        }
-
+        AddNewShopUiState.Initial -> { /* Idle */ }
         AddNewShopUiState.Loading -> {
             Box(
                 contentAlignment = Alignment.Center,
@@ -165,26 +182,6 @@ fun AddNewShopScreen(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             }
-        }
-
-        is AddNewShopUiState.AddNewShopInit -> {
-
-        }
-
-        is AddNewShopUiState.AddNewShopSuccess -> {
-            isEnabled = false
-            Toast.makeText(context, (uiState as AddNewShopUiState.AddNewShopSuccess).outputText, Toast.LENGTH_SHORT).show()
-            navController?.popBackStack(
-                route = AllDestinations.SHOP_LIST,
-                inclusive = false)
-        }
-
-        is AddNewShopUiState.AddNewShopError -> {
-            Toast.makeText(context, (uiState as AddNewShopUiState.AddNewShopError).errorMessage, Toast.LENGTH_SHORT).show()
-        }
-
-        is AddNewShopUiState.AddNewShopCompleted ->{
-
         }
     }
 

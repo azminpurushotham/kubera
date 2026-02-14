@@ -12,4 +12,15 @@ object RepositoryConstants {
     const val REPORT_ALL_SHOPS_FILENAME = "AllShops.csv"
     const val REPORT_DIR_NOT_CREATED = "Directories not created"
     const val REPORT_INVALID_DATE_FORMAT = "Invalid date format"
+
+    const val ADD_SHOP_SUCCESS_MESSAGE = "New Shop Added Successfully"
+    const val ADD_SHOP_ERROR_MESSAGE = "Shop is not added, please try again"
+    const val COLLECTION_HISTORY_NOT_UPDATED = "Collection history not updated"
+
+    const val PROFILE_USER_DETAILS_ERROR = "Something went wrong with this user details"
+    const val PROFILE_CREDENTIALS_UPDATED = "Credentials updated successfully"
+    const val PROFILE_UPDATE_FAILED = "Failed to update credentials"
+    const val PROFILE_USERNAME_EMPTY = "Username cannot be empty"
+    const val PROFILE_PASSWORD_EMPTY = "Password cannot be empty"
+    const val PROFILE_PASSWORD_MISMATCH = "Passwords do not matching"
 }

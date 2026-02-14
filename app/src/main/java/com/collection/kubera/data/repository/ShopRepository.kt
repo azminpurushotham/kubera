@@ -18,6 +18,7 @@ interface ShopRepository {
     fun getShopsPagingFlow(): Flow<PagingData<DocumentSnapshot>>
     fun getShopsSearchPagingFlow(shopName: String): Flow<PagingData<DocumentSnapshot>>
     suspend fun getShopById(id: String): Result<Shop?>
+    suspend fun addShop(shop: Shop): Result<Shop>
     suspend fun updateShopBalance(id: String, balance: Long): Result<Unit>
 }
 
@@ -59,6 +60,17 @@ class ShopRepositoryImpl(
             Result.Success(shop)
         } catch (e: Exception) {
             Timber.e(e, "getShopById failed")
+            Result.Error(e)
+        }
+    }
+
+    override suspend fun addShop(shop: Shop): Result<Shop> {
+        return try {
+            val docRef = firestore.collection(SHOP_COLLECTION).add(shop).await()
+            shop.id = docRef.id
+            Result.Success(shop)
+        } catch (e: Exception) {
+            Timber.e(e, "addShop failed")
             Result.Error(e)
         }
     }

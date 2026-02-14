@@ -2,52 +2,73 @@ package com.collection.kubera.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.USER_COLLECTION
+import com.collection.kubera.data.Result
 import com.collection.kubera.data.User
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.gson.Gson
-import kotlinx.coroutines.Dispatchers
+import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.data.repository.UserPreferencesRepository
+import com.collection.kubera.data.repository.UserRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
-class ProfileViewModel : ViewModel() {
-    private val _uiState: MutableStateFlow<ProfileUiState> =
-        MutableStateFlow(ProfileUiState.Initial)
+@HiltViewModel
+class ProfileViewModel @Inject constructor(
+    private val userRepository: UserRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val dispatcher: CoroutineDispatcher
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Initial)
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
-    val firestore = FirebaseFirestore.getInstance()
-    private lateinit var userCredentials: User
 
-    init {
-        Timber.i("init")
+    private val _uiEvent = MutableSharedFlow<ProfileUiEvent>()
+    val uiEvent: SharedFlow<ProfileUiEvent> = _uiEvent.asSharedFlow()
+
+    private var userCredentials: User? = null
+
+    fun init() {
+        Timber.d("init")
+        val userId = userPreferencesRepository.getUserId()
+        if (userId.isNotEmpty()) {
+            getUserDetails(userId)
+        } else {
+            _uiEvent.tryEmit(
+                ProfileUiEvent.ShowError(RepositoryConstants.PROFILE_USER_DETAILS_ERROR)
+            )
+        }
     }
 
-    fun getUserDetails(id:String) {
-        firestore
-            .collection(USER_COLLECTION)
-            .document(id)
-            .get()
-            .addOnSuccessListener { querySnapshot ->
-                if (querySnapshot.data?.isNotEmpty() == true) {
-                    querySnapshot.toObject(User::class.java)?.
-                    apply {
-                        this.id = id
-                    }?.let {
-                        userCredentials = it
+    fun getUserDetails(id: String) {
+        viewModelScope.launch(dispatcher) {
+            when (val result = userRepository.getUserById(id)) {
+                is Result.Success -> {
+                    result.data?.let { user ->
+                        userCredentials = user
+                        _uiState.value = ProfileUiState.UserCredentials(user)
+                    } ?: run {
+                        _uiEvent.tryEmit(
+                            ProfileUiEvent.ShowError(RepositoryConstants.PROFILE_USER_DETAILS_ERROR)
+                        )
                     }
-                    _uiState.value = ProfileUiState.UserCredentials(userCredentials)
-                } else {
-                    Timber.i("No matching documents found.")
-                    _uiState.value =
-                        ProfileUiState.Error("Something went wrong with this user details")
+                }
+                is Result.Error -> {
+                    _uiEvent.tryEmit(
+                        ProfileUiEvent.ShowError(
+                            result.exception.message
+                                ?: RepositoryConstants.PROFILE_USER_DETAILS_ERROR
+                        )
+                    )
                 }
             }
-            .addOnFailureListener {
-                _uiState.value =
-                    ProfileUiState.Error("Something went wrong with this user details,$it")
-            }
+        }
     }
 
     fun updateCredentials(
@@ -55,41 +76,48 @@ class ProfileViewModel : ViewModel() {
         password: String,
         confirmPassword: String,
     ) {
-        if (userName.isEmpty()) {
-            _uiState.value = ProfileUiState.UserNameError("Username cannot be empty")
-            return
+        when {
+            userName.isEmpty() -> {
+                _uiState.value = ProfileUiState.UserNameError(RepositoryConstants.PROFILE_USERNAME_EMPTY)
+                return
+            }
+            password.isEmpty() -> {
+                _uiState.value = ProfileUiState.PasswordError(RepositoryConstants.PROFILE_PASSWORD_EMPTY)
+                return
+            }
+            password != confirmPassword -> {
+                _uiState.value = ProfileUiState.PasswordMismatchError(RepositoryConstants.PROFILE_PASSWORD_MISMATCH)
+                return
+            }
         }
-        if (password.isEmpty()) {
-            _uiState.value = ProfileUiState.PasswordError("Password cannot be empty")
-        }
-        if (password != confirmPassword) {
-            _uiState.value =
-                ProfileUiState.PasswordMismatchError("Passwords do not matching")
+
+        val user = userCredentials
+        if (user == null) {
+            _uiEvent.tryEmit(ProfileUiEvent.ShowError(RepositoryConstants.PROFILE_USER_DETAILS_ERROR))
             return
         }
 
         _uiState.value = ProfileUiState.Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection(USER_COLLECTION)
-                .document(userCredentials.id)
-                .update("username", userName,
-                    "password", password)
-                .addOnSuccessListener {
-                    Timber.tag("userCredentials").v(Gson().toJson(userCredentials))
-                    _uiState.value =
-                        ProfileUiState.UpdationSuccess("Credentials updated successfully")
+        viewModelScope.launch(dispatcher) {
+            when (val result = userRepository.updateUserCredentials(user.id, userName, password)) {
+                is Result.Success -> {
+                    _uiEvent.tryEmit(
+                        ProfileUiEvent.ShowSuccess(RepositoryConstants.PROFILE_CREDENTIALS_UPDATED)
+                    )
                 }
-                .addOnFailureListener { exception ->
-                    Timber.tag("exception").e(exception)
-                    Timber.tag("userCredentials").v(Gson().toJson(userCredentials))
-                    _uiState.value =
-                        ProfileUiState.UpdationFiled("Failed to update credentials\n ${exception.message}")
+                is Result.Error -> {
+                    _uiEvent.tryEmit(
+                        ProfileUiEvent.ShowError(
+                            "${RepositoryConstants.PROFILE_UPDATE_FAILED}\n${result.exception.message}"
+                        )
+                    )
                 }
+            }
+            _uiState.value = ProfileUiState.UserCredentials(user.copy(username = userName, password = password))
         }
     }
 
     fun setPasswordMismatchError() {
-        _uiState.value =
-            ProfileUiState.PasswordMismatchError("Passwords do not matching")
+        _uiState.value = ProfileUiState.PasswordMismatchError(RepositoryConstants.PROFILE_PASSWORD_MISMATCH)
     }
 }
