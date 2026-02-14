@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.Result
 import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.data.repository.GoogleAuthRepository
 import com.collection.kubera.data.repository.UserPreferencesRepository
 import com.collection.kubera.data.repository.UserRepository
 import com.collection.kubera.states.LoginUiState
@@ -23,6 +24,7 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
+    private val googleAuthRepository: GoogleAuthRepository,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -53,6 +55,39 @@ class LoginViewModel @Inject constructor(
                         LoginUiEvent.ShowError(
                             result.exception.message
                                 ?: RepositoryConstants.LOGIN_CREDENTIALS_ERROR
+                        )
+                    )
+                }
+            }
+            _uiState.value = LoginUiState.Initial
+        }
+    }
+
+    fun getGoogleSignInIntent(webClientId: String): Intent? =
+        googleAuthRepository.getSignInIntent(webClientId)
+
+    fun showError(message: String) {
+        viewModelScope.launch { _uiEvent.emit(LoginUiEvent.ShowError(message)) }
+    }
+
+    fun signInWithGoogle(idToken: String) {
+        _uiState.value = LoginUiState.Loading
+        viewModelScope.launch(dispatcher) {
+            when (val result = googleAuthRepository.signInWithCredential(idToken)) {
+                is Result.Success -> {
+                    val data = result.data
+                    userPreferencesRepository.saveLoginState(
+                        userId = data.userId,
+                        userName = data.displayName,
+                        password = ""
+                    )
+                    _uiEvent.tryEmit(LoginUiEvent.ShowSuccess("Signed in with Google"))
+                    _uiEvent.tryEmit(LoginUiEvent.NavigateToMain)
+                }
+                is Result.Error -> {
+                    _uiEvent.tryEmit(
+                        LoginUiEvent.ShowError(
+                            result.exception.message ?: "Google sign-in failed"
                         )
                     )
                 }

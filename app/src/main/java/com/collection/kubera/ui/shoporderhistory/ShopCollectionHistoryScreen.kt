@@ -52,7 +52,6 @@ import com.collection.kubera.data.Shop
 import com.collection.kubera.ui.theme.KuberaTheme
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.onprimaryD
-import com.google.firebase.firestore.DocumentSnapshot
 import kotlinx.coroutines.flow.collectLatest
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -66,7 +65,7 @@ fun ShopCollectionHistoryScreen(
     val shop by viewModel.shop.collectAsState()
     val balance by viewModel.balance.collectAsState()
     val listFlow by viewModel.listFlow.collectAsState()
-    val userPagingItems: LazyPagingItems<DocumentSnapshot> = listFlow.collectAsLazyPagingItems()
+    val userPagingItems: LazyPagingItems<CollectionModel> = listFlow.collectAsLazyPagingItems()
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
@@ -208,8 +207,7 @@ fun ShopCollectionHistoryScreen(
             }
 
             items(userPagingItems.itemCount) { index ->
-                val item = userPagingItems[index]?.toObject(CollectionModel::class.java)
-                item?.let {
+                userPagingItems[index]?.let { item ->
                     ShopCollectionItem(item)
                 }
             }

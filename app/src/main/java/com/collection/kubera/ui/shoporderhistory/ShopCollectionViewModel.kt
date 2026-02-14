@@ -4,9 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.Shop
 import com.collection.kubera.data.repository.TransactionHistoryRepository
-import com.google.firebase.firestore.DocumentSnapshot
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -37,7 +37,7 @@ class ShopCollectionViewModel @Inject constructor(
             .getShopCollectionHistoryPagingFlow("")
             .cachedIn(viewModelScope)
     )
-    val listFlow: StateFlow<Flow<PagingData<DocumentSnapshot>>> = _listFlow.asStateFlow()
+    val listFlow: StateFlow<Flow<PagingData<CollectionModel>>> = _listFlow.asStateFlow()
 
     private val _uiEvent = MutableSharedFlow<ShopCollectionUiEvent>()
     val uiEvent: SharedFlow<ShopCollectionUiEvent> = _uiEvent.asSharedFlow()

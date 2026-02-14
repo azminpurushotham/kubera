@@ -8,10 +8,10 @@ import com.collection.kubera.data.Result
 import com.collection.kubera.data.TodaysCollectionData
 import com.collection.kubera.data.repository.RepositoryConstants
 import com.collection.kubera.data.repository.TodaysCollectionRepository
+import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.repository.TransactionHistoryRepository
 import com.collection.kubera.data.repository.TransactionSortType
 import com.collection.kubera.states.CollectionHistoryUiState
-import com.google.firebase.firestore.DocumentSnapshot
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -43,12 +43,12 @@ class CollectionViewModel @Inject constructor(
 
     private var currentSortType = TransactionSortType.TIMESTAMP_DESC
 
-    private val _listFlow = MutableStateFlow<Flow<PagingData<DocumentSnapshot>>>(
+    private val _listFlow = MutableStateFlow<Flow<PagingData<CollectionModel>>>(
         transactionHistoryRepository
             .getTransactionHistoryPagingFlow(currentSortType)
             .cachedIn(viewModelScope)
     )
-    val list: StateFlow<Flow<PagingData<DocumentSnapshot>>> = _listFlow.asStateFlow()
+    val list: StateFlow<Flow<PagingData<CollectionModel>>> = _listFlow.asStateFlow()
 
     fun init() {
         Timber.d("init")

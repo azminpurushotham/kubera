@@ -34,7 +34,6 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.HomeUiState
-import com.google.firebase.firestore.DocumentSnapshot
 import kotlinx.coroutines.flow.collectLatest
 import timber.log.Timber
 
@@ -51,7 +50,7 @@ fun ShopListScreen(
     val refreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
     val listFlow by viewModel.list.collectAsState()
-    val userPagingItems: LazyPagingItems<DocumentSnapshot> = listFlow.collectAsLazyPagingItems()
+    val userPagingItems: LazyPagingItems<Shop> = listFlow.collectAsLazyPagingItems()
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -127,9 +126,7 @@ fun ShopListScreen(
             }
 
             items(userPagingItems.itemCount) { index ->
-                userPagingItems[index]?.toObject(Shop::class.java)?.apply {
-                    id = userPagingItems[index]?.id.toString()
-                }?.let { ShopItem(navController, it) }
+                userPagingItems[index]?.let { shop -> ShopItem(navController, shop) }
             }
 
             item {

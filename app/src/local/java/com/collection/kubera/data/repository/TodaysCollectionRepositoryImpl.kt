@@ -4,7 +4,7 @@ import com.collection.kubera.data.Result
 import com.collection.kubera.data.TodaysCollectionData
 import com.collection.kubera.data.local.dao.TodaysCollectionDao
 import com.collection.kubera.data.local.entity.TodaysCollectionEntity
-import com.collection.kubera.data.local.mapper.EntityMappers.toTodaysCollectionData
+import com.collection.kubera.data.local.mapper.toTodaysCollectionData
 import kotlinx.coroutines.flow.first
 import timber.log.Timber
 import java.util.Calendar
@@ -12,7 +12,7 @@ import java.util.UUID
 
 private const val DEFAULT_TODAYS_ID = "default"
 
-class LocalTodaysCollectionRepository(
+class TodaysCollectionRepositoryImpl(
     private val todaysCollectionDao: TodaysCollectionDao
 ) : TodaysCollectionRepository {
 
@@ -26,7 +26,6 @@ class LocalTodaysCollectionRepository(
 
     override suspend fun getTodaysCollection(): Result<TodaysCollectionData> {
         return try {
-            Timber.i("getTodaysCollection")
             val entity = todaysCollectionDao.getLatest()
             if (entity == null || !isToday(entity.timestamp)) {
                 Result.Success(TodaysCollectionData(0L, 0L, 0L))
@@ -41,7 +40,6 @@ class LocalTodaysCollectionRepository(
 
     override suspend fun syncTodaysCollection(): Result<TodaysCollectionData> {
         return try {
-            Timber.i("syncTodaysCollection")
             val entity = todaysCollectionDao.getLatest()
             if (entity == null) {
                 Result.Success(TodaysCollectionData(0L, 0L, 0L))

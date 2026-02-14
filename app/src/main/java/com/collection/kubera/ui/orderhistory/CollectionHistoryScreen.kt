@@ -43,7 +43,6 @@ import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.states.CollectionHistoryUiState
 import com.collection.kubera.ui.theme.backgroundD
 import com.collection.kubera.ui.theme.onprimaryD
-import com.google.firebase.firestore.DocumentSnapshot
 import kotlinx.coroutines.flow.collectLatest
 import timber.log.Timber
 
@@ -63,7 +62,7 @@ fun CollectionHistoryScreen(
     val refreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
 
-    val userPagingItems: LazyPagingItems<DocumentSnapshot> = listFlow.collectAsLazyPagingItems()
+    val userPagingItems: LazyPagingItems<CollectionModel> = listFlow.collectAsLazyPagingItems()
 
     LaunchedEffect(Unit) {
         viewModel.init()
@@ -150,9 +149,8 @@ fun CollectionHistoryScreen(
             }
 
             items(userPagingItems.itemCount) { index ->
-                val item = userPagingItems[index]?.toObject(CollectionModel::class.java)
-                item?.let {
-                    CollectionItem(navController, it)
+                userPagingItems[index]?.let { item ->
+                    CollectionItem(navController, item)
                 }
             }
 

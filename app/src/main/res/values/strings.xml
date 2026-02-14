@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">kashflowclt</string>
+    <!-- For Google Sign-In: Add your Web client ID from Firebase Console > Project Settings > Your apps > Web app, or from Google Cloud Console OAuth 2.0 credentials -->
+    <string name="default_web_client_id" translatable="false">671993970845-YOUR_WEB_CLIENT_ID.apps.googleusercontent.com</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
     <string name="action_go">Go</string>
     <string name="filter">Filter</string>
     <string name="baking_title">Baking with Gemini</string>

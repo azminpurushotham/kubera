@@ -9,10 +9,10 @@ import androidx.paging.cachedIn
 import com.collection.kubera.data.Result
 import com.collection.kubera.data.TodaysCollectionData
 import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.data.Shop
 import com.collection.kubera.data.repository.ShopRepository
 import com.collection.kubera.data.repository.TodaysCollectionRepository
 import com.collection.kubera.states.HomeUiState
-import com.google.firebase.firestore.DocumentSnapshot
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -45,10 +45,10 @@ class ShopListViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<ShopListUiEvent>()
     val uiEvent: SharedFlow<ShopListUiEvent> = _uiEvent.asSharedFlow()
 
-    private val _listFlow = MutableStateFlow<Flow<PagingData<DocumentSnapshot>>>(
+    private val _listFlow = MutableStateFlow<Flow<PagingData<Shop>>>(
         shopRepository.getShopsPagingFlow().cachedIn(viewModelScope)
     )
-    val list: StateFlow<Flow<PagingData<DocumentSnapshot>>> = _listFlow.asStateFlow()
+    val list: StateFlow<Flow<PagingData<Shop>>> = _listFlow.asStateFlow()
 
     fun init() {
         Timber.d("init")

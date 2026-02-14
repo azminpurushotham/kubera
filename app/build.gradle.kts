@@ -13,13 +13,28 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.collection.kubera"
-        minSdk = 30
+        applicationId = "com.collection.management"
+        minSdk = 24
         targetSdk = 34
         versionCode = 1
         versionName = "1.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    flavorDimensions += "environment"
+
+    productFlavors {
+        create("local") {
+            dimension = "environment"
+            applicationIdSuffix = ".local"
+            versionNameSuffix = "-local"
+        }
+        create("cloud") {
+            dimension = "environment"
+            applicationIdSuffix = ".cloud"
+            versionNameSuffix = "-cloud"
+        }
     }
 
     buildTypes {
@@ -44,14 +59,10 @@ android {
     }
 
     applicationVariants.all {
+        val variant = this
         outputs.all {
-            val appName = rootProject.name
-            val versionName = versionName
-            val versionCode = versionCode
-            val flavor = flavorName
-
             (this as com.android.build.gradle.internal.api.BaseVariantOutputImpl).outputFileName =
-                "$appName-v$versionName($versionCode)-$flavor.apk"
+                "${rootProject.name}-v${variant.versionName}(${variant.versionCode})-${variant.flavorName}.apk"
         }
     }
 }
@@ -90,9 +101,14 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.coroutines.play.services)
     implementation(libs.play.services.base)
+    implementation(libs.play.services.auth)
 
     implementation(libs.navigation.compose)
     implementation(libs.androidx.room.common)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.room.paging)
+    kapt(libs.androidx.room.compiler)
     implementation(libs.androidx.paging)
     implementation(libs.csv)
 
