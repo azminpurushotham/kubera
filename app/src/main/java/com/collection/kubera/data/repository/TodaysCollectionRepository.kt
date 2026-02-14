@@ -13,6 +13,7 @@ import timber.log.Timber
 interface TodaysCollectionRepository {
     suspend fun getTodaysCollection(): Result<TodaysCollectionData>
     suspend fun syncTodaysCollection(): Result<TodaysCollectionData>
+    suspend fun updateOrInsertTodaysCollection(delta: Long, isCredit: Boolean): Result<Unit>
 }
 
 class TodaysCollectionRepositoryImpl(
@@ -86,6 +87,45 @@ class TodaysCollectionRepositoryImpl(
             }
         } catch (e: Exception) {
             Timber.e(e, "syncTodaysCollection failed")
+            Result.Error(e)
+        }
+    }
+
+    override suspend fun updateOrInsertTodaysCollection(delta: Long, isCredit: Boolean): Result<Unit> {
+        return try {
+            val querySnapshot = firestore.collection(TODAYS_COLLECTION).get().await()
+            val collections = querySnapshot.documents.mapNotNull { doc ->
+                doc.toObject(TodaysCollections::class.java)?.apply { id = doc.id }
+            }
+            if (collections.isEmpty()) {
+                val newDoc = TodaysCollections().apply {
+                    if (isCredit) {
+                        credit = delta
+                        balance = delta
+                    } else {
+                        debit = -delta
+                        balance = -delta
+                    }
+                }
+                firestore.collection(TODAYS_COLLECTION).add(newDoc).await()
+            } else {
+                val first = collections.first()
+                val balanceDelta = if (isCredit) delta else -delta
+                val prm = mutableMapOf<String, Any>(
+                    "balance" to (first.balance + balanceDelta)
+                )
+                if (isCredit) {
+                    prm["credit"] = first.credit + delta
+                } else {
+                    prm["debit"] = first.debit - delta
+                }
+                first.id?.let { docId ->
+                    firestore.collection(TODAYS_COLLECTION).document(docId).update(prm).await()
+                }
+            }
+            Result.Success(Unit)
+        } catch (e: Exception) {
+            Timber.e(e, "updateOrInsertTodaysCollection failed")
             Result.Error(e)
         }
     }

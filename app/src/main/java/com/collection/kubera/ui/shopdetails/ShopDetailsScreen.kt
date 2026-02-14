@@ -27,6 +27,7 @@ import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,8 +40,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.flow.collectLatest
 import com.collection.kubera.data.Shop
 import com.collection.kubera.states.ShopDetailUiState
 import com.collection.kubera.ui.AllDestinations.SHOP_COLLECTION_HISTORY
@@ -51,7 +53,6 @@ import com.collection.kubera.ui.theme.labelBackgroundD
 import com.collection.kubera.ui.theme.labelD
 import com.collection.kubera.ui.theme.onHintD
 import com.collection.kubera.ui.theme.red
-import com.collection.kubera.utils.PreferenceHelper
 import com.google.gson.Gson
 import kotlin.math.absoluteValue
 
@@ -63,7 +64,7 @@ fun ShopDetailsScreen(
     navController: NavHostController,
 ) {
     val context = LocalContext.current
-    val viewModel: ShopDetailsViewModel = viewModel()
+    val viewModel: ShopDetailsViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState(ShopDetailUiState.Initial)
     val shop by viewModel.shop.collectAsState()
     var selectedOption by remember { mutableStateOf("Credit") } // Current selected option
@@ -72,50 +73,26 @@ fun ShopDetailsScreen(
 
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
-    val pref = PreferenceHelper.getPrefs(context)
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is ShopDetailsUiEvent.ShowToast ->
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                is ShopDetailsUiEvent.PopBack ->
+                    navController.popBackStack()
+            }
+        }
+    }
 
     fun enableButton() {
         isEnabled = balance.isNotEmpty() && balance.toLong() > 0
     }
 
 
-    when (uiState) {
-        is ShopDetailUiState.Initial -> {
-            viewModel.setPref(pref)
-            model?.let { viewModel.setShop(it) }
-            id?.let { viewModel.getShopDetails(it) }
-        }
-
-        ShopDetailUiState.Loading -> {
-        }
-
-        is ShopDetailUiState.ShopDetailInit -> {
-
-        }
-
-        is ShopDetailUiState.ShopDetailSuccess -> {
-        }
-
-        is ShopDetailUiState.ShopDetailError -> {
-
-        }
-
-        is ShopDetailUiState.ShopDetailsPopBack -> {
-
-            if (viewModel.c==0) {
-                viewModel.c += 1
-                navController.popBackStack()
-            }
-        }
-
-        is ShopDetailUiState.ShopDetailToast -> {
-            Toast.makeText(
-                context,
-                (uiState as ShopDetailUiState.ShopDetailToast).outputText,
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-
+    LaunchedEffect(id, model) {
+        model?.let { viewModel.setShop(it) }
+        id?.let { viewModel.getShopDetails(it) }
     }
 
     if (showBottomSheet) {
