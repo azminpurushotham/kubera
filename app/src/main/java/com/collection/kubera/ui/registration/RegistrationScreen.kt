@@ -32,6 +32,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,31 +51,52 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.collection.kubera.data.User
 import com.collection.kubera.states.RegistrationUiState
 import com.collection.kubera.ui.login.LoginActivity
 import com.collection.kubera.ui.theme.KuberaTheme
 import com.collection.kubera.ui.theme.onHintD
 import com.collection.kubera.ui.updatecredentials.UpdateCredentialActivity
+import kotlinx.coroutines.flow.collectLatest
 
 @Preview
 @Composable
 fun RegistrationScreen(
-    viewModel: RegistrationViewModel = viewModel()
+    viewModel: RegistrationViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    var expanded by remember { mutableStateOf(false) } // Tracks whether the menu is open
-    var isEnabled by remember { mutableStateOf(false) } // Tracks whether the menu is open
-    var userName by remember { mutableStateOf("Select user") } // Tracks selected item
+    var expanded by remember { mutableStateOf(false) }
+    var isEnabled by remember { mutableStateOf(false) }
+    var userName by remember { mutableStateOf("Select user") }
+    var selectedUser by remember { mutableStateOf<User?>(null) }
+
     val users by viewModel.users.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
-    var selectedUser by remember { mutableStateOf<User?>(null) }
 
     var password by remember { mutableStateOf("") }
     var isErrorPassword by rememberSaveable { mutableStateOf(false) }
     val passwordCharacterLimit = 8
     var passwordVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.init()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is RegistrationUiEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
+                is RegistrationUiEvent.NavigateToUpdateCredentials -> {
+                    val intent = Intent(context, UpdateCredentialActivity::class.java)
+                    intent.putExtra("userCredentials", event.user)
+                    context.startActivity(intent)
+                }
+            }
+        }
+    }
 
     fun validatePassword(password: String) {
         isErrorPassword = password.length < passwordCharacterLimit
@@ -84,57 +106,25 @@ fun RegistrationScreen(
         isEnabled = !userName.contains("Select") && !isErrorPassword
     }
 
-    viewModel.getUsers()
-
     KuberaTheme {
-        Scaffold(/*topBar = {
-        TopAppBar(
-            title = { Text("Login") },
-            colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = MaterialTheme.colorScheme.onPrimary
-            )
-        )
-    },*/
+        Scaffold(
             content = { paddingValues ->
-                // Page content goes here
                 Column(
                     modifier = Modifier
                         .padding(paddingValues)
                         .padding(20.dp)
                         .fillMaxSize(),
-                    verticalArrangement = Arrangement.Center, // Vertically center items
-                    horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
-                    when(uiState){
-                       is RegistrationUiState.Initial -> {
-
-                        }
-                        RegistrationUiState.Loading->{
+                    when (uiState) {
+                        RegistrationUiState.Loading -> {
                             CircularProgressIndicator(
                                 modifier = Modifier.align(Alignment.CenterHorizontally),
                                 color = MaterialTheme.colorScheme.onPrimary,
                             )
                         }
-
-                        is RegistrationUiState.RegistrationInit -> {
-
-                        }
-                        is RegistrationUiState.RegistrationSuccess ->{
-                            val intent = Intent(context, UpdateCredentialActivity::class.java)
-                            intent.apply {
-                                putExtra("userCredentials",selectedUser)
-                            }
-                            context.startActivity(intent)
-                        }
-                        is RegistrationUiState.RegistrationError -> {
-                            Toast.makeText(
-                                context,
-                                (uiState as RegistrationUiState.RegistrationError).errorMessage,
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
+                        else -> { /* Idle / Initial */ }
                     }
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -145,9 +135,7 @@ fun RegistrationScreen(
                             .fillMaxWidth()
                             .height(50.dp),
                         shape = RoundedCornerShape(5.dp),
-                        onClick = {
-                            expanded = true
-                        },
+                        onClick = { expanded = true },
                         colors = ButtonDefaults.outlinedButtonColors(
                             containerColor = Color.Transparent,
                         ),
@@ -161,10 +149,10 @@ fun RegistrationScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         DropdownMenu(
-                            expanded = expanded, // Controls visibility
-                            onDismissRequest = { expanded = false }, // Close when clicking outside
-                            modifier = Modifier.fillMaxWidth(), // Make the dropdown full-width
-                            offset = DpOffset(x = 100.dp, y = 10.dp), // Adjust the menu position
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth(),
+                            offset = DpOffset(x = 100.dp, y = 10.dp),
                             containerColor = MaterialTheme.colorScheme.primary
                         ) {
                             users.forEach { user ->
@@ -174,11 +162,12 @@ fun RegistrationScreen(
                                         userName = user.username
                                         expanded = false
                                         selectedUser = user
-                                    })
+                                    }
+                                )
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(20.dp)) // Adds 16dp space
+                    Spacer(modifier = Modifier.height(20.dp))
                     OutlinedTextField(
                         value = password,
                         onValueChange = {
@@ -224,13 +213,13 @@ fun RegistrationScreen(
                     Spacer(modifier = Modifier.height(20.dp))
                     Button(
                         onClick = {
-                            viewModel.login(userName, password)
+                            viewModel.validateCredentials(userName, password)
                         },
                         shape = RoundedCornerShape(5.dp),
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = isEnabled, // Control button's enabled state
+                        enabled = isEnabled,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary, // Green when enabled, Gray when disabled
+                            containerColor = if (isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.tertiary,
                             contentColor = if (isEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
                         )
                     ) {
@@ -239,8 +228,7 @@ fun RegistrationScreen(
                     TextButton(
                         onClick = {
                             context.startActivity(Intent(context, LoginActivity::class.java))
-                            val currentActivity = context as? Activity
-                            currentActivity?.finish()
+                            (context as? Activity)?.finish()
                         },
                         modifier = Modifier.align(alignment = Alignment.End),
                     ) {
@@ -251,6 +239,3 @@ fun RegistrationScreen(
         )
     }
 }
-
-
-

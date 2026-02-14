@@ -3,6 +3,7 @@ package com.collection.kubera.ui.registration
 import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -16,6 +17,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowInsetsControllerCompat
 import com.collection.kubera.ui.theme.KuberaTheme
 
+@AndroidEntryPoint
 class RegistrationActivity : ComponentActivity() {
     @Composable
     fun StatusBarWithPlatformApi() {

@@ -4,10 +4,12 @@ import com.collection.kubera.data.Result
 import com.collection.kubera.data.USER_COLLECTION
 import com.collection.kubera.data.User
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber
 
 interface UserRepository {
+    suspend fun getAllUsers(): Result<List<User>>
     suspend fun getUserById(id: String): Result<User?>
     suspend fun login(username: String, password: String): Result<String?>
     suspend fun updateUserCredentials(userId: String, username: String, password: String): Result<Unit>
@@ -19,6 +21,23 @@ class UserRepositoryImpl(
 
     private val userCollection
         get() = firestore.collection(USER_COLLECTION)
+
+    override suspend fun getAllUsers(): Result<List<User>> {
+        return try {
+            Timber.d("getAllUsers")
+            val snapshot = userCollection
+                .orderBy("username", Query.Direction.ASCENDING)
+                .get()
+                .await()
+            val users = snapshot.documents.mapNotNull {
+                it.toObject(User::class.java)?.apply { id = it.id }
+            }
+            Result.Success(users)
+        } catch (e: Exception) {
+            Timber.e(e, "getAllUsers failed")
+            Result.Error(e)
+        }
+    }
 
     override suspend fun login(username: String, password: String): Result<String?> {
         return try {

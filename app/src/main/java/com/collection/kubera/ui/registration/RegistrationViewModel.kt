@@ -2,55 +2,76 @@ package com.collection.kubera.ui.registration
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.USER_COLLECTION
+import com.collection.kubera.data.Result
 import com.collection.kubera.data.User
+import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.data.repository.UserRepository
 import com.collection.kubera.states.RegistrationUiState
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import kotlinx.coroutines.Dispatchers
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import timber.log.Timber
+import javax.inject.Inject
 
-class RegistrationViewModel : ViewModel() {
-    private val _uiState: MutableStateFlow<RegistrationUiState> =
-        MutableStateFlow(RegistrationUiState.Initial)
-    val uiState: StateFlow<RegistrationUiState> =
-        _uiState.asStateFlow()
+@HiltViewModel
+class RegistrationViewModel @Inject constructor(
+    private val userRepository: UserRepository,
+    private val dispatcher: CoroutineDispatcher
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow<RegistrationUiState>(RegistrationUiState.Initial)
+    val uiState: StateFlow<RegistrationUiState> = _uiState.asStateFlow()
+
     private val _users = MutableStateFlow<List<User>>(emptyList())
-    val users: StateFlow<List<User>> get() = _users
-    private val firestore = FirebaseFirestore.getInstance()
+    val users: StateFlow<List<User>> = _users.asStateFlow()
 
-    fun getUsers() {
-        Timber.i("getUsers")
+    private val _uiEvent = MutableSharedFlow<RegistrationUiEvent>()
+    val uiEvent: SharedFlow<RegistrationUiEvent> = _uiEvent.asSharedFlow()
+
+    fun init() {
+        Timber.d("getUsers")
         _uiState.value = RegistrationUiState.Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            val snapshot = firestore.collection(USER_COLLECTION)
-                .orderBy("username", Query.Direction.ASCENDING)
-                .get().await()
-            _users.value = snapshot.documents.mapNotNull {
-                it.toObject(User::class.java)?.apply { id = it.id }
+        viewModelScope.launch(dispatcher) {
+            when (val result = userRepository.getAllUsers()) {
+                is Result.Success -> {
+                    _users.value = result.data
+                    _uiState.value = RegistrationUiState.Initial
+                }
+                is Result.Error -> {
+                    _uiEvent.tryEmit(
+                        RegistrationUiEvent.ShowError(
+                            result.exception.message ?: RepositoryConstants.DEFAULT_ERROR_MESSAGE
+                        )
+                    )
+                    _uiState.value = RegistrationUiState.Initial
+                }
             }
-            _uiState.value = RegistrationUiState.RegistrationSuccess("Success")
-            _uiState.value = RegistrationUiState.Initial
         }
     }
 
-    fun login(userName: String, password: String) {
-        Timber.i("login")
+    fun validateCredentials(userName: String, password: String) {
+        Timber.d("validateCredentials")
         _uiState.value = RegistrationUiState.Loading
-        users.value.indexOfFirst { (it.username.equals(userName) && it.password.equals(password)) }
-            .also { result ->
-                result.takeIf { result >= 0 }?.let {
-                    _uiState.value =
-                        RegistrationUiState.RegistrationSuccess("Successfully logged in")
-                } ?: run {
-                    _uiState.value =
-                        RegistrationUiState.RegistrationError("Please enter correct credentials")
-                }
+        viewModelScope.launch(dispatcher) {
+            val index = _users.value.indexOfFirst {
+                it.username == userName && it.password == password
             }
+            if (index >= 0) {
+                val user = _users.value[index]
+                _uiState.value = RegistrationUiState.Initial
+                _uiEvent.emit(RegistrationUiEvent.NavigateToUpdateCredentials(user))
+            } else {
+                _uiState.value = RegistrationUiState.Initial
+                _uiEvent.tryEmit(
+                    RegistrationUiEvent.ShowError(RepositoryConstants.LOGIN_CREDENTIALS_ERROR)
+                )
+            }
+        }
     }
 }
