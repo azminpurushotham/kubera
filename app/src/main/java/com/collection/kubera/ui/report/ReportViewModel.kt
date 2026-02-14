@@ -1,303 +1,281 @@
 package com.collection.kubera.ui.report
-import android.content.Context
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.BALANCE_COLLECTION
-import com.collection.kubera.data.BalanceAmount
 import com.collection.kubera.data.CollectionModel
-import com.collection.kubera.data.SHOP_COLLECTION
+import com.collection.kubera.data.Result
 import com.collection.kubera.data.Shop
-import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
+import com.collection.kubera.data.repository.BalanceRepository
+import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.data.repository.ReportFileHelper
+import com.collection.kubera.data.repository.ReportRepository
 import com.collection.kubera.states.ReportUiState
-import com.collection.kubera.utils.deleteOldFile
 import com.collection.kubera.utils.getCurrentDate
+import com.collection.kubera.utils.getTodayStartAndEndTime
 import com.collection.kubera.utils.toEndTimestamp
 import com.collection.kubera.utils.toTimestamp
 import com.collection.kubera.utils.writeCsvFile
 import com.fasterxml.jackson.dataformat.csv.CsvSchema
-import com.google.firebase.Timestamp
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import kotlinx.coroutines.Dispatchers
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import java.io.File
 import java.io.FileNotFoundException
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.util.Date
+import javax.inject.Inject
 
-class ReportViewModel(private val application: Context) : ViewModel() {
-    private val firestore = FirebaseFirestore.getInstance()
+@HiltViewModel
+class ReportViewModel @Inject constructor(
+    private val balanceRepository: BalanceRepository,
+    private val reportRepository: ReportRepository,
+    private val reportFileHelper: ReportFileHelper,
+    private val dispatcher: CoroutineDispatcher
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow<ReportUiState>(ReportUiState.Initial)
+    val uiState: StateFlow<ReportUiState> = _uiState.asStateFlow()
+
     private val _balance = MutableStateFlow<Long>(0)
-    val balance: StateFlow<Long> get() = _balance
-    init {
-        getBalance()
+    val balance: StateFlow<Long> = _balance.asStateFlow()
+
+    private val _uiEvent = MutableSharedFlow<ReportUiEvent>()
+    val uiEvent: SharedFlow<ReportUiEvent> = _uiEvent.asSharedFlow()
+
+    fun init() {
+        Timber.d("init")
+        syncBalance()
     }
 
-
-    internal fun getBalance() {
-        Timber.tag("getBalance").i("getBalance")
-        viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection(BALANCE_COLLECTION)
-                .get()
-                .addOnSuccessListener {
-                    val balanceAmounts = it.documents.mapNotNull { item ->
-                        item.toObject(BalanceAmount::class.java)
-                            ?.apply {
-                                id = item.id
-                            }
-                    }
-                    if (balanceAmounts.isNotEmpty() && balanceAmounts[0].balance > 0) {
-                        Timber.tag("getBalance").i(it.toString())
-                        _balance.value = balanceAmounts[0].balance
-                    } else {
-                        _balance.value = 0L
-                    }
-                    Timber.tag("_balance.value").i(_balance.value.toString())
-                }
-                .addOnFailureListener {
-                    Timber.e(it)
+    fun syncBalance() {
+        viewModelScope.launch(dispatcher) {
+            when (val result = balanceRepository.getBalance()) {
+                is Result.Success -> _balance.value = result.data
+                is Result.Error -> {
                     _balance.value = 0L
-                    Timber.tag("_balance.value").i(_balance.value.toString())
-                    _uiState.value =
-                        ReportUiState.ReportError(it.message ?: "Unable to show balance")
+                    _uiEvent.tryEmit(
+                        ReportUiEvent.ShowError(
+                            result.exception.message ?: RepositoryConstants.DEFAULT_ERROR_MESSAGE
+                        )
+                    )
                 }
-        }
-    }
-
-    fun todaysReport(path: String, date: String = getCurrentDate()
-    ) {
-        Timber.i("todaysReport")
-        _uiState.value = ReportUiState.Loading
-        val dir = File(path)
-        if (!dir.exists()) {
-            if(!dir.mkdirs()){
-                _uiState.value = ReportUiState.ReportError("Directories not created ${dir.name}")
             }
         }
-        val schema = getReportSchema()
-        val localDateTime = LocalDateTime.now()
-        val zoneId: ZoneId = ZoneId.systemDefault()
-        val startOfDay = localDateTime.toLocalDate().atStartOfDay(zoneId)
-        val endOfDay = localDateTime.toLocalDate().atTime(23, 59, 59).atZone(zoneId)
+    }
 
-        val startTimestamp = Timestamp(Date.from(startOfDay.toInstant()))
-        val endTimestamp = Timestamp(Date.from(endOfDay.toInstant()))
+    fun todaysReport(path: String, date: String = getCurrentDate()) {
+        Timber.d("todaysReport")
+        _uiState.value = ReportUiState.Loading
+        val dir = File(path)
+        if (!dir.exists() && !dir.mkdirs()) {
+            _uiEvent.tryEmit(
+                ReportUiEvent.ShowError(
+                    "${RepositoryConstants.REPORT_DIR_NOT_CREATED} ${dir.name}"
+                )
+            )
+            _uiState.value = ReportUiState.Initial
+            return
+        }
 
-        firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .whereGreaterThanOrEqualTo("timestamp", startTimestamp)
-            .whereLessThanOrEqualTo("timestamp", endTimestamp)
-            .get()
-            .addOnSuccessListener {
-                    val r = it.documents.mapNotNull { item ->
-                        try {
-                            item.toObject(CollectionModel::class.java)
-                                ?.apply {
-                                    id = item.id
-                                }
-                        } catch (e: Exception) {
-                            Timber.e(e)
-                        }
-                    }
-                    Timber.i(r.toString())
-                    if(r.isNotEmpty()){
+        val (startTimestamp, endTimestamp) = getTodayStartAndEndTime()
+
+        viewModelScope.launch(dispatcher) {
+            when (val result = reportRepository.getCollectionHistoryByDateRange(
+                startTimestamp,
+                endTimestamp
+            )) {
+                is Result.Success -> {
+                    val list = result.data
+                    if (list.isNotEmpty()) {
                         try {
                             writeCsvFile(
                                 fileName = "$date.csv",
                                 dir.absolutePath,
-                                list = r,
-                                schema = schema
+                                list = list,
+                                schema = getReportSchema()
                             )
-                            val message = "Today's $date report generated successfully"
-                            _uiState.value = ReportUiState.ReportSuccess(message)
-                            Timber.i(message)
+                            _uiEvent.tryEmit(
+                                ReportUiEvent.ShowSuccess("Today's $date report generated successfully")
+                            )
                         } catch (e: Exception) {
-                            val message = "Failed to create today's report $date ERROR $e"
-                            Timber.i(message)
-                            _uiState.value = ReportUiState.ReportError(message)
+                            _uiEvent.tryEmit(
+                                ReportUiEvent.ShowError("Failed to create today's report $date ERROR $e")
+                            )
                         }
-                    }else{
-                        val message = "No collection report for today $date"
-                        Timber.i(message)
-                        _uiState.value = ReportUiState.ReportError(message)
+                    } else {
+                        _uiEvent.tryEmit(
+                            ReportUiEvent.ShowError("No collection report for today $date")
+                        )
                     }
+                }
+                is Result.Error -> {
+                    _uiEvent.tryEmit(
+                        ReportUiEvent.ShowError(
+                            "No collection report for today $date ${result.exception.message}"
+                        )
+                    )
+                }
             }
-            .addOnFailureListener {e->
-                val message = "No collection report for today $date $e"
-                Timber.i(message)
-                _uiState.value = ReportUiState.ReportError(message)
-            }
+            _uiState.value = ReportUiState.Initial
+        }
     }
 
-
     fun generateReport(path: String, startDate: String, endDate: String) {
-        Timber.i("generateReport")
+        Timber.d("generateReport")
         _uiState.value = ReportUiState.Loading
         val fileName = "$startDate-$endDate.csv"
         val dir = File(path)
-        if (!dir.exists()) {
-            if(!dir.mkdirs()){
-                _uiState.value = ReportUiState.ReportError("Directories not created ${dir.name}")
-            }
+        if (!dir.exists() && !dir.mkdirs()) {
+            _uiEvent.tryEmit(
+                ReportUiEvent.ShowError(
+                    "${RepositoryConstants.REPORT_DIR_NOT_CREATED} ${dir.name}"
+                )
+            )
+            _uiState.value = ReportUiState.Initial
+            return
         }
-        val schema = getReportSchema()
+
         val startTimestamp = startDate.toTimestamp()
         val endTimestamp = endDate.toEndTimestamp()
-        Timber.tag("generateReportDATE").i("$startTimestamp - $endTimestamp")
 
-        if(startTimestamp!=null && endTimestamp!=null){
-            firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .whereGreaterThanOrEqualTo("timestamp", startTimestamp)
-                .whereLessThanOrEqualTo("timestamp", endTimestamp)
-                .get()
-                .addOnSuccessListener {
-                    val r = it.documents.mapNotNull { item ->
-                        item.toObject(CollectionModel::class.java)
-                            ?.apply {
-                                id = item.id
-                            }
-                    }
-                    if(r.isNotEmpty()){
-                        Timber.tag("generateReportSIZE").i(r.size.toString())
+        if (startTimestamp == null || endTimestamp == null) {
+            _uiEvent.tryEmit(ReportUiEvent.ShowError(RepositoryConstants.REPORT_INVALID_DATE_FORMAT))
+            _uiState.value = ReportUiState.Initial
+            return
+        }
+
+        viewModelScope.launch(dispatcher) {
+            when (val result = reportRepository.getCollectionHistoryByDateRange(
+                startTimestamp,
+                endTimestamp
+            )) {
+                is Result.Success -> {
+                    val list = result.data
+                    if (list.isNotEmpty()) {
                         try {
                             writeCsvFile(
                                 fileName = fileName,
                                 dir.absolutePath,
-                                list = r,
-                                schema = schema
+                                list = list,
+                                schema = getReportSchema()
                             )
-                            val message = "$fileName report generated successfully"
-                            Timber.i(message)
-                            _uiState.value = ReportUiState.ReportSuccess(message)
+                            _uiEvent.tryEmit(
+                                ReportUiEvent.ShowSuccess("$fileName report generated successfully")
+                            )
                         } catch (e: Exception) {
-                            val message = "Failed to create report for $fileName ERROR $e"
-                            Timber.i(message)
-                            _uiState.value = ReportUiState.ReportError(message)
+                            _uiEvent.tryEmit(
+                                ReportUiEvent.ShowError("Failed to create report for $fileName ERROR $e")
+                            )
                         }
-                    }else{
-                        val message = "No collection report for $fileName"
-                        Timber.i(message)
-                        _uiState.value = ReportUiState.ReportError(message)
+                    } else {
+                        _uiEvent.tryEmit(
+                            ReportUiEvent.ShowError("No collection report for $fileName")
+                        )
                     }
                 }
-                .addOnFailureListener {e->
-                    val message = "No collection report for $fileName $e"
-                    Timber.i(message)
-                    _uiState.value = ReportUiState.ReportError(message)
+                is Result.Error -> {
+                    _uiEvent.tryEmit(
+                        ReportUiEvent.ShowError(
+                            "No collection report for $fileName ${result.exception.message}"
+                        )
+                    )
                 }
-        }else{
-            val message = "Invalid date format"
-            Timber.i(message)
-            _uiState.value = ReportUiState.ReportError("Invalid date format")
+            }
+            _uiState.value = ReportUiState.Initial
         }
-
     }
 
-    fun generateAllshops(path: String) {
-        Timber.i("generateAllshops")
+    fun generateAllShops(path: String) {
+        Timber.d("generateAllShops")
         _uiState.value = ReportUiState.Loading
         val dir = File(path)
-        if (!dir.exists()) {
-            if(!dir.mkdirs()){
-                val message = "Directories not created ${dir.name}"
-                Timber.i(message)
-                _uiState.value = ReportUiState.ReportError(message)
-            }
+        if (!dir.exists() && !dir.mkdirs()) {
+            _uiEvent.tryEmit(
+                ReportUiEvent.ShowError(
+                    "${RepositoryConstants.REPORT_DIR_NOT_CREATED} ${dir.name}"
+                )
+            )
+            _uiState.value = ReportUiState.Initial
+            return
         }
-        val schema = getShopsSchema()
-        firestore.collection(SHOP_COLLECTION)
-            .get()
-            .addOnSuccessListener {
-                val r = it.documents.mapNotNull { item ->
-                    item.toObject(Shop::class.java)
-                        ?.apply {
-                            id = item.id
-                        }
-                }
-                if(r.isNotEmpty()){
-                    try {
-                        writeCsvFile(
-                            fileName = "AllShops.csv",
-                            dir.absolutePath,
-                            list = r,
-                            schema = schema
-                        )
-                        val message = "AllShops report generated successfully"
-                        Timber.i(message)
-                        _uiState.value = ReportUiState.ReportSuccess(message)
-                    }catch (e: FileNotFoundException) {
-                        Timber.tag("FileNotFoundException").i("DELETE -> ${dir.delete()}")
-                        if(!dir.delete()){
-                            deleteOldFile(context = application,dir.name)?.let {
-                                _uiState.value = ReportUiState.ReportError(it)
-                            }?:run {
-                                _uiState.value = ReportUiState.ReportError("Please DELETE old folder \"${dir.name}\" and try again")
+
+        viewModelScope.launch(dispatcher) {
+            when (val result = reportRepository.getAllShops()) {
+                is Result.Success -> {
+                    val list = result.data
+                    if (list.isNotEmpty()) {
+                        try {
+                            writeCsvFile(
+                                fileName = RepositoryConstants.REPORT_ALL_SHOPS_FILENAME,
+                                dir.absolutePath,
+                                list = list,
+                                schema = getShopsSchema()
+                            )
+                            _uiEvent.tryEmit(
+                                ReportUiEvent.ShowSuccess("AllShops report generated successfully")
+                            )
+                        } catch (e: FileNotFoundException) {
+                            Timber.tag("FileNotFoundException").d("DELETE -> ${dir.delete()}")
+                            if (!dir.delete()) {
+                                reportFileHelper.deleteOldFile(dir.name)?.let { msg ->
+                                    _uiEvent.tryEmit(ReportUiEvent.ShowError(msg))
+                                } ?: run {
+                                    _uiEvent.tryEmit(
+                                        ReportUiEvent.ShowError(
+                                            "Please DELETE old folder \"${dir.name}\" and try again"
+                                        )
+                                    )
+                                }
+                            } else {
+                                _uiEvent.tryEmit(ReportUiEvent.ShowError("Please try again"))
                             }
-                        }else{
-                            _uiState.value = ReportUiState.ReportError("Please try again")
+                        } catch (e: Exception) {
+                            _uiEvent.tryEmit(
+                                ReportUiEvent.ShowError(
+                                    "Failed to create AllShops report ERROR $e\n\nPlease DELETE old folder \"${dir.name}\" and try again"
+                                )
+                            )
                         }
-                    } catch (e: Exception) {
-                        _uiState.value = ReportUiState.ReportError("Failed to create AllShops report ERROR $e \n\n Please DELETE old folder \"${dir.name}\" and try again")
+                    } else {
+                        _uiEvent.tryEmit(
+                            ReportUiEvent.ShowError("Failed to create AllShops report")
+                        )
                     }
-                }else{
-                    _uiState.value = ReportUiState.ReportError("Failed to create AllShops report")
+                }
+                is Result.Error -> {
+                    _uiEvent.tryEmit(
+                        ReportUiEvent.ShowError("Failed to create AllShops report ${result.exception.message}")
+                    )
                 }
             }
-            .addOnFailureListener {e->
-                _uiState.value = ReportUiState.ReportError("Failed to create AllShops report $e")
-            }
+            _uiState.value = ReportUiState.Initial
+        }
     }
 
-    private fun getReportSchema(): CsvSchema {
-        return CsvSchema.builder()
-            .addColumn("Time")
-            .addColumn("ShopName")
-            .addColumn("FirstName")
-            .addColumn("LastName")
-            .addColumn("TransactionType")
-            .addColumn("Amount")
-            .addColumn("CollectedBy")
-//            .addColumn("Id")
-//            .addColumn("ShopId")
-//            .addColumn("ShopNameL")
-//            .addColumn("FirstNameL")
-//            .addColumn("LastNameL")
-//            .addColumn("PhoneNumber")
-//            .addColumn("SecondaryPhoneNumber")
-//            .addColumn("MailId")
-//            .addColumn("CollectedById")
-            .addColumn("stability")
-            .build()
-    }
+    private fun getReportSchema(): CsvSchema = CsvSchema.builder()
+        .addColumn("Time")
+        .addColumn("ShopName")
+        .addColumn("FirstName")
+        .addColumn("LastName")
+        .addColumn("TransactionType")
+        .addColumn("Amount")
+        .addColumn("CollectedBy")
+        .addColumn("stability")
+        .build()
 
-    private fun getShopsSchema(): CsvSchema {
-        return CsvSchema.builder()
-            .addColumn("ShopName")
-            .addColumn("FirstName")
-            .addColumn("LastName")
-            .addColumn("PhoneNumber")
-            .addColumn("Balance")
-            .addColumn("TransactionType")
-            .addColumn("Time")
-//            .addColumn("Location")
-//            .addColumn("Landmark")
-//            .addColumn("Id")
-//            .addColumn("ShopNameL")
-//            .addColumn("FirstNameL")
-//            .addColumn("LastNameL")
-//            .addColumn("SecondaryPhoneNumber")
-//            .addColumn("MailId")
-//            .addColumn("Status")
-            .addColumn("stability")
-            .build()
-    }
-
-    private val _uiState: MutableStateFlow<ReportUiState> =
-        MutableStateFlow(ReportUiState.Initial)
-    val uiState: MutableStateFlow<ReportUiState> = _uiState
+    private fun getShopsSchema(): CsvSchema = CsvSchema.builder()
+        .addColumn("ShopName")
+        .addColumn("FirstName")
+        .addColumn("LastName")
+        .addColumn("PhoneNumber")
+        .addColumn("Balance")
+        .addColumn("TransactionType")
+        .addColumn("Time")
+        .addColumn("stability")
+        .build()
 }

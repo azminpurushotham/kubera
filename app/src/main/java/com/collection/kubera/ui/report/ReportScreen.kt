@@ -1,6 +1,5 @@
 package com.collection.kubera.ui.report
 
-import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.ComponentActivity.RESULT_OK
@@ -41,7 +40,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,12 +48,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat.getString
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.collection.kubera.R
 import com.collection.kubera.states.ReportUiState
@@ -67,7 +63,7 @@ import com.collection.kubera.utils.dateFormate2
 import com.collection.kubera.utils.isTreeUriPersisted
 import com.collection.kubera.utils.path
 import com.collection.kubera.utils.showDialogueForFileLauncher
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.collectLatest
 import timber.log.Timber
 import java.time.LocalDate
 import java.util.Date
@@ -76,26 +72,21 @@ import java.util.Date
 @Composable
 fun ReportScreen(
     navController: NavHostController,
-    viewModel: ReportViewModel = viewModel(
-        factory = ViewModelFactory(LocalContext.current.applicationContext)
-    ),
+    viewModel: ReportViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val lifecycleState = remember { mutableStateOf(Lifecycle.Event.ON_CREATE) } // Initialize
+    var lifecycleState by remember { mutableStateOf(Lifecycle.Event.ON_CREATE) }
     val uiState by viewModel.uiState.collectAsState(ReportUiState.Initial)
     var isButtonEnabled by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
-    var message: String? = null
     var showDatePicker by remember { mutableStateOf(false) }
     val today = LocalDate.now()
     val datePickerState = rememberDateRangePickerState(
         selectableDates = object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                val s =
-                    LocalDate.ofEpochDay(utcTimeMillis / 86_400_000) // Convert millis to LocalDate
-                return !s.isAfter(today) // Allow only past & today, disable future dates
+                val s = LocalDate.ofEpochDay(utcTimeMillis / 86_400_000)
+                return !s.isAfter(today)
             }
         }
     )
@@ -105,13 +96,12 @@ fun ReportScreen(
     val openDocumentTreeLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        Timber.tag("registerForActivityResult").i(result.toString())
+        Timber.tag("registerForActivityResult").d(result.toString())
         if (result.resultCode == RESULT_OK) {
             val uri = result.data?.data
             if (uri != null) {
                 val takeFlags: Int = result.resultCode.and(
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
                 )
                 context.contentResolver.takePersistableUriPermission(uri, takeFlags)
                 createDirectory(uri, context)
@@ -121,38 +111,44 @@ fun ReportScreen(
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            lifecycleState.value = event // Update lifecycle state
+            lifecycleState = event
         }
-
         lifecycleOwner.lifecycle.addObserver(observer)
-
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 
+    LaunchedEffect(Unit) {
+        viewModel.init()
+    }
 
-    val isCreacted = lifecycleState.value == Lifecycle.Event.ON_CREATE
-    // Now you can use 'isResumed' to perform actions conditionally:
-    if (isCreacted) {
-        // Code to execute only when the Composable is resumed
-        LaunchedEffect(Unit) { // Use LaunchedEffect for side effects
-            Timber.i("Composable is created!")
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is ReportUiEvent.ShowError -> {
+                    snackbarHostState.showSnackbar(
+                        message = event.message,
+                        duration = SnackbarDuration.Long
+                    )
+                }
+                is ReportUiEvent.ShowSuccess -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    if (lifecycleState == Lifecycle.Event.ON_CREATE) {
+        LaunchedEffect(Unit) {
             if (!isTreeUriPersisted(context)) {
                 showDialogueForFileLauncher(context, openDocumentTreeLauncher)
             }
         }
-    } else if (lifecycleState.value == Lifecycle.Event.ON_PAUSE) {
-        // Code to execute when paused
-        Timber.i("Composable is paused!")
-    } else if (lifecycleState.value == Lifecycle.Event.ON_DESTROY) {
-        Timber.i("Composable is destroyed!")
     }
 
     when (uiState) {
-        ReportUiState.Initial -> {
-        }
-
+        ReportUiState.Initial -> { /* Idle */ }
         ReportUiState.Loading -> {
             Box(
                 contentAlignment = Alignment.Center,
@@ -162,36 +158,6 @@ fun ReportScreen(
                     color = MaterialTheme.colorScheme.onPrimary,
                 )
             }
-
-        }
-
-        is ReportUiState.ReportCompleted -> {
-
-        }
-
-        is ReportUiState.ReportError -> {
-            LaunchedEffect(Unit) {
-                scope.launch {
-                    message = (uiState as ReportUiState.ReportError).errorMessage
-                    Timber.e(message)
-                    snackbarHostState.showSnackbar(
-                        message = message!!,
-                        duration = SnackbarDuration.Long
-                    )
-                }
-            }
-        }
-
-        is ReportUiState.ReportInit -> {
-
-        }
-
-        is ReportUiState.ReportSuccess -> {
-            Toast.makeText(
-                context,
-                (uiState as ReportUiState.ReportSuccess).message,
-                Toast.LENGTH_SHORT
-            ).show()
         }
     }
 
@@ -208,12 +174,8 @@ fun ReportScreen(
                 endDate = datePickerState.selectedEndDateMillis?.let {
                     dateFormate2.format(Date(it))
                 }
-                if (startDate != null && endDate == null) {
-                    endDate = startDate
-                }
-                if (startDate == null && endDate != null) {
-                    startDate = endDate
-                }
+                if (startDate != null && endDate == null) endDate = startDate
+                if (startDate == null && endDate != null) startDate = endDate
                 showDatePicker = false
             },
             confirmButton = {
@@ -225,13 +187,9 @@ fun ReportScreen(
                     endDate = datePickerState.selectedEndDateMillis?.let {
                         dateFormate2.format(Date(it))
                     }
-                    if (startDate != null && endDate == null) {
-                        endDate = startDate
-                    }
-                    if (startDate == null && endDate != null) {
-                        startDate = endDate
-                    }
-                    Timber.tag("DATE").i("$startDate - $endDate")
+                    if (startDate != null && endDate == null) endDate = startDate
+                    if (startDate == null && endDate != null) startDate = endDate
+                    Timber.tag("DATE").d("$startDate - $endDate")
                     showDatePicker = false
                 }) {
                     Text("Confirm", color = primaryLightD)
@@ -264,8 +222,8 @@ fun ReportScreen(
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
             .fillMaxSize(),
-        verticalArrangement = Arrangement.Center, // Vertically center items
-        horizontalAlignment = Alignment.Start // Horizontally center items
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.Start
     ) {
         BalanceHeader(viewModel)
         Spacer(modifier = Modifier.height(10.dp))
@@ -290,12 +248,10 @@ fun ReportScreen(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(5.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
+                containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ),
-            onClick = {
-                showDatePicker = true
-            },
+            onClick = { showDatePicker = true },
             content = {
                 Text(
                     if (startDate != null && endDate != null) {
@@ -316,12 +272,7 @@ fun ReportScreen(
                     showDialogueForFileLauncher(context, openDocumentTreeLauncher)
                 } else {
                     viewModel.generateReport(
-                        "${path.absolutePath}/${
-                            getString(
-                                context,
-                                R.string.app_name
-                            )
-                        }/Collection",
+                        "${path.absolutePath}/${getString(context, R.string.app_name)}/Collection",
                         startDate!!,
                         endDate!!
                     )
@@ -329,9 +280,9 @@ fun ReportScreen(
             },
             shape = RoundedCornerShape(5.dp),
             modifier = Modifier.fillMaxWidth(),
-            enabled = isButtonEnabled, // Control button's enabled state
+            enabled = isButtonEnabled,
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (isButtonEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface, // Green when enabled, Gray when disabled
+                containerColor = if (isButtonEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
                 contentColor = if (isButtonEnabled) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.secondary
             )
         ) {
@@ -363,19 +314,14 @@ fun ReportScreen(
                     showDialogueForFileLauncher(context, openDocumentTreeLauncher)
                 } else {
                     viewModel.todaysReport(
-                        "${path.absolutePath}/${
-                            getString(
-                                context,
-                                R.string.app_name
-                            )
-                        }/Collection"
+                        "${path.absolutePath}/${getString(context, R.string.app_name)}/Collection"
                     )
                 }
             },
             shape = RoundedCornerShape(5.dp),
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
+                containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
@@ -406,20 +352,15 @@ fun ReportScreen(
                 if (!isTreeUriPersisted(context)) {
                     showDialogueForFileLauncher(context, openDocumentTreeLauncher)
                 } else {
-                    viewModel.generateAllshops(
-                        "${path.absolutePath}/${
-                            getString(
-                                context,
-                                R.string.app_name
-                            )
-                        }/Shops"
+                    viewModel.generateAllShops(
+                        "${path.absolutePath}/${getString(context, R.string.app_name)}/Shops"
                     )
                 }
             },
             shape = RoundedCornerShape(5.dp),
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary, // Green when enabled, Gray when disabled
+                containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
         ) {
@@ -431,6 +372,7 @@ fun ReportScreen(
             )
         }
     }
+
     SnackbarHost(
         hostState = snackbarHostState,
         snackbar = { snackbarData ->
@@ -439,21 +381,9 @@ fun ReportScreen(
                 contentColor = MaterialTheme.colorScheme.error,
                 containerColor = MaterialTheme.colorScheme.surface,
                 content = {
-                    Text(
-                        text = message ?: ""
-                    )
+                    Text(text = snackbarData.visuals.message)
                 }
             )
         }
     )
-}
-
-class ViewModelFactory(private val param: Context) : ViewModelProvider.Factory {
-    @Suppress("UNCHECKED_CAST")
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ReportViewModel::class.java)) {
-            return ReportViewModel(param) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
 }

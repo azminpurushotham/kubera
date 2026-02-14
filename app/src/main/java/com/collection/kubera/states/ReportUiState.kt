@@ -1,34 +1,10 @@
 package com.collection.kubera.states
 
 /**
- * A sealed hierarchy describing the state of the text generation.
+ * UI state for the Report screen.
+ * Success/error messages are handled via ReportUiEvent (SharedFlow) to avoid re-show on config change.
  */
-sealed interface ReportUiState{
-    /**
-     * Empty state when the screen is first shown
-     */
+sealed interface ReportUiState {
     object Initial : ReportUiState
-
-    /**
-     * Still loading
-     */
     object Loading : ReportUiState
-
-    /**
-     * Text has been generated
-     */
-    data class ReportInit(val message: String) : ReportUiState
-    /**
-     * Text has been generated
-     */
-    data class ReportSuccess(val message: String) : ReportUiState
-
-    /**
-     * There was an error generating text
-     */
-    data class ReportError(val errorMessage: String) : ReportUiState
-    /**
-     * There was an error generating text
-     */
-    data class ReportCompleted(val message: String) : ReportUiState
 }
