@@ -19,6 +19,7 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,7 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
@@ -43,16 +44,18 @@ import com.collection.kubera.states.CollectionHistoryUiState
 import com.collection.kubera.ui.theme.backgroundD
 import com.collection.kubera.ui.theme.onprimaryD
 import com.google.firebase.firestore.DocumentSnapshot
+import kotlinx.coroutines.flow.collectLatest
 import timber.log.Timber
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CollectionHistoryScreen(
     navController: NavHostController,
-    viewModel: CollectionViewModel = viewModel()
+    viewModel: CollectionViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    val listFlow by viewModel.list.collectAsState()
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState()
@@ -60,21 +63,35 @@ fun CollectionHistoryScreen(
     val refreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
 
-    val list = viewModel.list.collectAsLazyPagingItems()
-    val userPagingItems: LazyPagingItems<DocumentSnapshot> = viewModel.list.collectAsLazyPagingItems()
+    val userPagingItems: LazyPagingItems<DocumentSnapshot> = listFlow.collectAsLazyPagingItems()
 
-    val onRefresh: () -> Unit = {
+    LaunchedEffect(Unit) {
+        viewModel.init()
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.uiEvent.collectLatest { event ->
+            when (event) {
+                is CollectionHistoryUiEvent.ShowError -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
+
+    val onRefresh = {
         isRefreshing = true
-        viewModel.getSwipeShopsCollectionHistory()
-//        viewModel.getBalance()
-        viewModel.getTodaysCollection()
+        viewModel.onRefresh()
+    }
+
+    LaunchedEffect(userPagingItems.loadState.refresh) {
+        if (userPagingItems.loadState.refresh !is LoadState.Loading) {
+            isRefreshing = false
+        }
     }
 
     when (uiState) {
-        is CollectionHistoryUiState.Initial -> {
-            viewModel.init()
-        }
-
+        is CollectionHistoryUiState.Initial -> { /* triggers init via LaunchedEffect */ }
         CollectionHistoryUiState.Loading -> {
             Box(
                 contentAlignment = Alignment.Center,
@@ -85,29 +102,11 @@ fun CollectionHistoryScreen(
                 )
             }
         }
-
-        is CollectionHistoryUiState.CollectionHistoryUiStateInit -> {
-
-        }
-
-        is CollectionHistoryUiState.CollectionHistoryUiStateSuccess -> {
-            isRefreshing = false
-            Timber.i("HomeSuccess")
-        }
-
-        is CollectionHistoryUiState.CollectionHistoryUiStateError -> {
-            Toast.makeText(
-                context,
-                (uiState as CollectionHistoryUiState.CollectionHistoryUiStateError).errorMessage,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-
-        is CollectionHistoryUiState.Refreshing -> {
-            isRefreshing = true
-        }
+        is CollectionHistoryUiState.CollectionHistoryUiStateInit,
+        is CollectionHistoryUiState.CollectionHistoryUiStateSuccess -> { /* isRefreshing cleared by loadState */ }
+        is CollectionHistoryUiState.CollectionHistoryUiStateError -> { /* errors via uiEvent */ }
+        is CollectionHistoryUiState.Refreshing -> isRefreshing = true
     }
-
 
     if (showBottomSheet) {
         ShowCollectionSort(
@@ -124,11 +123,9 @@ fun CollectionHistoryScreen(
         onRefresh = onRefresh,
     ) {
         LazyColumn(
-            modifier = Modifier
-//                .verticalScroll(rememberScrollState())
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Top, // Vertically center items
-            horizontalAlignment = Alignment.CenterHorizontally // Horizontally center items
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             item {
                 Column {
@@ -137,16 +134,15 @@ fun CollectionHistoryScreen(
                         onClick = {
                             showBottomSheet = true
                         },
-                        modifier = Modifier
-                            .align(Alignment.End)
+                        modifier = Modifier.align(Alignment.End)
                     ) {
                         Image(
-                            painter = painterResource(id = R.drawable.baseline_filter_list_24), // Replace with your drawable
+                            painter = painterResource(id = R.drawable.baseline_filter_list_24),
                             contentDescription = stringResource(R.string.filter),
                             alignment = Alignment.CenterEnd,
-                            contentScale = ContentScale.Crop, // Adjust image scaling
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier.size(30.dp),
-                            colorFilter = ColorFilter.tint(onprimaryD) // Optional color filter
+                            colorFilter = ColorFilter.tint(onprimaryD)
                         )
                     }
                     BalanceHeader(viewModel)
@@ -156,38 +152,30 @@ fun CollectionHistoryScreen(
             items(userPagingItems.itemCount) { index ->
                 val item = userPagingItems[index]?.toObject(CollectionModel::class.java)
                 item?.let {
-                    CollectionItem(navController, item)
+                    CollectionItem(navController, it)
                 }
             }
 
-            // Show Loader at the Bottom During Load More
             item {
-                if (userPagingItems.loadState.refresh is LoadState.Loading) {
-                    Timber.i("loadState.refresh")
-                    CircularProgressIndicator(
+                when (val refreshLoadState = userPagingItems.loadState.refresh) {
+                    is LoadState.Loading -> CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.padding(10.dp)
                     )
-                }
-               else if (userPagingItems.loadState.append is LoadState.Loading) {
-                    Timber.i("loadState.append")
-                    CircularProgressIndicator(
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.padding(10.dp)
+                    is LoadState.Error -> Text(
+                        text = "Error: ${refreshLoadState.error.localizedMessage}",
+                        color = MaterialTheme.colorScheme.error
                     )
-                }
-               else if (userPagingItems.loadState.refresh is LoadState.Error) {
-                    Timber.i("loadState.Error")
-                    val e = list.loadState.refresh as LoadState.Error
-                    Text("Error: ${e.error.localizedMessage}", color = MaterialTheme.colorScheme.error)
+                    else -> when {
+                        userPagingItems.loadState.append is LoadState.Loading ->
+                            CircularProgressIndicator(
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.padding(10.dp)
+                            )
+                        else -> { /* Idle */ }
+                    }
                 }
             }
         }
     }
 }
-
-
-
-
-
-

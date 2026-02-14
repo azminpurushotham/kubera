@@ -6,4 +6,6 @@ object RepositoryConstants {
     const val SEARCH_DEBOUNCE_MS = 300L
 
     const val DEFAULT_ERROR_MESSAGE = "Something went wrong. Please refresh the page."
+
+    const val TRANSACTION_HISTORY_PAGE_SIZE = 10
 }

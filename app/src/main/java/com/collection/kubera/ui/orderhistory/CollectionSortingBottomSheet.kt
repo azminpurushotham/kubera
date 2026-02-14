@@ -27,6 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.collection.kubera.R
+import com.collection.kubera.data.repository.TransactionSortType
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.onprimaryD
 import timber.log.Timber
@@ -73,7 +74,7 @@ internal fun ShowCollectionSort(
                     Spacer(modifier = Modifier.weight(1f)) // Spacer to fill the space
                     Row {
                         Button(onClick = {
-                            viewModel.getCollectionHistory("UAZ")
+                            viewModel.getCollectionHistory(TransactionSortType.USER_NAME_ASC)
                         }) {
                             Text(
                                 "A - Z",
@@ -84,7 +85,7 @@ internal fun ShowCollectionSort(
                         Spacer(modifier = Modifier.width(60.dp))
                         Button(
                             onClick = {
-                                viewModel.getCollectionHistory("UZA")
+                                viewModel.getCollectionHistory(TransactionSortType.USER_NAME_DESC)
                             }) {
                             Text(
                                 "Z - A",
@@ -103,7 +104,7 @@ internal fun ShowCollectionSort(
                     )
                     Spacer(modifier = Modifier.weight(1f)) // Spacer to fill the space
                     Button(onClick = {
-                        viewModel.getCollectionHistory("SAZ")
+                        viewModel.getCollectionHistory(TransactionSortType.SHOP_NAME_ASC)
                     }) {
                         Text(
                             "A - Z",
@@ -114,7 +115,7 @@ internal fun ShowCollectionSort(
                     Spacer(modifier = Modifier.width(60.dp))
                     Button(
                         onClick = {
-                            viewModel.getCollectionHistory("SZA")
+                            viewModel.getCollectionHistory(TransactionSortType.SHOP_NAME_DESC)
                         }) {
                         Text(
                             "Z - A",
@@ -139,7 +140,7 @@ internal fun ShowCollectionSort(
                     Spacer(modifier = Modifier.weight(1f)) // Spacer to fill the space
                     Button(
                         onClick = {
-                            viewModel.getCollectionHistory("ASC")
+                            viewModel.getCollectionHistory(TransactionSortType.TIMESTAMP_ASC)
                         }) {
                         Image(
                             painter = painterResource(id = R.drawable.baseline_arrow_upward_24), // Replace with your drawable
@@ -151,7 +152,7 @@ internal fun ShowCollectionSort(
                     }
                     Spacer(modifier = Modifier.width(60.dp))
                     Button(onClick = {
-                        viewModel.getCollectionHistory("DSC")
+                        viewModel.getCollectionHistory(TransactionSortType.TIMESTAMP_DESC)
                     }) {
                         Image(
                             modifier = Modifier.rotate(180f),

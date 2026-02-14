@@ -2,150 +2,98 @@ package com.collection.kubera.ui.orderhistory
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import com.collection.kubera.data.Shop
-import com.collection.kubera.data.TODAYS_COLLECTION
-import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
-import com.collection.kubera.data.TodaysCollections
+import androidx.paging.cachedIn
+import com.collection.kubera.data.Result
+import com.collection.kubera.data.TodaysCollectionData
+import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.data.repository.TodaysCollectionRepository
+import com.collection.kubera.data.repository.TransactionHistoryRepository
+import com.collection.kubera.data.repository.TransactionSortType
 import com.collection.kubera.states.CollectionHistoryUiState
-import com.collection.kubera.utils.FirestorePagingSource
 import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
-import kotlinx.coroutines.Dispatchers
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
-class CollectionViewModel : ViewModel() {
-    private val _uiState: MutableStateFlow<CollectionHistoryUiState> =
-        MutableStateFlow(CollectionHistoryUiState.Initial)
+@HiltViewModel
+class CollectionViewModel @Inject constructor(
+    private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val todaysCollectionRepository: TodaysCollectionRepository,
+    private val dispatcher: CoroutineDispatcher
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow<CollectionHistoryUiState>(CollectionHistoryUiState.Initial)
     val uiState: StateFlow<CollectionHistoryUiState> = _uiState.asStateFlow()
-    private val _balance = MutableStateFlow<Long>(0)
-    val balance: StateFlow<Long> get() = _balance
-    private val firestore = FirebaseFirestore.getInstance()
-    private val _shop = MutableStateFlow<Shop?>(null)
-    val shop: StateFlow<Shop?> get() = _shop
-    private val _todaysCollection = MutableStateFlow(0L)
-    val todaysCollection: StateFlow<Long> get() = _todaysCollection
-    private val _todaysCredit = MutableStateFlow(0L)
-    val todaysCredit: StateFlow<Long> get() = _todaysCredit
-    private val _todaysDebit = MutableStateFlow(0L)
-    val todaysDebit: StateFlow<Long> get() = _todaysDebit
-    val BASE_QUERY by lazy {
-        firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-    }
 
-    private fun createPager(q: Query): Pager<Query, DocumentSnapshot> {
-        return Pager(
-            config = PagingConfig(
-                pageSize = 10,
-                enablePlaceholders = false
-            ),
-            pagingSourceFactory = {
-                FirestorePagingSource(
-                    query = q,
-                )
-            }
-        )
-    }
+    private val _todaysCollection = MutableStateFlow(TodaysCollectionData(0L, 0L, 0L))
+    val todaysCollection: StateFlow<TodaysCollectionData> = _todaysCollection.asStateFlow()
 
-    var list: Flow<PagingData<DocumentSnapshot>> = createPager(BASE_QUERY).flow
+    private val _uiEvent = MutableSharedFlow<CollectionHistoryUiEvent>()
+    val uiEvent: SharedFlow<CollectionHistoryUiEvent> = _uiEvent.asSharedFlow()
+
+    private var currentSortType = TransactionSortType.TIMESTAMP_DESC
+
+    private val _listFlow = MutableStateFlow<Flow<PagingData<DocumentSnapshot>>>(
+        transactionHistoryRepository
+            .getTransactionHistoryPagingFlow(currentSortType)
+            .cachedIn(viewModelScope)
+    )
+    val list: StateFlow<Flow<PagingData<DocumentSnapshot>>> = _listFlow.asStateFlow()
 
     fun init() {
-//        getCollectionHistory()
-//        getBalance()
-        Timber.i("init")
-        getTodaysCollection()
+        Timber.d("init")
+        syncTodaysCollection()
     }
 
-    fun getCollectionHistory(type: String? = null) {
-        Timber.i("getCollectionHistory")
-        Timber.i("type -> $type")
-        viewModelScope.launch(Dispatchers.IO) {
-            val query: Query
-            when (type) {
-                "ASC" -> {
-                    query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                        .orderBy("timestamp", Query.Direction.ASCENDING)
-                }
+    fun onRefresh() {
+        Timber.d("onRefresh")
+        refreshTransactionHistory()
+        syncTodaysCollection()
+    }
 
-                "DESC" -> {
-                    query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                        .orderBy("timestamp", Query.Direction.DESCENDING)
-                }
+    fun getCollectionHistory(sortType: TransactionSortType) {
+        Timber.d("getCollectionHistory sortType=${sortType.code}")
+        currentSortType = sortType
+        viewModelScope.launch(dispatcher) {
+            _listFlow.value = transactionHistoryRepository
+                .getTransactionHistoryPagingFlow(sortType)
+                .cachedIn(viewModelScope)
+        }
+    }
 
-                "SAZ" -> {
-                    query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                        .orderBy("s_shopName", Query.Direction.ASCENDING)
+    private fun syncTodaysCollection() {
+        viewModelScope.launch(dispatcher) {
+            when (val result = todaysCollectionRepository.syncTodaysCollection()) {
+                is Result.Success -> {
+                    _todaysCollection.value = result.data
                 }
-
-                "SZA" -> {
-                    query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                        .orderBy("s_shopName", Query.Direction.DESCENDING)
-                }
-
-                "UAZ" -> {
-                    query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                        .orderBy("s_firstName", Query.Direction.ASCENDING)
-                }
-
-                "UZA" -> {
-                    query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                        .orderBy("s_firstName", Query.Direction.DESCENDING)
-                }
-
-                else -> {
-                    query = firestore.collection(TRANSECTION_HISTORY_COLLECTION)
-                        .orderBy("timestamp", Query.Direction.DESCENDING)
+                is Result.Error -> {
+                    _todaysCollection.value = TodaysCollectionData(0L, 0L, 0L)
+                    _uiEvent.emit(
+                        CollectionHistoryUiEvent.ShowError(
+                            result.exception.message
+                                ?: RepositoryConstants.DEFAULT_ERROR_MESSAGE
+                        )
+                    )
                 }
             }
-            Timber.i(query.toString())
-            list = createPager(q = query).flow
         }
     }
 
-    fun getSwipeShopsCollectionHistory() {
-        Timber.i("getSwipeShopsCollectionHistory")
-        _uiState.value = CollectionHistoryUiState.Refreshing
-        list = createPager(q = BASE_QUERY).flow
+    private fun refreshTransactionHistory() {
+        Timber.d("refreshTransactionHistory")
+        _listFlow.value = transactionHistoryRepository
+            .getTransactionHistoryPagingFlow(currentSortType)
+            .cachedIn(viewModelScope)
     }
-
-
-    internal fun getTodaysCollection() {
-        Timber.i("getTodaysCollection")
-        viewModelScope.launch(Dispatchers.IO) {
-            firestore.collection(TODAYS_COLLECTION)
-                .get()
-                .addOnSuccessListener { querySnapshot ->
-                    querySnapshot.documents.mapNotNull {
-                        it.toObject(TodaysCollections::class.java)
-                            ?.apply {
-                                Timber.tag("addOnSuccessListener").i(it.id)
-                                id = it.id
-                            }
-                    }.also {
-                        if (it.isNotEmpty()) {
-                            _todaysCollection.value = it[0].balance
-                            _todaysCredit.value = it[0].credit
-                            _todaysDebit.value = it[0].debit
-                            Timber.tag("addOnSuccessListener").i("_todaysCollection.value -> ${_todaysCollection.value} _todaysCredit.value -> ${_todaysCredit.value} _todaysDebit.value -> ${_todaysDebit.value}")
-                        }
-                    }
-                }
-                .addOnFailureListener {
-                    val error = it.message ?: "Something went wrong,Please refresh the page"
-                    _todaysCollection.value = 0L
-                    _uiState.value = CollectionHistoryUiState.CollectionHistoryUiStateError(error)
-                    Timber.tag("addOnFailureListener").i(error)
-                }
-        }
-    }
-
 }
