@@ -1,23 +1,36 @@
 package com.collection.kubera.ui.landing
 
-import android.content.SharedPreferences
 import androidx.lifecycle.ViewModel
-import com.collection.kubera.states.UiState
-import com.collection.kubera.utils.ISLOGGEDIN
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import androidx.lifecycle.viewModelScope
+import com.collection.kubera.data.repository.UserPreferencesRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.launch
 import timber.log.Timber
+import javax.inject.Inject
 
-class LandingViewModel : ViewModel() {
-    private val _uiState: MutableStateFlow<UiState> =
-        MutableStateFlow(UiState.Initial)
-    val uiState: StateFlow<UiState> =
-        _uiState.asStateFlow()
+@HiltViewModel
+class LandingViewModel @Inject constructor(
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val dispatcher: CoroutineDispatcher
+) : ViewModel() {
 
+    private val _uiEvent = MutableSharedFlow<LandingUiEvent>()
+    val uiEvent: SharedFlow<LandingUiEvent> = _uiEvent.asSharedFlow()
 
-    fun checkLoginStatus(pref: SharedPreferences): Boolean {
-        Timber.i("checkLoginStatus")
-       return pref.getBoolean(ISLOGGEDIN, false)
+    fun init() {
+        Timber.d("init - checkLoginStatus")
+        viewModelScope.launch(dispatcher) {
+            val isLoggedIn = userPreferencesRepository.isLoggedIn()
+            Timber.d("isLoggedIn -> $isLoggedIn")
+            if (isLoggedIn) {
+                _uiEvent.emit(LandingUiEvent.NavigateToMain)
+            } else {
+                _uiEvent.emit(LandingUiEvent.NavigateToLogin)
+            }
+        }
     }
 }

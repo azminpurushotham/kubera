@@ -18,6 +18,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
 
     override fun getUserId(): String = prefs.getString(USER_ID, "") ?: ""
     override fun getUserName(): String = prefs.getString(USER_NAME, "") ?: ""
+    override fun isLoggedIn(): Boolean = prefs.getBoolean(ISLOGGEDIN, false)
 
     override fun saveLoginState(userId: String, userName: String, password: String) {
         prefs[USER_ID] = userId

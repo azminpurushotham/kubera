@@ -2,6 +2,7 @@ package com.collection.kubera.ui.landing
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -11,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import com.collection.kubera.ui.theme.KuberaTheme
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
+@AndroidEntryPoint
 class LandingActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
