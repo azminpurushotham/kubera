@@ -11,17 +11,17 @@ import com.collection.kubera.data.local.entity.UserEntity
 interface UserDao {
 
     @Query("SELECT * FROM user ORDER BY username ASC")
-    suspend fun getAll(): List<UserEntity>
+    fun getAll(): List<UserEntity>
 
     @Query("SELECT * FROM user WHERE id = :id")
-    suspend fun getById(id: String): UserEntity?
+    fun getById(id: String): List<UserEntity>
 
     @Query("SELECT * FROM user WHERE username = :username AND password = :password LIMIT 1")
-    suspend fun login(username: String, password: String): UserEntity?
+    fun login(username: String, password: String): List<UserEntity>
 
     @Query("UPDATE user SET username = :username, password = :password WHERE id = :userId")
-    suspend fun updateCredentials(userId: String, username: String, password: String)
+    fun updateCredentials(userId: String, username: String, password: String)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(entity: UserEntity)
+    fun insert(entity: UserEntity)
 }

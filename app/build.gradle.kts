@@ -25,10 +25,10 @@ android {
     flavorDimensions += "environment"
 
     productFlavors {
-        create("local") {
+        create("genaral") {
             dimension = "environment"
-            applicationIdSuffix = ".local"
-            versionNameSuffix = "-local"
+            applicationIdSuffix = ".genaral"
+            versionNameSuffix = "-genaral"
         }
         create("cloud") {
             dimension = "environment"

@@ -9,8 +9,10 @@ import com.collection.kubera.data.Shop
 import com.collection.kubera.data.local.dao.ShopDao
 import com.collection.kubera.data.local.mapper.toShop
 import com.collection.kubera.data.local.mapper.toShopEntity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.UUID
 
@@ -39,9 +41,9 @@ class ShopRepositoryImpl(
         ).flow.map { pagingData -> pagingData.map { it.toShop() } }
     }
 
-    override suspend fun getShopById(id: String): Result<Shop?> {
-        return try {
-            val entity = shopDao.getById(id)
+    override suspend fun getShopById(id: String): Result<Shop?> = withContext(Dispatchers.IO) {
+        try {
+            val entity = shopDao.getById(id).firstOrNull()
             Result.Success(entity?.toShop())
         } catch (e: Exception) {
             Timber.e(e, "getShopById failed")
@@ -49,8 +51,8 @@ class ShopRepositoryImpl(
         }
     }
 
-    override suspend fun addShop(shop: Shop): Result<Shop> {
-        return try {
+    override suspend fun addShop(shop: Shop): Result<Shop> = withContext(Dispatchers.IO) {
+        try {
             val id = shop.id.ifEmpty { UUID.randomUUID().toString() }
             shop.id = id
             shopDao.insert(shop.toShopEntity())
@@ -61,16 +63,16 @@ class ShopRepositoryImpl(
         }
     }
 
-    override suspend fun updateShop(shopId: String, updates: Map<String, Any>): Result<Unit> {
-        return try {
-            val entity = shopDao.getById(shopId) ?: return Result.Error(Exception("Shop not found"))
+    override suspend fun updateShop(shopId: String, updates: Map<String, Any>): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
+            val entity = shopDao.getById(shopId).firstOrNull() ?: return@withContext Result.Error(Exception("Shop not found"))
             val updated = entity.copy(
                 shopName = updates["shopName"] as? String ?: entity.shopName,
                 firstName = updates["firstName"] as? String ?: entity.firstName,
                 lastName = updates["lastName"] as? String ?: entity.lastName,
                 phoneNumber = updates["phoneNumber"] as? String ?: entity.phoneNumber,
                 location = updates["location"] as? String ?: entity.location,
-                balance = (updates["balance"] as? Number)?.longValue() ?: entity.balance,
+                balance = (updates["balance"] as? Number)?.toLong() ?: entity.balance,
             )
             shopDao.update(updated)
             Result.Success(Unit)
@@ -80,8 +82,8 @@ class ShopRepositoryImpl(
         }
     }
 
-    override suspend fun updateShopBalance(id: String, balance: Long): Result<Unit> {
-        return try {
+    override suspend fun updateShopBalance(id: String, balance: Long): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
             shopDao.updateBalance(id, balance)
             Result.Success(Unit)
         } catch (e: Exception) {

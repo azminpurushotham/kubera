@@ -18,17 +18,17 @@ interface ShopDao {
     fun getShopsSearchPagingSource(query: String): PagingSource<Int, ShopEntity>
 
     @Query("SELECT * FROM shop WHERE id = :id")
-    suspend fun getById(id: String): ShopEntity?
+    fun getById(id: String): List<ShopEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(shop: ShopEntity)
+    fun insert(shop: ShopEntity)
 
     @Update
-    suspend fun update(shop: ShopEntity)
+    fun update(shop: ShopEntity)
 
     @Query("UPDATE shop SET balance = :balance WHERE id = :id")
-    suspend fun updateBalance(id: String, balance: Long)
+    fun updateBalance(id: String, balance: Long)
 
     @Query("SELECT * FROM shop ORDER BY s_firstName ASC")
-    suspend fun getAllShops(): List<ShopEntity>
+    fun getAllShops(): List<ShopEntity>
 }

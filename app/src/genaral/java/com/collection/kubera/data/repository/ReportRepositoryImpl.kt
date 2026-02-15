@@ -8,6 +8,8 @@ import com.collection.kubera.data.local.dao.ShopDao
 import com.collection.kubera.data.local.mapper.toCollectionModel
 import com.collection.kubera.data.local.mapper.toShop
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 
 class ReportRepositoryImpl(
@@ -18,8 +20,8 @@ class ReportRepositoryImpl(
     override suspend fun getCollectionHistoryByDateRange(
         startTimestamp: Timestamp,
         endTimestamp: Timestamp
-    ): Result<List<CollectionModel>> {
-        return try {
+    ): Result<List<CollectionModel>> = withContext(Dispatchers.IO) {
+        try {
             val start = startTimestamp.toDate().time
             val end = endTimestamp.toDate().time
             val entities = collectionHistoryDao.getByDateRange(start, end)
@@ -30,8 +32,8 @@ class ReportRepositoryImpl(
         }
     }
 
-    override suspend fun getAllShops(): Result<List<Shop>> {
-        return try {
+    override suspend fun getAllShops(): Result<List<Shop>> = withContext(Dispatchers.IO) {
+        try {
             val entities = shopDao.getAllShops()
             Result.Success(entities.map { it.toShop() })
         } catch (e: Exception) {

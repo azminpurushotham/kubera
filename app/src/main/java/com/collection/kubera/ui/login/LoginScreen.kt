@@ -212,7 +212,7 @@ fun LoginScreen(
                 }
                 val webClientId = stringResource(R.string.default_web_client_id)
                 val googleSignInIntent: Intent? = remember(webClientId) {
-                    viewModel.getGoogleSignInIntent(webClientId)
+                    if (webClientId.isNotBlank()) viewModel.getGoogleSignInIntent(webClientId) else null
                 }
                 if (googleSignInIntent != null && onLaunchGoogleSignIn != null) {
                     Spacer(modifier = Modifier.height(12.dp))

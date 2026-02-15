@@ -59,5 +59,5 @@ object CloudDataModule {
 
     @Provides
     @Singleton
-    fun provideGoogleAuthRepository(impl: GoogleAuthRepositoryImpl): GoogleAuthRepository = impl
+    fun provideGoogleAuthRepository(): GoogleAuthRepository = GoogleAuthRepositoryImpl()
 }

@@ -68,5 +68,5 @@ object LocalDataModule {
 
     @Provides
     @Singleton
-    fun provideGoogleAuthRepository(): GoogleAuthRepository = GoogleAuthRepositoryImpl()
+    fun provideGoogleAuthRepository(impl: GoogleAuthRepositoryImpl): GoogleAuthRepository = impl
 }

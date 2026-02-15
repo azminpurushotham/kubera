@@ -32,8 +32,8 @@ interface CollectionHistoryDao {
     fun getShopCollectionPagingSource(shopId: String): PagingSource<Int, CollectionHistoryEntity>
 
     @Query("SELECT * FROM collection_history WHERE timestamp BETWEEN :start AND :end ORDER BY timestamp DESC")
-    suspend fun getByDateRange(start: Long, end: Long): List<CollectionHistoryEntity>
+    fun getByDateRange(start: Long, end: Long): List<CollectionHistoryEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(entity: CollectionHistoryEntity)
+    fun insert(entity: CollectionHistoryEntity)
 }

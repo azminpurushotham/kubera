@@ -3,6 +3,8 @@ package com.collection.kubera.data.repository
 import com.collection.kubera.data.Result
 import com.collection.kubera.data.local.dao.BalanceDao
 import com.collection.kubera.data.local.entity.BalanceEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.UUID
 
@@ -12,8 +14,8 @@ class BalanceRepositoryImpl(
     private val balanceDao: BalanceDao
 ) : BalanceRepository {
 
-    override suspend fun getBalance(): Result<Long> {
-        return try {
+    override suspend fun getBalance(): Result<Long> = withContext(Dispatchers.IO) {
+        try {
             val entity = balanceDao.getLatest()
             Result.Success(entity?.balance ?: 0L)
         } catch (e: Exception) {
@@ -22,8 +24,8 @@ class BalanceRepositoryImpl(
         }
     }
 
-    override suspend fun updateBalance(delta: Long, isCredit: Boolean): Result<Unit> {
-        return try {
+    override suspend fun updateBalance(delta: Long, isCredit: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
             val entity = balanceDao.getLatest()
             val newBalance = when {
                 entity == null -> if (isCredit) delta else -delta

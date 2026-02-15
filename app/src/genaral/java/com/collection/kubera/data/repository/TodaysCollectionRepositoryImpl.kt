@@ -5,7 +5,9 @@ import com.collection.kubera.data.TodaysCollectionData
 import com.collection.kubera.data.local.dao.TodaysCollectionDao
 import com.collection.kubera.data.local.entity.TodaysCollectionEntity
 import com.collection.kubera.data.local.mapper.toTodaysCollectionData
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.Calendar
 import java.util.UUID
@@ -24,8 +26,8 @@ class TodaysCollectionRepositoryImpl(
         return now == then
     }
 
-    override suspend fun getTodaysCollection(): Result<TodaysCollectionData> {
-        return try {
+    override suspend fun getTodaysCollection(): Result<TodaysCollectionData> = withContext(Dispatchers.IO) {
+        try {
             val entity = todaysCollectionDao.getLatest()
             if (entity == null || !isToday(entity.timestamp)) {
                 Result.Success(TodaysCollectionData(0L, 0L, 0L))
@@ -38,8 +40,8 @@ class TodaysCollectionRepositoryImpl(
         }
     }
 
-    override suspend fun syncTodaysCollection(): Result<TodaysCollectionData> {
-        return try {
+    override suspend fun syncTodaysCollection(): Result<TodaysCollectionData> = withContext(Dispatchers.IO) {
+        try {
             val entity = todaysCollectionDao.getLatest()
             if (entity == null) {
                 Result.Success(TodaysCollectionData(0L, 0L, 0L))
@@ -56,8 +58,8 @@ class TodaysCollectionRepositoryImpl(
         }
     }
 
-    override suspend fun updateOrInsertTodaysCollection(delta: Long, isCredit: Boolean): Result<Unit> {
-        return try {
+    override suspend fun updateOrInsertTodaysCollection(delta: Long, isCredit: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
+        try {
             var entity = todaysCollectionDao.getLatest()
             if (entity == null || !isToday(entity.timestamp)) {
                 entity = TodaysCollectionEntity(

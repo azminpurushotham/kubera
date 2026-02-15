@@ -11,11 +11,11 @@ import com.collection.kubera.data.local.entity.BalanceEntity
 interface BalanceDao {
 
     @Query("SELECT * FROM balance ORDER BY timestamp DESC LIMIT 1")
-    suspend fun getLatest(): BalanceEntity?
+    fun getLatest(): BalanceEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(entity: BalanceEntity)
+    fun insert(entity: BalanceEntity)
 
     @Query("UPDATE balance SET balance = :balance WHERE id = :id")
-    suspend fun updateBalance(id: String, balance: Long)
+    fun updateBalance(id: String, balance: Long)
 }

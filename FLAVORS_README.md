@@ -1,29 +1,25 @@
-# Product Flavors: Local & Cloud
+# Product Flavors: Genaral & Cloud
 
 ## Overview
 The app supports two product flavors that can be installed side-by-side:
 
 | Flavor | Application ID | Use Case |
 |--------|----------------|----------|
-| **local** | `com.collection.management.local` | Local Room database (future) / Offline-first |
-| **cloud** | `com.collection.management.cloud` | Firebase/Firestore cloud backend |
+| **genaral** | `com.collection.management.genaral` | Offline only – Local Room database |
+| **cloud** | `com.collection.management.cloud` | Firebase collection only |
 
 ## Building
-- **Local flavor**: `./gradlew assembleLocalDebug` or Build Variant: `localDebug`
+- **Genaral flavor**: `./gradlew assembleGenaralDebug` or Build Variant: `genaralDebug`
 - **Cloud flavor**: `./gradlew assembleCloudDebug` or Build Variant: `cloudDebug`
 
 ## Firebase Setup
-1. In Firebase Console, register **two** Android apps:
-   - Package: `com.collection.management.local` (already configured)
+1. In Firebase Console, register **two** Android apps (aligned with `google-services.json`):
+   - Package: `com.collection.management.genaral`
    - Package: `com.collection.management.cloud`
-2. Download the `google-services.json` for each app
-3. Place them in:
-   - `app/src/local/google-services.json`
+2. Place `google-services.json` in:
+   - `app/src/genaral/google-services.json`
    - `app/src/cloud/google-services.json`
-
-The placeholder files use the same project config with updated package names. Replace with your Firebase Console downloads for production.
 
 ## DI / Data Source
 - **CloudDataModule** (in `app/src/cloud/`) provides Firebase-backed repositories
-- **LocalDataModule** (in `app/src/local/`) currently uses Firebase implementations
-  - When Room database is implemented, switch to `Local*Repository` classes here
+- **LocalDataModule** (in `app/src/genaral/`) provides Room-backed repositories
