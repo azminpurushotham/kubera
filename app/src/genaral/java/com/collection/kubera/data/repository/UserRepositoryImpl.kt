@@ -25,11 +25,13 @@ class UserRepositoryImpl(
     }
 
     override suspend fun login(username: String, password: String): Result<String?> = withContext(Dispatchers.IO) {
+        Timber.d("UserRepositoryImpl(genaral): login username=$username")
         try {
             val user = userDao.login(username, password).firstOrNull()
+            Timber.d("UserRepositoryImpl(genaral): login query result userId=${user?.id ?: "null"}")
             Result.Success(user?.id)
         } catch (e: Exception) {
-            Timber.e(e, "login failed")
+            Timber.e(e, "UserRepositoryImpl(genaral): login failed")
             Result.Error(e)
         }
     }

@@ -30,15 +30,17 @@ class UserRepositoryImpl(
     }
 
     override suspend fun login(username: String, password: String): Result<String?> {
+        Timber.d("UserRepositoryImpl(cloud): login username=$username Firestore query ${USER_COLLECTION}")
         return try {
             val querySnapshot = userCollection
                 .whereEqualTo("username", username)
                 .whereEqualTo("password", password)
                 .get().await()
             val userId = querySnapshot.documents.firstOrNull()?.id
+            Timber.d("UserRepositoryImpl(cloud): login Firestore result docCount=${querySnapshot.size()} userId=$userId")
             Result.Success(userId)
         } catch (e: Exception) {
-            Timber.e(e, "login failed")
+            Timber.e(e, "UserRepositoryImpl(cloud): login failed")
             Result.Error(e)
         }
     }

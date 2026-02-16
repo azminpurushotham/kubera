@@ -54,6 +54,7 @@ import com.collection.kubera.ui.registration.RegistrationActivity
 import com.collection.kubera.ui.theme.KuberaTheme
 import com.collection.kubera.ui.theme.onHintD
 import kotlinx.coroutines.flow.collectLatest
+import timber.log.Timber
 
 @Preview
 @Composable
@@ -78,12 +79,15 @@ fun LoginScreen(
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
                 is LoginUiEvent.ShowError -> {
+                    Timber.i("ShowError");
                     Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
                 }
                 is LoginUiEvent.ShowSuccess -> {
+                    Timber.i("ShowSuccess");
                     Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
                 }
                 is LoginUiEvent.NavigateToMain -> {
+                    Timber.i("NavigateToMain");
                     context.startActivity(Intent(context, MainActivity::class.java))
                     (context as? Activity)?.finish()
                 }

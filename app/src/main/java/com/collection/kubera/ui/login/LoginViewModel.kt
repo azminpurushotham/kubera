@@ -32,27 +32,30 @@ class LoginViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<LoginUiState>(LoginUiState.Initial)
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<LoginUiEvent>()
+    private val _uiEvent = MutableSharedFlow<LoginUiEvent>(replay = 0, extraBufferCapacity = 2)
     val uiEvent: SharedFlow<LoginUiEvent> = _uiEvent.asSharedFlow()
 
     fun login(userName: String, password: String) {
-        Timber.d("login")
+        Timber.d("login() called userName=$userName")
         _uiState.value = LoginUiState.Loading
         viewModelScope.launch(dispatcher) {
+            Timber.d("login: calling userRepository.login")
             when (val result = userRepository.login(userName, password)) {
                 is Result.Success -> {
+                    Timber.d("login: userRepository.login Success userId=${result.data ?: "null"}")
                     result.data?.let { userId ->
                         userPreferencesRepository.saveLoginState(userId, userName, password)
-                        _uiEvent.tryEmit(LoginUiEvent.ShowSuccess(RepositoryConstants.LOGIN_SUCCESS_MESSAGE))
-                        _uiEvent.tryEmit(LoginUiEvent.NavigateToMain)
+                        Timber.d("login: saved login state, emitting success and navigate")
+                        _uiEvent.emit(LoginUiEvent.ShowSuccess(RepositoryConstants.LOGIN_SUCCESS_MESSAGE))
+                        _uiEvent.emit(LoginUiEvent.NavigateToMain)
                     } ?: run {
-                        _uiEvent.tryEmit(
-                            LoginUiEvent.ShowError(RepositoryConstants.LOGIN_CREDENTIALS_ERROR)
-                        )
+                        Timber.w("login: userId is null, credentials invalid")
+                        _uiEvent.emit(LoginUiEvent.ShowError(RepositoryConstants.LOGIN_CREDENTIALS_ERROR))
                     }
                 }
                 is Result.Error -> {
-                    _uiEvent.tryEmit(
+                    Timber.e(result.exception, "login: userRepository.login Error")
+                    _uiEvent.emit(
                         LoginUiEvent.ShowError(
                             result.exception.message
                                 ?: RepositoryConstants.LOGIN_CREDENTIALS_ERROR
@@ -60,6 +63,7 @@ class LoginViewModel @Inject constructor(
                     )
                 }
             }
+            Timber.d("login: completed, resetting uiState")
             _uiState.value = LoginUiState.Initial
         }
     }
@@ -82,11 +86,11 @@ class LoginViewModel @Inject constructor(
                         userName = data.displayName,
                         password = ""
                     )
-                    _uiEvent.tryEmit(LoginUiEvent.ShowSuccess("Signed in with Google"))
-                    _uiEvent.tryEmit(LoginUiEvent.NavigateToMain)
+                    _uiEvent.emit(LoginUiEvent.ShowSuccess("Signed in with Google"))
+                    _uiEvent.emit(LoginUiEvent.NavigateToMain)
                 }
                 is Result.Error -> {
-                    _uiEvent.tryEmit(
+                    _uiEvent.emit(
                         LoginUiEvent.ShowError(
                             result.exception.message ?: "Google sign-in failed"
                         )
