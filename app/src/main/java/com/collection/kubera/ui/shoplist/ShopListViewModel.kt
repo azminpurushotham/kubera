@@ -58,6 +58,7 @@ class ShopListViewModel @Inject constructor(
     fun onResume() {
         Timber.d("onResume")
         syncTodaysCollection()
+        onRefresh();
     }
 
     fun onRefresh() {

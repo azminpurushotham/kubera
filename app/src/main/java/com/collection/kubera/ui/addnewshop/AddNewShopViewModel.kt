@@ -38,7 +38,7 @@ class AddNewShopViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AddNewShopUiState>(AddNewShopUiState.Initial)
     val uiState: StateFlow<AddNewShopUiState> = _uiState.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<AddNewShopUiEvent>()
+    private val _uiEvent = MutableSharedFlow<AddNewShopUiEvent>(replay = 0, extraBufferCapacity = 2)
     val uiEvent: SharedFlow<AddNewShopUiEvent> = _uiEvent.asSharedFlow()
 
     fun addShopDetails(
@@ -81,9 +81,11 @@ class AddNewShopViewModel @Inject constructor(
         }
 
         viewModelScope.launch(dispatcher) {
+            Timber.d("addShopDetails: calling shopRepository.addShop")
             when (val result = shopRepository.addShop(shop)) {
                 is Result.Success -> {
                     val addedShop = result.data
+                    Timber.d("addShopDetails: addShop Success shopId=${addedShop.id} shopName=${addedShop.shopName}")
                     if ((addedShop.balance ?: 0L) != 0L) {
                         insertCollectionHistory(addedShop)
                         balanceRepository.updateBalance(addedShop.balance!!, true)
@@ -92,11 +94,13 @@ class AddNewShopViewModel @Inject constructor(
                             true
                         )
                     }
-                    _uiEvent.tryEmit(AddNewShopUiEvent.ShowSuccess(RepositoryConstants.ADD_SHOP_SUCCESS_MESSAGE))
-                    _uiEvent.tryEmit(AddNewShopUiEvent.NavigateBack)
+                    Timber.d("addShopDetails: emitting ShowSuccess and NavigateBack")
+                    _uiEvent.emit(AddNewShopUiEvent.ShowSuccess(RepositoryConstants.ADD_SHOP_SUCCESS_MESSAGE))
+                    _uiEvent.emit(AddNewShopUiEvent.NavigateBack)
                 }
                 is Result.Error -> {
-                    _uiEvent.tryEmit(
+                    Timber.e(result.exception, "addShopDetails: addShop Error")
+                    _uiEvent.emit(
                         AddNewShopUiEvent.ShowError(
                             result.exception.message ?: RepositoryConstants.ADD_SHOP_ERROR_MESSAGE
                         )
@@ -104,6 +108,7 @@ class AddNewShopViewModel @Inject constructor(
                 }
             }
             _uiState.value = AddNewShopUiState.Initial
+            Timber.d("addShopDetails: completed")
         }
     }
 
@@ -140,10 +145,10 @@ class AddNewShopViewModel @Inject constructor(
         }
 
         when (val result = collectionHistoryRepository.insertCollectionHistory(collectionModel)) {
-            is Result.Success -> Timber.d("Collection history updated")
+            is Result.Success -> Timber.d("insertCollectionHistory: success")
             is Result.Error -> {
-                Timber.e("Collection history not updated")
-                _uiEvent.tryEmit(
+                Timber.e(result.exception, "insertCollectionHistory: error")
+                _uiEvent.emit(
                     AddNewShopUiEvent.ShowError(
                         result.exception.message ?: RepositoryConstants.COLLECTION_HISTORY_NOT_UPDATED
                     )
