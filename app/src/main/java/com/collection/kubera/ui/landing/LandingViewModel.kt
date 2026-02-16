@@ -18,7 +18,7 @@ class LandingViewModel @Inject constructor(
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
-    private val _uiEvent = MutableSharedFlow<LandingUiEvent>()
+    private val _uiEvent = MutableSharedFlow<LandingUiEvent>(replay = 0, extraBufferCapacity = 2)
     val uiEvent: SharedFlow<LandingUiEvent> = _uiEvent.asSharedFlow()
 
     fun init() {

@@ -58,7 +58,7 @@ class ShopListViewModel @Inject constructor(
     fun onResume() {
         Timber.d("onResume")
         syncTodaysCollection()
-        onRefresh();
+//        refreshShops();
     }
 
     fun onRefresh() {
@@ -70,19 +70,23 @@ class ShopListViewModel @Inject constructor(
     private val _searchQuery = MutableStateFlow("")
 
     init {
+        Timber.d("ShopListViewModel init: starting search query observer")
         viewModelScope.launch(dispatcher) {
             _searchQuery
                 .debounce(RepositoryConstants.SEARCH_DEBOUNCE_MS)
                 .distinctUntilChanged()
                 .collect { query ->
                     val trimmed = query.trim()
+                    Timber.d("ShopListViewModel searchQuery collect: trimmed='$trimmed' length=${trimmed.length}")
                     if (trimmed.length >= RepositoryConstants.MIN_SEARCH_QUERY_LENGTH) {
+                        Timber.d("ShopListViewModel: search with query='$trimmed'")
                         _uiState.value = HomeUiState.Searching
                         _listFlow.value = shopRepository
                             .getShopsSearchPagingFlow(trimmed)
                             .cachedIn(viewModelScope)
                         _uiState.value = HomeUiState.HomeSuccess("Success")
                     } else if (trimmed.isEmpty()) {
+                        Timber.d("ShopListViewModel: query empty, refreshing shops")
                         refreshShops()
                     }
                 }

@@ -53,10 +53,15 @@ class ReportViewModel @Inject constructor(
     }
 
     fun syncBalance() {
+        Timber.d("syncBalance: calling balanceRepository.getBalance")
         viewModelScope.launch(dispatcher) {
             when (val result = balanceRepository.getBalance()) {
-                is Result.Success -> _balance.value = result.data
+                is Result.Success -> {
+                    Timber.d("syncBalance: Success balance=${result.data}")
+                    _balance.value = result.data
+                }
                 is Result.Error -> {
+                    Timber.e(result.exception, "syncBalance: Error")
                     _balance.value = 0L
                     _uiEvent.tryEmit(
                         ReportUiEvent.ShowError(
@@ -65,6 +70,7 @@ class ReportViewModel @Inject constructor(
                     )
                 }
             }
+            Timber.d("syncBalance: completed")
         }
     }
 

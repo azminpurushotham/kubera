@@ -23,6 +23,10 @@ import com.google.android.gms.common.GooglePlayServicesRepairableException
 import com.google.android.gms.security.ProviderInstaller
 import com.google.firebase.FirebaseApp
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 @HiltAndroidApp
@@ -34,21 +38,22 @@ class KuberaApplication : Application() {
         FirebaseApp.initializeApp(this)?.let {
             Log.d("FirebaseInit", "Firebase successfully initialized")
         }
-        installProvider()
         Timber.plant(Timber.DebugTree())
+        // Run ProviderInstaller off main thread to avoid blocking (contacts Google Play Services)
+        CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+            installProvider()
+        }
     }
-
 
     private fun installProvider() {
         try {
             ProviderInstaller.installIfNeeded(applicationContext)
         } catch (e: GooglePlayServicesRepairableException) {
-            // Prompt user to update Google Play Services
+            Timber.w(e, "ProviderInstaller: Google Play Services needs update")
         } catch (e: GooglePlayServicesNotAvailableException) {
-            // Handle case where Google Play Services is not available
+            Timber.w(e, "ProviderInstaller: Google Play Services not available")
         } catch (e: Exception) {
-            // Log unexpected errors
-            e.printStackTrace()
+            Timber.w(e, "ProviderInstaller: unexpected error")
         }
     }
 }

@@ -1,10 +1,12 @@
 package com.collection.kubera.ui.report
 
 import android.content.Intent
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.ComponentActivity.RESULT_OK
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -68,6 +70,7 @@ import timber.log.Timber
 import java.time.LocalDate
 import java.util.Date
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportScreen(
@@ -96,7 +99,7 @@ fun ReportScreen(
     val openDocumentTreeLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
-        Timber.tag("registerForActivityResult").d(result.toString())
+        Timber.tag("registerResult").d(result.toString())
         if (result.resultCode == RESULT_OK) {
             val uri = result.data?.data
             if (uri != null) {
