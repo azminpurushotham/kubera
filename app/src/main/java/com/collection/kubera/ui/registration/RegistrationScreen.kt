@@ -52,7 +52,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.collection.kubera.data.User
+import com.collection.kubera.domain.model.User
 import com.collection.kubera.states.RegistrationUiState
 import com.collection.kubera.ui.login.LoginActivity
 import com.collection.kubera.ui.theme.KuberaTheme

@@ -4,9 +4,12 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.local.dao.CollectionHistoryDao
-import com.collection.kubera.data.local.mapper.toCollectionModel
+import com.collection.kubera.data.mapper.toDomainCollectionModel
+import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.domain.model.CollectionModel
+import com.collection.kubera.domain.repository.TransactionHistoryRepository
+import com.collection.kubera.domain.repository.TransactionSortType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import timber.log.Timber
@@ -31,7 +34,7 @@ class TransactionHistoryRepositoryImpl(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = { pagingSource }
-        ).flow.map { it.map { entity -> entity.toCollectionModel() } }
+        ).flow.map { it.map { entity -> entity.toDomainCollectionModel() } }
     }
 
     override fun getShopCollectionHistoryPagingFlow(shopId: String): Flow<PagingData<CollectionModel>> {
@@ -42,6 +45,6 @@ class TransactionHistoryRepositoryImpl(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = { collectionHistoryDao.getShopCollectionPagingSource(shopId) }
-        ).flow.map { it.map { entity -> entity.toCollectionModel() } }
+        ).flow.map { it.map { entity -> entity.toDomainCollectionModel() } }
     }
 }

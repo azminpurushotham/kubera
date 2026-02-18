@@ -27,7 +27,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.collection.kubera.R
-import com.collection.kubera.data.repository.TransactionSortType
+import com.collection.kubera.domain.repository.TransactionSortType
 import com.collection.kubera.ui.theme.boxColorD
 import com.collection.kubera.ui.theme.onprimaryD
 import timber.log.Timber

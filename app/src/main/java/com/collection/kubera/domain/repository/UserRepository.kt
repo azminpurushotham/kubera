@@ -1,7 +1,7 @@
-package com.collection.kubera.data.repository
+package com.collection.kubera.domain.repository
 
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.User
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.User
 
 interface UserRepository {
     suspend fun getAllUsers(): Result<List<User>>

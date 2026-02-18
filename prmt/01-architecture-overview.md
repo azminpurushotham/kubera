@@ -9,47 +9,43 @@ Reference: **`ui/shoplist/`**, **`domain/shoplist/usecase/`**
 ## Dependency Flow
 
 ```
-UI (Screen, ViewModel)  →  Domain (Use Cases)  →  Data (Repository interfaces)
-                                                         ↓
-                                               Impls (genaral/cloud)
+UI (Screen, ViewModel)  →  Domain (Use Cases, Models, Repository interfaces)  ←  Data (Implementations)
 ```
 
-- **UI** never depends on Data directly (except models like User, Shop)
-- **ViewModel** injects **UseCases only**, never repositories
-- **UseCases** inject repositories and orchestrate business logic
-- **Data** provides repository interfaces (main) and implementations (flavor-specific)
+- **Domain** is the core: pure models, repository interfaces, use cases. No framework dependencies.
+- **Data** implements domain interfaces; returns domain models (via mappers from entities/DTOs).
+- **UI** depends on ViewModel; ViewModels convert domain to data models only at display/navigation boundaries.
+- **ViewModel** injects **UseCases only**, never repositories.
 
 ---
 
 ## Layer Structure
 
 ```
-domain/[feature]/
-└── usecase/
-    ├── GetXxxUseCase.kt      # ViewModel → UseCase → Repository
-    ├── SearchXxxUseCase.kt
-    └── SyncXxxUseCase.kt
+domain/
+├── model/                    # Pure Kotlin models (User, Shop, CollectionModel, Result)
+├── repository/               # Repository interfaces (return domain models)
+│   ├── UserRepository.kt
+│   ├── ShopRepository.kt
+│   └── ...
+└── [feature]/
+    └── usecase/
+        ├── GetXxxUseCase.kt
+        └── ...
 
 data/
-├── repository/               # Interface in main, Impl in genaral/cloud
-│   ├── XxxRepository.kt
-│   └── (XxxRepositoryImpl in flavor source sets)
-├── XxxData.kt                # Models (User, Shop, Result)
-└── ...
-
-di/
-├── XxxModule.kt              # Hilt module per feature
+├── mapper/                   # domain ↔ data (EntityToDomain, DomainToData, DomainToEntity)
+├── repository/               # Impls in genaral/cloud, RepositoryConstants
+├── User.kt, Shop.kt, ...     # Data models (Parcelable, Firestore, JSON)
 └── ...
 
 ui/[feature]/
-├── XxxScreen.kt              # Composable, uses hiltViewModel()
-├── XxxViewModel.kt           # @HiltViewModel, injects UseCases only
-├── XxxUiEvent.kt             # One-time events (SharedFlow)
-└── ...
+├── XxxScreen.kt
+├── XxxViewModel.kt           # Injects UseCases; maps domain→data for UI
+└── XxxUiEvent.kt
 
-states/                       # All UiState sealed types (shared)
-├── XxxUiState.kt
-└── ...
+states/
+└── XxxUiState.kt
 ```
 
 ---
@@ -57,6 +53,7 @@ states/                       # All UiState sealed types (shared)
 ## Rules
 
 1. **ViewModel** → UseCases only. No repository injection.
-2. **UseCase** → Repository interfaces. One business operation per use case.
-3. **Repository** → Interface in main; implementation in genaral or cloud flavor.
-4. **UI** → ViewModel; never data layer.
+2. **UseCase** → Domain repository interfaces; works with domain models only.
+3. **Repository interface** → In `domain/repository/`; implementations in `data/repository/` (flavor-specific).
+4. **Domain models** → Pure Kotlin (no Android/Firebase types). Data models for Parcelable/JSON/Firestore.
+5. **UI** → Receives data models for display (datedmy, time, Gson). ViewModels convert domain → data at boundary.

@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 class UserPreferencesRepositoryImpl @Inject constructor(
     @param:ApplicationContext private val context: Context
-) : UserPreferencesRepository {
+) : com.collection.kubera.domain.repository.UserPreferencesRepository {
 
     private val prefs by lazy { PreferenceHelper.getPrefs(context) }
 

@@ -1,11 +1,13 @@
 package com.collection.kubera.data.repository
 
-import com.collection.kubera.data.CollectionModel
-import com.collection.kubera.data.Result
 import com.collection.kubera.data.SHOP_COLLECTION
-import com.collection.kubera.data.Shop
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
-import com.google.firebase.Timestamp
+import com.collection.kubera.data.mapper.toDomainCollectionModel
+import com.collection.kubera.data.mapper.toDomainShop
+import com.collection.kubera.domain.model.CollectionModel
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.Shop
+import com.collection.kubera.domain.repository.ReportRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
@@ -19,10 +21,12 @@ class ReportRepositoryImpl(
     private val shopCollection get() = firestore.collection(SHOP_COLLECTION)
 
     override suspend fun getCollectionHistoryByDateRange(
-        startTimestamp: Timestamp,
-        endTimestamp: Timestamp
+        startTimestampMillis: Long,
+        endTimestampMillis: Long
     ): Result<List<CollectionModel>> {
         return try {
+            val startTimestamp = com.google.firebase.Timestamp(java.util.Date(startTimestampMillis))
+            val endTimestamp = com.google.firebase.Timestamp(java.util.Date(endTimestampMillis))
             val querySnapshot = transactionCollection
                 .orderBy("timestamp", Query.Direction.DESCENDING)
                 .whereGreaterThanOrEqualTo("timestamp", startTimestamp)
@@ -30,7 +34,7 @@ class ReportRepositoryImpl(
                 .get().await()
             val list = querySnapshot.documents.mapNotNull { doc ->
                 try {
-                    doc.toObject(CollectionModel::class.java)?.apply { id = doc.id }
+                    doc.toObject(com.collection.kubera.data.CollectionModel::class.java)?.apply { id = doc.id }?.toDomainCollectionModel()
                 } catch (e: Exception) {
                     Timber.e(e)
                     null
@@ -47,7 +51,7 @@ class ReportRepositoryImpl(
         return try {
             val querySnapshot = shopCollection.get().await()
             val list = querySnapshot.documents.mapNotNull { doc ->
-                doc.toObject(Shop::class.java)?.apply { id = doc.id }
+                doc.toObject(com.collection.kubera.data.Shop::class.java)?.apply { id = doc.id }?.toDomainShop()
             }
             Result.Success(list)
         } catch (e: Exception) {

@@ -1,8 +1,8 @@
-package com.collection.kubera.data.repository
+package com.collection.kubera.domain.repository
 
-import androidx.paging.PagingData
-import com.collection.kubera.data.CollectionModel
+import com.collection.kubera.domain.model.CollectionModel
 import kotlinx.coroutines.flow.Flow
+import androidx.paging.PagingData
 
 enum class TransactionSortType(val code: String) {
     TIMESTAMP_DESC("DESC"),

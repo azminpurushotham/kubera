@@ -3,11 +3,18 @@ package com.collection.kubera.data.repository
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.map
 import com.collection.kubera.data.TRANSECTION_HISTORY_COLLECTION
+import com.collection.kubera.data.mapper.toDomainCollectionModel
+import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.domain.model.CollectionModel
+import com.collection.kubera.domain.repository.TransactionHistoryRepository
+import com.collection.kubera.domain.repository.TransactionSortType
 import com.collection.kubera.utils.FirestoreCollectionPagingSource
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import timber.log.Timber
 
 class TransactionHistoryRepositoryImpl(
@@ -33,7 +40,7 @@ class TransactionHistoryRepositoryImpl(
                 collection.orderBy("s_firstName", Query.Direction.DESCENDING)
         }
 
-    override fun getTransactionHistoryPagingFlow(sortType: TransactionSortType): Flow<PagingData<com.collection.kubera.data.CollectionModel>> {
+    override fun getTransactionHistoryPagingFlow(sortType: TransactionSortType): Flow<PagingData<CollectionModel>> {
         Timber.d("getTransactionHistoryPagingFlow sortType=${sortType.code}")
         return Pager(
             config = PagingConfig(
@@ -41,10 +48,10 @@ class TransactionHistoryRepositoryImpl(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = { FirestoreCollectionPagingSource(query = buildQuery(sortType)) }
-        ).flow
+        ).flow.map { pagingData -> pagingData.map { it.toDomainCollectionModel() } }
     }
 
-    override fun getShopCollectionHistoryPagingFlow(shopId: String): Flow<PagingData<com.collection.kubera.data.CollectionModel>> {
+    override fun getShopCollectionHistoryPagingFlow(shopId: String): Flow<PagingData<CollectionModel>> {
         Timber.d("getShopCollectionHistoryPagingFlow shopId=$shopId")
         val query = collection
             .whereEqualTo("shopId", shopId)
@@ -55,6 +62,6 @@ class TransactionHistoryRepositoryImpl(
                 enablePlaceholders = false
             ),
             pagingSourceFactory = { FirestoreCollectionPagingSource(query = query) }
-        ).flow
+        ).flow.map { pagingData -> pagingData.map { it.toDomainCollectionModel() } }
     }
 }

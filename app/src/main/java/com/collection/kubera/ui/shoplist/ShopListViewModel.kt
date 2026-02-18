@@ -6,16 +6,19 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.FlowPreview
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.TodaysCollectionData
-import com.collection.kubera.data.repository.RepositoryConstants
+import androidx.paging.map
 import com.collection.kubera.data.Shop
+import com.collection.kubera.data.mapper.toDataShop
+import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.TodaysCollectionData
 import com.collection.kubera.domain.shoplist.usecase.GetShopsPagingUseCase
 import com.collection.kubera.domain.shoplist.usecase.SearchShopsUseCase
 import com.collection.kubera.domain.shoplist.usecase.SyncTodaysCollectionUseCase
 import com.collection.kubera.states.HomeUiState
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -47,7 +50,7 @@ class ShopListViewModel @Inject constructor(
     val uiEvent: SharedFlow<ShopListUiEvent> = _uiEvent.asSharedFlow()
 
     private val _listFlow = MutableStateFlow(
-        getShopsPagingUseCase().cachedIn(viewModelScope)
+        getShopsPagingUseCase().map { it.map { shop -> shop.toDataShop() } }.cachedIn(viewModelScope)
     )
     val list: StateFlow<Flow<PagingData<Shop>>> = _listFlow.asStateFlow()
 
@@ -81,7 +84,7 @@ class ShopListViewModel @Inject constructor(
                     if (trimmed.length >= RepositoryConstants.MIN_SEARCH_QUERY_LENGTH) {
                         Timber.d("ShopListViewModel: search with query='$trimmed'")
                         _uiState.value = HomeUiState.Searching
-                        _listFlow.value = searchShopsUseCase(trimmed).cachedIn(viewModelScope)
+                        _listFlow.value = searchShopsUseCase(trimmed).map { it.map { shop -> shop.toDataShop() } }.cachedIn(viewModelScope)
                         _uiState.value = HomeUiState.HomeSuccess("Success")
                     } else if (trimmed.isEmpty()) {
                         Timber.d("ShopListViewModel: query empty, refreshing shops")
@@ -116,7 +119,7 @@ class ShopListViewModel @Inject constructor(
 
     private fun refreshShops() {
         Timber.d("refreshShops")
-        _listFlow.value = getShopsPagingUseCase().cachedIn(viewModelScope)
+        _listFlow.value = getShopsPagingUseCase().map { it.map { shop -> shop.toDataShop() } }.cachedIn(viewModelScope)
     }
 
 }

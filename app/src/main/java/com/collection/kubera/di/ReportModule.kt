@@ -1,7 +1,7 @@
 package com.collection.kubera.di
 
-import com.collection.kubera.data.repository.ReportFileHelper
 import com.collection.kubera.data.repository.ReportFileHelperImpl
+import com.collection.kubera.domain.repository.ReportFileHelper
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

@@ -2,7 +2,9 @@ package com.collection.kubera.data.repository
 
 import android.content.Context
 import android.content.Intent
-import com.collection.kubera.data.Result
+import com.collection.kubera.domain.model.GoogleAuthResult
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.repository.GoogleAuthRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions

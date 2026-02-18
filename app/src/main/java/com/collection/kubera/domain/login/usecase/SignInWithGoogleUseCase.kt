@@ -1,8 +1,8 @@
 package com.collection.kubera.domain.login.usecase
 
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.repository.GoogleAuthRepository
-import com.collection.kubera.data.repository.UserPreferencesRepository
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.repository.GoogleAuthRepository
+import com.collection.kubera.domain.repository.UserPreferencesRepository
 import javax.inject.Inject
 
 /**

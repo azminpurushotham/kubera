@@ -1,8 +1,8 @@
 package com.collection.kubera.domain.shoplist.usecase
 
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.TodaysCollectionData
-import com.collection.kubera.data.repository.TodaysCollectionRepository
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.TodaysCollectionData
+import com.collection.kubera.domain.repository.TodaysCollectionRepository
 import javax.inject.Inject
 
 /**

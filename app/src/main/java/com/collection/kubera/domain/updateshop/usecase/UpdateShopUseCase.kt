@@ -1,7 +1,7 @@
 package com.collection.kubera.domain.updateshop.usecase
 
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.repository.ShopRepository
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.repository.ShopRepository
 import javax.inject.Inject
 
 /**

@@ -17,7 +17,8 @@
 package com.collection.kubera.data
 
 /**
- * A generic class that holds a value or an exception
+ * A generic class that holds a value or an exception.
+ * Used by data layer. Domain layer uses domain.model.Result.
  */
 sealed class Result<out R> {
     data class Success<out T>(val data: T) : Result<T>()

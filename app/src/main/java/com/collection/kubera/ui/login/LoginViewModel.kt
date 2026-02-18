@@ -3,7 +3,7 @@ package com.collection.kubera.ui.login
 import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.Result
+import com.collection.kubera.domain.model.Result
 import com.collection.kubera.data.repository.RepositoryConstants
 import com.collection.kubera.domain.login.usecase.GetGoogleSignInIntentUseCase
 import com.collection.kubera.domain.login.usecase.LoginUseCase
@@ -41,7 +41,7 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             Timber.d("login: calling loginUseCase")
             when (val result = loginUseCase(userName, password)) {
-                is Result.Success -> {
+                is com.collection.kubera.domain.model.Result.Success -> {
                     result.data?.let {
                         Timber.d("login: Success, emitting navigate")
                         _uiEvent.emit(LoginUiEvent.ShowSuccess(RepositoryConstants.LOGIN_SUCCESS_MESSAGE))

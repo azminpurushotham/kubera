@@ -2,9 +2,10 @@ package com.collection.kubera.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.User
+import com.collection.kubera.data.mapper.toDataUser
 import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.data.User
+import com.collection.kubera.domain.model.Result
 import com.collection.kubera.domain.profile.usecase.GetCurrentUserIdUseCase
 import com.collection.kubera.domain.profile.usecase.GetUserByIdUseCase
 import com.collection.kubera.domain.updatecredentials.usecase.UpdateUserCredentialsUseCase
@@ -56,8 +57,8 @@ class ProfileViewModel @Inject constructor(
             when (val result = getUserByIdUseCase(id)) {
                 is Result.Success -> {
                     result.data?.let { user ->
-                        userCredentials = user
-                        _uiState.value = ProfileUiState.UserCredentials(user)
+                        userCredentials = user.toDataUser()
+                        _uiState.value = ProfileUiState.UserCredentials(user.toDataUser())
                     } ?: run {
                         _uiEvent.emit(
                             ProfileUiEvent.ShowError(RepositoryConstants.PROFILE_USER_DETAILS_ERROR)

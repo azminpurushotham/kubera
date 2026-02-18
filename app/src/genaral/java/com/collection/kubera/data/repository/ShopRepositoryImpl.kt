@@ -4,11 +4,13 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.Shop
+import com.collection.kubera.data.repository.RepositoryConstants
 import com.collection.kubera.data.local.dao.ShopDao
-import com.collection.kubera.data.local.mapper.toShop
-import com.collection.kubera.data.local.mapper.toShopEntity
+import com.collection.kubera.data.mapper.toDomainShop
+import com.collection.kubera.data.mapper.toShopEntity
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.Shop
+import com.collection.kubera.domain.repository.ShopRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -27,7 +29,7 @@ class ShopRepositoryImpl(
                 enablePlaceholders = true
             ),
             pagingSourceFactory = { shopDao.getShopsPagingSource() }
-        ).flow.map { pagingData -> pagingData.map { it.toShop() } }
+        ).flow.map { pagingData -> pagingData.map { it.toDomainShop() } }
     }
 
     override fun getShopsSearchPagingFlow(shopName: String): Flow<PagingData<Shop>> {
@@ -38,13 +40,13 @@ class ShopRepositoryImpl(
                 enablePlaceholders = true
             ),
             pagingSourceFactory = { shopDao.getShopsSearchPagingSource(shopName.lowercase()) }
-        ).flow.map { pagingData -> pagingData.map { it.toShop() } }
+        ).flow.map { pagingData -> pagingData.map { it.toDomainShop() } }
     }
 
     override suspend fun getShopById(id: String): Result<Shop?> = withContext(Dispatchers.IO) {
         try {
             val entity = shopDao.getById(id).firstOrNull()
-            Result.Success(entity?.toShop())
+            Result.Success(entity?.toDomainShop())
         } catch (e: Exception) {
             Timber.e(e, "getShopById failed")
             Result.Error(e)
@@ -54,9 +56,9 @@ class ShopRepositoryImpl(
     override suspend fun addShop(shop: Shop): Result<Shop> = withContext(Dispatchers.IO) {
         try {
             val id = shop.id.ifEmpty { UUID.randomUUID().toString() }
-            shop.id = id
-            shopDao.insert(shop.toShopEntity())
-            Result.Success(shop)
+            val entity = shop.copy(id = id).toShopEntity()
+            shopDao.insert(entity)
+            Result.Success(shop.copy(id = id))
         } catch (e: Exception) {
             Timber.e(e, "addShop failed")
             Result.Error(e)

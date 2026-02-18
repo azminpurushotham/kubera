@@ -1,8 +1,9 @@
 package com.collection.kubera.data.repository
 
-import com.collection.kubera.data.Result
 import com.collection.kubera.data.local.dao.BalanceDao
 import com.collection.kubera.data.local.entity.BalanceEntity
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.repository.BalanceRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber

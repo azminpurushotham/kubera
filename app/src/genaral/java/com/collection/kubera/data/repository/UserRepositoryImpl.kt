@@ -1,14 +1,13 @@
 package com.collection.kubera.data.repository
 
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.User
 import com.collection.kubera.data.local.dao.UserDao
-import com.collection.kubera.data.local.mapper.toUser
-import com.collection.kubera.data.local.mapper.toUserEntity
+import com.collection.kubera.data.mapper.toDomainUser
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.User
+import com.collection.kubera.domain.repository.UserRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.util.UUID
 
 class UserRepositoryImpl(
     private val userDao: UserDao
@@ -17,7 +16,7 @@ class UserRepositoryImpl(
     override suspend fun getAllUsers(): Result<List<User>> = withContext(Dispatchers.IO) {
         try {
             val entities = userDao.getAll()
-            Result.Success(entities.map { it.toUser() })
+            Result.Success(entities.map { it.toDomainUser() })
         } catch (e: Exception) {
             Timber.e(e, "getAllUsers failed")
             Result.Error(e)
@@ -39,7 +38,7 @@ class UserRepositoryImpl(
     override suspend fun getUserById(id: String): Result<User?> = withContext(Dispatchers.IO) {
         try {
             val entity = userDao.getById(id).firstOrNull()
-            Result.Success(entity?.toUser())
+            Result.Success(entity?.toDomainUser())
         } catch (e: Exception) {
             Timber.e(e, "getUserById failed")
             Result.Error(e)

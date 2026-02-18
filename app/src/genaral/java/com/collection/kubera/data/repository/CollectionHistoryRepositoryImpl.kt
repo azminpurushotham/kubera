@@ -1,9 +1,10 @@
 package com.collection.kubera.data.repository
 
-import com.collection.kubera.data.CollectionModel
-import com.collection.kubera.data.Result
 import com.collection.kubera.data.local.dao.CollectionHistoryDao
-import com.collection.kubera.data.local.mapper.toCollectionHistoryEntity
+import com.collection.kubera.data.mapper.toCollectionHistoryEntity
+import com.collection.kubera.domain.model.CollectionModel
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.repository.CollectionHistoryRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber

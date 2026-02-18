@@ -1,4 +1,4 @@
-package com.collection.kubera.data.repository
+package com.collection.kubera.domain.repository
 
 interface UserPreferencesRepository {
     fun getUserId(): String

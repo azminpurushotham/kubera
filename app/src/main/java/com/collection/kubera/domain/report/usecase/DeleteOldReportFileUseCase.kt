@@ -1,6 +1,6 @@
 package com.collection.kubera.domain.report.usecase
 
-import com.collection.kubera.data.repository.ReportFileHelper
+import com.collection.kubera.domain.repository.ReportFileHelper
 import javax.inject.Inject
 
 /**

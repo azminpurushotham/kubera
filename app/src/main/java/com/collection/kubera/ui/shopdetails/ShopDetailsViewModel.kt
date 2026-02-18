@@ -2,8 +2,10 @@ package com.collection.kubera.ui.shopdetails
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.Result
 import com.collection.kubera.data.Shop
+import com.collection.kubera.data.mapper.toDataShop
+import com.collection.kubera.data.mapper.toDomainShop
+import com.collection.kubera.domain.model.Result
 import com.collection.kubera.domain.shopdetails.usecase.GetShopByIdUseCase
 import com.collection.kubera.domain.shopdetails.usecase.UpdateBalanceUseCase
 import com.collection.kubera.states.ShopDetailUiState
@@ -51,7 +53,7 @@ class ShopDetailsViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             when (val result = getShopByIdUseCase(id)) {
                 is Result.Success -> {
-                    _shop.value = result.data?.apply { this.id = id }
+                    _shop.value = result.data?.copy(id = id)?.toDataShop()
                     updateState(ShopDetailUiState.ShopDetailSuccess("Success"))
                 }
                 is Result.Error -> {
@@ -75,7 +77,7 @@ class ShopDetailsViewModel @Inject constructor(
 
         viewModelScope.launch(dispatcher) {
             updateState(ShopDetailUiState.Loading)
-            when (val result = updateBalanceUseCase(shopValue, id, newBalance, amount, selectedOption)) {
+            when (val result = updateBalanceUseCase(shopValue.toDomainShop(), id, newBalance, amount, selectedOption)) {
                 is Result.Success -> {
                     _shop.value = shopValue.copy(balance = newBalance)
                     val message = "Successfully balance updated"

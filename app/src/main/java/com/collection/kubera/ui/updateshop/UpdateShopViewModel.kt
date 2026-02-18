@@ -2,8 +2,8 @@ package com.collection.kubera.ui.updateshop
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.Result
 import com.collection.kubera.data.Shop
+import com.collection.kubera.domain.model.Result
 import com.collection.kubera.data.repository.RepositoryConstants
 import com.collection.kubera.domain.updateshop.usecase.UpdateShopUseCase
 import com.collection.kubera.states.UpdateShopUiState

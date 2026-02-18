@@ -1,13 +1,13 @@
 package com.collection.kubera.data.repository
 
-import com.collection.kubera.data.CollectionModel
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.Shop
 import com.collection.kubera.data.local.dao.CollectionHistoryDao
 import com.collection.kubera.data.local.dao.ShopDao
-import com.collection.kubera.data.local.mapper.toCollectionModel
-import com.collection.kubera.data.local.mapper.toShop
-import com.google.firebase.Timestamp
+import com.collection.kubera.data.mapper.toDomainCollectionModel
+import com.collection.kubera.data.mapper.toDomainShop
+import com.collection.kubera.domain.model.CollectionModel
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.Shop
+import com.collection.kubera.domain.repository.ReportRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -18,14 +18,12 @@ class ReportRepositoryImpl(
 ) : ReportRepository {
 
     override suspend fun getCollectionHistoryByDateRange(
-        startTimestamp: Timestamp,
-        endTimestamp: Timestamp
+        startTimestampMillis: Long,
+        endTimestampMillis: Long
     ): Result<List<CollectionModel>> = withContext(Dispatchers.IO) {
         try {
-            val start = startTimestamp.toDate().time
-            val end = endTimestamp.toDate().time
-            val entities = collectionHistoryDao.getByDateRange(start, end)
-            Result.Success(entities.map { it.toCollectionModel() })
+            val entities = collectionHistoryDao.getByDateRange(startTimestampMillis, endTimestampMillis)
+            Result.Success(entities.map { it.toDomainCollectionModel() })
         } catch (e: Exception) {
             Timber.e(e, "getCollectionHistoryByDateRange failed")
             Result.Error(e)
@@ -35,7 +33,7 @@ class ReportRepositoryImpl(
     override suspend fun getAllShops(): Result<List<Shop>> = withContext(Dispatchers.IO) {
         try {
             val entities = shopDao.getAllShops()
-            Result.Success(entities.map { it.toShop() })
+            Result.Success(entities.map { it.toDomainShop() })
         } catch (e: Exception) {
             Timber.e(e, "getAllShops failed")
             Result.Error(e)

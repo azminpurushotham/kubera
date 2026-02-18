@@ -1,16 +1,15 @@
 package com.collection.kubera.data.repository
 
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.TodaysCollectionData
 import com.collection.kubera.data.local.dao.TodaysCollectionDao
 import com.collection.kubera.data.local.entity.TodaysCollectionEntity
-import com.collection.kubera.data.local.mapper.toTodaysCollectionData
+import com.collection.kubera.data.mapper.toDomainTodaysCollectionData
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.TodaysCollectionData
+import com.collection.kubera.domain.repository.TodaysCollectionRepository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.util.Calendar
-import java.util.UUID
 
 private const val DEFAULT_TODAYS_ID = "default"
 
@@ -32,7 +31,7 @@ class TodaysCollectionRepositoryImpl(
             if (entity == null || !isToday(entity.timestamp)) {
                 Result.Success(TodaysCollectionData(0L, 0L, 0L))
             } else {
-                Result.Success(entity.toTodaysCollectionData())
+                Result.Success(entity.toDomainTodaysCollectionData())
             }
         } catch (e: Exception) {
             Timber.e(e, "getTodaysCollection failed")
@@ -50,7 +49,7 @@ class TodaysCollectionRepositoryImpl(
                 todaysCollectionDao.deleteAll()
                 Result.Success(TodaysCollectionData(0L, 0L, 0L))
             } else {
-                Result.Success(entity.toTodaysCollectionData())
+                Result.Success(entity.toDomainTodaysCollectionData())
             }
         } catch (e: Exception) {
             Timber.e(e, "syncTodaysCollection failed")

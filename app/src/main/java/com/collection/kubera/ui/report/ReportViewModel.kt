@@ -2,10 +2,10 @@ package com.collection.kubera.ui.report
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.CollectionModel
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.Shop
+import com.collection.kubera.data.mapper.toDataCollectionModel
+import com.collection.kubera.data.mapper.toDataShop
 import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.domain.model.Result
 import com.collection.kubera.domain.report.usecase.DeleteOldReportFileUseCase
 import com.collection.kubera.domain.report.usecase.GetAllShopsUseCase
 import com.collection.kubera.domain.report.usecase.GetBalanceUseCase
@@ -96,11 +96,11 @@ class ReportViewModel @Inject constructor(
 
         viewModelScope.launch(dispatcher) {
             when (val result = getCollectionHistoryByDateRangeUseCase(
-                startTimestamp,
-                endTimestamp
+                startTimestamp.toDate().time,
+                endTimestamp.toDate().time
             )) {
                 is Result.Success -> {
-                    val list = result.data
+                    val list = result.data.map { it.toDataCollectionModel() }
                     if (list.isNotEmpty()) {
                         try {
                             writeCsvFile(
@@ -165,11 +165,11 @@ class ReportViewModel @Inject constructor(
 
         viewModelScope.launch(dispatcher) {
             when (val result = getCollectionHistoryByDateRangeUseCase(
-                startTimestamp,
-                endTimestamp
+                startTimestamp!!.toDate().time,
+                endTimestamp!!.toDate().time
             )) {
                 is Result.Success -> {
-                    val list = result.data
+                    val list = result.data.map { it.toDataCollectionModel() }
                     if (list.isNotEmpty()) {
                         try {
                             writeCsvFile(
@@ -223,7 +223,7 @@ class ReportViewModel @Inject constructor(
         viewModelScope.launch(dispatcher) {
             when (val result = getAllShopsUseCase()) {
                 is Result.Success -> {
-                    val list = result.data
+                    val list = result.data.map { it.toDataShop() }
                     if (list.isNotEmpty()) {
                         try {
                             writeCsvFile(

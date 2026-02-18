@@ -1,6 +1,6 @@
-package com.collection.kubera.data.repository
+package com.collection.kubera.domain.repository
 
-import com.collection.kubera.data.Result
+import com.collection.kubera.domain.model.Result
 
 interface BalanceRepository {
     suspend fun getBalance(): Result<Long>

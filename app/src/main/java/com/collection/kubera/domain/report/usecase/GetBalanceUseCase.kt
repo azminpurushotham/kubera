@@ -1,7 +1,7 @@
 package com.collection.kubera.domain.report.usecase
 
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.repository.BalanceRepository
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.repository.BalanceRepository
 import javax.inject.Inject
 
 /**

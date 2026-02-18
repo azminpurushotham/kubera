@@ -1,8 +1,8 @@
 package com.collection.kubera.domain.shoplist.usecase
 
 import androidx.paging.PagingData
-import com.collection.kubera.data.Shop
-import com.collection.kubera.data.repository.ShopRepository
+import com.collection.kubera.domain.model.Shop
+import com.collection.kubera.domain.repository.ShopRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

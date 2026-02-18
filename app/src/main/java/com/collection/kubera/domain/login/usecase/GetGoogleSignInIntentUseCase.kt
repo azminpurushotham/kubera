@@ -1,7 +1,7 @@
 package com.collection.kubera.domain.login.usecase
 
 import android.content.Intent
-import com.collection.kubera.data.repository.GoogleAuthRepository
+import com.collection.kubera.domain.repository.GoogleAuthRepository
 import javax.inject.Inject
 
 /**

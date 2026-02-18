@@ -1,8 +1,10 @@
 package com.collection.kubera.data.repository
 
-import com.collection.kubera.data.Result
 import com.collection.kubera.data.USER_COLLECTION
-import com.collection.kubera.data.User
+import com.collection.kubera.data.mapper.toDomainUser
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.User
+import com.collection.kubera.domain.repository.UserRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import kotlinx.coroutines.tasks.await
@@ -20,8 +22,8 @@ class UserRepositoryImpl(
                 .orderBy("username", Query.Direction.ASCENDING)
                 .get().await()
             val users = snapshot.documents.mapNotNull {
-                it.toObject(User::class.java)?.apply { id = it.id }
-            }
+                it.toObject(com.collection.kubera.data.User::class.java)?.apply { id = it.id }
+            }.map { it.toDomainUser() }
             Result.Success(users)
         } catch (e: Exception) {
             Timber.e(e, "getAllUsers failed")
@@ -48,9 +50,9 @@ class UserRepositoryImpl(
     override suspend fun getUserById(id: String): Result<User?> {
         return try {
             val doc = userCollection.document(id).get().await()
-            val user = doc.toObject(User::class.java)?.apply { this.id = id }
-            if (doc.data?.isNotEmpty() == true && user != null) {
-                Result.Success(user)
+            val dataUser = doc.toObject(com.collection.kubera.data.User::class.java)?.apply { this.id = id }
+            if (doc.data?.isNotEmpty() == true && dataUser != null) {
+                Result.Success(dataUser.toDomainUser())
             } else {
                 Result.Error(Exception("No matching documents found"))
             }

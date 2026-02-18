@@ -1,14 +1,13 @@
 package com.collection.kubera.domain.shopdetails.usecase
 
-import com.collection.kubera.data.CollectionModel
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.Shop
-import com.collection.kubera.data.repository.BalanceRepository
-import com.collection.kubera.data.repository.CollectionHistoryRepository
-import com.collection.kubera.data.repository.ShopRepository
-import com.collection.kubera.data.repository.TodaysCollectionRepository
-import com.collection.kubera.data.repository.UserPreferencesRepository
-import com.google.firebase.Timestamp
+import com.collection.kubera.domain.model.CollectionModel
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.Shop
+import com.collection.kubera.domain.repository.BalanceRepository
+import com.collection.kubera.domain.repository.CollectionHistoryRepository
+import com.collection.kubera.domain.repository.ShopRepository
+import com.collection.kubera.domain.repository.TodaysCollectionRepository
+import com.collection.kubera.domain.repository.UserPreferencesRepository
 import javax.inject.Inject
 
 /**
@@ -44,30 +43,22 @@ class UpdateBalanceUseCase @Inject constructor(
 
     private fun buildCollectionModel(shop: Shop, amount: Long, selectedOption: String): CollectionModel {
         val balanceAmount = if (selectedOption == "Credit") amount else -amount
-        return CollectionModel().apply {
-            if (shop.id?.isNotEmpty() == true) shopId = shop.id
-            if (shop.shopName.isNotEmpty()) {
-                this.shopName = shop.shopName
-                s_shopName = shop.shopName.lowercase()
-            }
-            this.amount = balanceAmount
-            if (shop.firstName.isNotEmpty()) {
-                firstName = shop.firstName
-                s_firstName = shop.firstName.lowercase()
-            }
-            shop.lastName?.let {
-                if (it.isNotEmpty()) {
-                    lastName = it
-                    s_lastName = it.lowercase()
-                }
-            }
-            shop.phoneNumber?.toString()?.takeIf { it.isNotEmpty() }?.let { phoneNumber = it }
-            shop.secondPhoneNumber?.toString()?.takeIf { it.isNotEmpty() }?.let { secondPhoneNumber = it }
-            collectedBy = userPreferencesRepository.getUserName()
-            collectedById = userPreferencesRepository.getUserId()
-            shop.mailId?.takeIf { it.isNotEmpty() }?.let { mailId = it }
-            timestamp = Timestamp.now()
-            transactionType = selectedOption
-        }
+        return CollectionModel(
+            shopId = shop.id.takeIf { it.isNotEmpty() },
+            shopName = shop.shopName.takeIf { it.isNotEmpty() },
+            sShopName = shop.shopName.takeIf { it.isNotEmpty() }?.lowercase(),
+            firstName = shop.firstName.takeIf { it.isNotEmpty() },
+            sFirstName = shop.firstName.takeIf { it.isNotEmpty() }?.lowercase(),
+            lastName = shop.lastName.takeIf { it.isNotEmpty() },
+            sLastName = shop.lastName.takeIf { it.isNotEmpty() }?.lowercase(),
+            phoneNumber = shop.phoneNumber,
+            secondPhoneNumber = shop.secondPhoneNumber,
+            mailId = shop.mailId.takeIf { it.isNotEmpty() },
+            amount = balanceAmount,
+            collectedBy = userPreferencesRepository.getUserName().ifEmpty { "Admin" },
+            collectedById = userPreferencesRepository.getUserId().ifEmpty { null },
+            transactionType = selectedOption,
+            timestampMillis = System.currentTimeMillis(),
+        )
     }
 }

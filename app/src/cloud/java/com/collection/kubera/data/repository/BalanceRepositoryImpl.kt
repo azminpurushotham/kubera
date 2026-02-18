@@ -2,7 +2,8 @@ package com.collection.kubera.data.repository
 
 import com.collection.kubera.data.BALANCE_COLLECTION
 import com.collection.kubera.data.BalanceAmount
-import com.collection.kubera.data.Result
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.repository.BalanceRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import timber.log.Timber

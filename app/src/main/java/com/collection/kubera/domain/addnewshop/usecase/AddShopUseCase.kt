@@ -1,14 +1,13 @@
 package com.collection.kubera.domain.addnewshop.usecase
 
-import com.collection.kubera.data.CollectionModel
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.Shop
-import com.collection.kubera.data.repository.BalanceRepository
-import com.collection.kubera.data.repository.CollectionHistoryRepository
-import com.collection.kubera.data.repository.ShopRepository
-import com.collection.kubera.data.repository.TodaysCollectionRepository
-import com.collection.kubera.data.repository.UserPreferencesRepository
-import com.google.firebase.Timestamp
+import com.collection.kubera.domain.model.CollectionModel
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.Shop
+import com.collection.kubera.domain.repository.BalanceRepository
+import com.collection.kubera.domain.repository.CollectionHistoryRepository
+import com.collection.kubera.domain.repository.ShopRepository
+import com.collection.kubera.domain.repository.TodaysCollectionRepository
+import com.collection.kubera.domain.repository.UserPreferencesRepository
 import javax.inject.Inject
 
 /**
@@ -36,31 +35,29 @@ class AddShopUseCase @Inject constructor(
         return addResult
     }
 
-    private fun buildCollectionModel(shop: Shop): CollectionModel = CollectionModel().apply {
-        if (shop.id.isNotEmpty()) shopId = shop.id
-        if (shop.shopName.isNotEmpty()) {
-            this.shopName = shop.shopName
-            s_shopName = shop.shopName.lowercase()
-        }
-        if ((shop.balance ?: 0L) != 0L) amount = shop.balance
-        if (shop.firstName.isNotEmpty()) {
-            firstName = shop.firstName
-            s_firstName = shop.firstName.lowercase()
-        }
-        if ((shop.lastName ?: "").isNotEmpty()) {
-            lastName = shop.lastName
-            s_lastName = (shop.lastName ?: "").lowercase()
-        }
-        if (shop.phoneNumber?.isNotEmpty() == true) phoneNumber = shop.phoneNumber
-        shop.secondPhoneNumber?.takeIf { it.isNotEmpty() }?.let { secondPhoneNumber = it }
-        if ((shop.mailId ?: "").isNotEmpty()) mailId = shop.mailId
-        collectedById = userPreferencesRepository.getUserId().ifEmpty { null }
-        collectedBy = userPreferencesRepository.getUserName().ifEmpty { "Admin" }
-        timestamp = Timestamp.now()
-        transactionType = when {
-            (amount ?: 0L) > 0L -> "Credit"
-            (amount ?: 0L) < 0L -> "Debit"
+    private fun buildCollectionModel(shop: Shop): CollectionModel {
+        val amount = shop.balance ?: 0L
+        val transactionType = when {
+            amount > 0L -> "Credit"
+            amount < 0L -> "Debit"
             else -> null
         }
+        return CollectionModel(
+            shopId = shop.id.takeIf { it.isNotEmpty() },
+            shopName = shop.shopName.takeIf { it.isNotEmpty() },
+            sShopName = shop.shopName.takeIf { it.isNotEmpty() }?.lowercase(),
+            firstName = shop.firstName.takeIf { it.isNotEmpty() },
+            sFirstName = shop.firstName.takeIf { it.isNotEmpty() }?.lowercase(),
+            lastName = shop.lastName.takeIf { it.isNotEmpty() },
+            sLastName = shop.lastName.takeIf { it.isNotEmpty() }?.lowercase(),
+            phoneNumber = shop.phoneNumber,
+            secondPhoneNumber = shop.secondPhoneNumber,
+            mailId = shop.mailId.takeIf { it.isNotEmpty() },
+            amount = amount.takeIf { it != 0L },
+            collectedBy = userPreferencesRepository.getUserName().ifEmpty { "Admin" },
+            collectedById = userPreferencesRepository.getUserId().ifEmpty { null },
+            transactionType = transactionType,
+            timestampMillis = System.currentTimeMillis(),
+        )
     }
 }

@@ -1,8 +1,8 @@
 package com.collection.kubera.domain.shoporderhistory.usecase
 
 import androidx.paging.PagingData
-import com.collection.kubera.data.CollectionModel
-import com.collection.kubera.data.repository.TransactionHistoryRepository
+import com.collection.kubera.domain.model.CollectionModel
+import com.collection.kubera.domain.repository.TransactionHistoryRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

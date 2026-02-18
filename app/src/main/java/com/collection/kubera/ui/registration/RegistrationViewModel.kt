@@ -2,9 +2,10 @@ package com.collection.kubera.ui.registration
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.User
+import com.collection.kubera.data.mapper.toDataUser
 import com.collection.kubera.data.repository.RepositoryConstants
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.User
 import com.collection.kubera.domain.registration.usecase.GetAllUsersUseCase
 import com.collection.kubera.states.RegistrationUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -65,7 +66,7 @@ class RegistrationViewModel @Inject constructor(
             if (index >= 0) {
                 val user = _users.value[index]
                 _uiState.value = RegistrationUiState.Initial
-                _uiEvent.emit(RegistrationUiEvent.NavigateToUpdateCredentials(user))
+                _uiEvent.emit(RegistrationUiEvent.NavigateToUpdateCredentials(user.toDataUser()))
             } else {
                 _uiState.value = RegistrationUiState.Initial
                 _uiEvent.emit(

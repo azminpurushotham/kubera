@@ -1,9 +1,8 @@
 package com.collection.kubera.domain.report.usecase
 
-import com.collection.kubera.data.CollectionModel
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.repository.ReportRepository
-import com.google.firebase.Timestamp
+import com.collection.kubera.domain.model.CollectionModel
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.repository.ReportRepository
 import javax.inject.Inject
 
 /**
@@ -14,8 +13,8 @@ class GetCollectionHistoryByDateRangeUseCase @Inject constructor(
     private val reportRepository: ReportRepository
 ) {
     suspend operator fun invoke(
-        startTimestamp: Timestamp,
-        endTimestamp: Timestamp
+        startTimestampMillis: Long,
+        endTimestampMillis: Long
     ): Result<List<CollectionModel>> =
-        reportRepository.getCollectionHistoryByDateRange(startTimestamp, endTimestamp)
+        reportRepository.getCollectionHistoryByDateRange(startTimestampMillis, endTimestampMillis)
 }

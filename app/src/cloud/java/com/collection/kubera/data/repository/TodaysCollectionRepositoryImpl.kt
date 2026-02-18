@@ -1,9 +1,10 @@
 package com.collection.kubera.data.repository
 
-import com.collection.kubera.data.Result
 import com.collection.kubera.data.TODAYS_COLLECTION
-import com.collection.kubera.data.TodaysCollectionData
 import com.collection.kubera.data.TodaysCollections
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.TodaysCollectionData
+import com.collection.kubera.domain.repository.TodaysCollectionRepository
 import com.collection.kubera.utils.formatFirestoreTimestamp
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore

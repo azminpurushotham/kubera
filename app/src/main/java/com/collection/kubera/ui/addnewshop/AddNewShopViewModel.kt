@@ -2,12 +2,11 @@ package com.collection.kubera.ui.addnewshop
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.Result
-import com.collection.kubera.data.Shop
+import com.collection.kubera.domain.model.Result
+import com.collection.kubera.domain.model.Shop
 import com.collection.kubera.data.repository.RepositoryConstants
 import com.collection.kubera.domain.addnewshop.usecase.AddShopUseCase
 import com.collection.kubera.states.AddNewShopUiState
-import com.google.firebase.Timestamp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -46,30 +45,22 @@ class AddNewShopViewModel @Inject constructor(
         Timber.d("addShopDetails")
         _uiState.value = AddNewShopUiState.Loading
 
-        val shop = Shop().apply {
-            if (shopName.isNotEmpty()) {
-                this.shopName = shopName
-                this.s_shopName = shopName.lowercase()
-            }
-            if (location.isNotEmpty()) this.location = location
-            if ((landmark ?: "").isNotEmpty()) this.landmark = landmark!!
-            if ((balance ?: "0").isNotEmpty()) this.balance = (balance ?: "0").toLong()
-            if (firstName.isNotEmpty()) {
-                this.firstName = firstName
-                this.s_firstName = firstName.lowercase()
-            }
-            if ((lastName ?: "").isNotEmpty()) {
-                this.lastName = lastName!!
-                this.s_lastName = (lastName ?: "").lowercase()
-            }
-            if (phoneNumber.isNotEmpty()) this.phoneNumber = phoneNumber
-            if (secondPhoneNumber != null && secondPhoneNumber.isNotEmpty()) {
-                this.secondPhoneNumber = secondPhoneNumber
-            }
-            if ((mailId ?: "").isNotEmpty()) this.mailId = mailId!!
-            this.timestamp = Timestamp.now()
-            this.status = true
-        }
+        val shop = Shop(
+            shopName = shopName,
+            sShopName = shopName.takeIf { it.isNotEmpty() }?.lowercase() ?: "",
+            location = location,
+            landmark = landmark,
+            balance = (balance ?: "0").toLongOrNull() ?: 0L,
+            firstName = firstName,
+            sFirstName = firstName.takeIf { it.isNotEmpty() }?.lowercase() ?: "",
+            lastName = lastName ?: "",
+            sLastName = (lastName ?: "").takeIf { it.isNotEmpty() }?.lowercase() ?: "",
+            phoneNumber = phoneNumber.takeIf { it.isNotEmpty() },
+            secondPhoneNumber = secondPhoneNumber,
+            mailId = mailId ?: "",
+            timestampMillis = System.currentTimeMillis(),
+            status = true,
+        )
 
         viewModelScope.launch(dispatcher) {
             Timber.d("addShopDetails: calling addShopUseCase")

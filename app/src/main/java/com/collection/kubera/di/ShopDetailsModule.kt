@@ -1,7 +1,7 @@
 package com.collection.kubera.di
 
-import com.collection.kubera.data.repository.UserPreferencesRepository
 import com.collection.kubera.data.repository.UserPreferencesRepositoryImpl
+import com.collection.kubera.domain.repository.UserPreferencesRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

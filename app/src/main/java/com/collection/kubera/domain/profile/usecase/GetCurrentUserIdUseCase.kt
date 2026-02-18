@@ -1,6 +1,6 @@
 package com.collection.kubera.domain.profile.usecase
 
-import com.collection.kubera.data.repository.UserPreferencesRepository
+import com.collection.kubera.domain.repository.UserPreferencesRepository
 import javax.inject.Inject
 
 /**
