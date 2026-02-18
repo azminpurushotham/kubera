@@ -14,7 +14,6 @@ import com.collection.kubera.data.repository.ShopRepository
 import com.collection.kubera.data.repository.TodaysCollectionRepository
 import com.collection.kubera.states.HomeUiState
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.debounce
@@ -42,7 +41,7 @@ class ShopListViewModel @Inject constructor(
     private val _todaysCollection = MutableStateFlow(TodaysCollectionData(0L, 0L, 0L))
     val todaysCollection: StateFlow<TodaysCollectionData> = _todaysCollection.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<ShopListUiEvent>()
+    private val _uiEvent = MutableSharedFlow<ShopListUiEvent>(replay = 0, extraBufferCapacity = 2)
     val uiEvent: SharedFlow<ShopListUiEvent> = _uiEvent.asSharedFlow()
 
     private val _listFlow = MutableStateFlow<Flow<PagingData<Shop>>>(
@@ -50,18 +49,17 @@ class ShopListViewModel @Inject constructor(
     )
     val list: StateFlow<Flow<PagingData<Shop>>> = _listFlow.asStateFlow()
 
-    fun init() {
-        Timber.d("init")
+    init {
+        Timber.d("ShopListViewModel: initial load")
         syncTodaysCollection()
     }
 
-    fun onResume() {
-        Timber.d("onResume")
+    fun onScreenResumed() {
+        Timber.d("onScreenResumed")
         syncTodaysCollection()
-//        refreshShops();
     }
 
-    fun onRefresh() {
+    fun refreshWhenVisible() {
         Timber.d("onRefresh")
         refreshShops()
         syncTodaysCollection()
@@ -121,10 +119,4 @@ class ShopListViewModel @Inject constructor(
         _listFlow.value = shopRepository.getShopsPagingFlow().cachedIn(viewModelScope)
     }
 
-    fun getSwipeShopsOnResume() {
-        Timber.d("getSwipeShopsOnResume")
-        viewModelScope.launch(dispatcher) {
-            _listFlow.value = shopRepository.getShopsPagingFlow().cachedIn(viewModelScope)
-        }
-    }
 }

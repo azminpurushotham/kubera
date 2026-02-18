@@ -62,14 +62,10 @@ fun ShopListScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
-        viewModel.init()
-    }
-
     LaunchedEffect(lifecycleState) {
         if (lifecycleState == Lifecycle.Event.ON_RESUME) {
             Timber.d("Screen resumed")
-            viewModel.onResume()
+            viewModel.onScreenResumed()
         }
     }
 
@@ -85,7 +81,7 @@ fun ShopListScreen(
 
     val onRefresh = {
         isRefreshing = true
-        viewModel.onRefresh()
+        viewModel.refreshWhenVisible()
     }
 
     LaunchedEffect(userPagingItems.loadState.refresh) {

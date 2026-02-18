@@ -12,6 +12,13 @@ The app supports two product flavors that can be installed side-by-side:
 - **Genaral flavor**: `./gradlew assembleGenaralDebug` or Build Variant: `genaralDebug`
 - **Cloud flavor**: `./gradlew assembleCloudDebug` or Build Variant: `cloudDebug`
 
+## Launcher Icons
+Each flavor has a distinct launcher icon and app name:
+- **genaral**: Green icon background (#4CAF50), app name "Kubera (Offline)"
+- **cloud**: Blue icon background (#2196F3), app name "Kubera (Cloud)"
+
+Resources are in `app/src/genaral/res/` and `app/src/cloud/res/`. To customize further, add or override `ic_launcher_background.xml`, `strings.xml`, or full mipmap assets.
+
 ## Firebase Setup
 
 ### Fix "Failed to get service from broker" / `SecurityException: Unknown calling package name`
