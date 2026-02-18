@@ -5,10 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.Result
 import com.collection.kubera.data.Shop
-import com.collection.kubera.data.repository.BalanceRepository
 import com.collection.kubera.data.repository.RepositoryConstants
-import com.collection.kubera.data.repository.ReportFileHelper
-import com.collection.kubera.data.repository.ReportRepository
+import com.collection.kubera.domain.report.usecase.DeleteOldReportFileUseCase
+import com.collection.kubera.domain.report.usecase.GetAllShopsUseCase
+import com.collection.kubera.domain.report.usecase.GetBalanceUseCase
+import com.collection.kubera.domain.report.usecase.GetCollectionHistoryByDateRangeUseCase
 import com.collection.kubera.states.ReportUiState
 import com.collection.kubera.utils.getCurrentDate
 import com.collection.kubera.utils.getTodayStartAndEndTime
@@ -32,9 +33,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ReportViewModel @Inject constructor(
-    private val balanceRepository: BalanceRepository,
-    private val reportRepository: ReportRepository,
-    private val reportFileHelper: ReportFileHelper,
+    private val getBalanceUseCase: GetBalanceUseCase,
+    private val getCollectionHistoryByDateRangeUseCase: GetCollectionHistoryByDateRangeUseCase,
+    private val getAllShopsUseCase: GetAllShopsUseCase,
+    private val deleteOldReportFileUseCase: DeleteOldReportFileUseCase,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -44,7 +46,7 @@ class ReportViewModel @Inject constructor(
     private val _balance = MutableStateFlow<Long>(0)
     val balance: StateFlow<Long> = _balance.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<ReportUiEvent>()
+    private val _uiEvent = MutableSharedFlow<ReportUiEvent>(replay = 0, extraBufferCapacity = 2)
     val uiEvent: SharedFlow<ReportUiEvent> = _uiEvent.asSharedFlow()
 
     fun init() {
@@ -53,9 +55,9 @@ class ReportViewModel @Inject constructor(
     }
 
     fun syncBalance() {
-        Timber.d("syncBalance: calling balanceRepository.getBalance")
+        Timber.d("syncBalance: calling getBalanceUseCase")
         viewModelScope.launch(dispatcher) {
-            when (val result = balanceRepository.getBalance()) {
+            when (val result = getBalanceUseCase()) {
                 is Result.Success -> {
                     Timber.d("syncBalance: Success balance=${result.data}")
                     _balance.value = result.data
@@ -63,7 +65,7 @@ class ReportViewModel @Inject constructor(
                 is Result.Error -> {
                     Timber.e(result.exception, "syncBalance: Error")
                     _balance.value = 0L
-                    _uiEvent.tryEmit(
+                    _uiEvent.emit(
                         ReportUiEvent.ShowError(
                             result.exception.message ?: RepositoryConstants.DEFAULT_ERROR_MESSAGE
                         )
@@ -79,11 +81,13 @@ class ReportViewModel @Inject constructor(
         _uiState.value = ReportUiState.Loading
         val dir = File(path)
         if (!dir.exists() && !dir.mkdirs()) {
-            _uiEvent.tryEmit(
-                ReportUiEvent.ShowError(
-                    "${RepositoryConstants.REPORT_DIR_NOT_CREATED} ${dir.name}"
+            viewModelScope.launch(dispatcher) {
+                _uiEvent.emit(
+                    ReportUiEvent.ShowError(
+                        "${RepositoryConstants.REPORT_DIR_NOT_CREATED} ${dir.name}"
+                    )
                 )
-            )
+            }
             _uiState.value = ReportUiState.Initial
             return
         }
@@ -91,7 +95,7 @@ class ReportViewModel @Inject constructor(
         val (startTimestamp, endTimestamp) = getTodayStartAndEndTime()
 
         viewModelScope.launch(dispatcher) {
-            when (val result = reportRepository.getCollectionHistoryByDateRange(
+            when (val result = getCollectionHistoryByDateRangeUseCase(
                 startTimestamp,
                 endTimestamp
             )) {
@@ -105,22 +109,22 @@ class ReportViewModel @Inject constructor(
                                 list = list,
                                 schema = getReportSchema()
                             )
-                            _uiEvent.tryEmit(
+                            _uiEvent.emit(
                                 ReportUiEvent.ShowSuccess("Today's $date report generated successfully")
                             )
                         } catch (e: Exception) {
-                            _uiEvent.tryEmit(
+                            _uiEvent.emit(
                                 ReportUiEvent.ShowError("Failed to create today's report $date ERROR $e")
                             )
                         }
                     } else {
-                        _uiEvent.tryEmit(
+                        _uiEvent.emit(
                             ReportUiEvent.ShowError("No collection report for today $date")
                         )
                     }
                 }
                 is Result.Error -> {
-                    _uiEvent.tryEmit(
+                    _uiEvent.emit(
                         ReportUiEvent.ShowError(
                             "No collection report for today $date ${result.exception.message}"
                         )
@@ -137,11 +141,13 @@ class ReportViewModel @Inject constructor(
         val fileName = "$startDate-$endDate.csv"
         val dir = File(path)
         if (!dir.exists() && !dir.mkdirs()) {
-            _uiEvent.tryEmit(
-                ReportUiEvent.ShowError(
-                    "${RepositoryConstants.REPORT_DIR_NOT_CREATED} ${dir.name}"
+            viewModelScope.launch(dispatcher) {
+                _uiEvent.emit(
+                    ReportUiEvent.ShowError(
+                        "${RepositoryConstants.REPORT_DIR_NOT_CREATED} ${dir.name}"
+                    )
                 )
-            )
+            }
             _uiState.value = ReportUiState.Initial
             return
         }
@@ -150,13 +156,15 @@ class ReportViewModel @Inject constructor(
         val endTimestamp = endDate.toEndTimestamp()
 
         if (startTimestamp == null || endTimestamp == null) {
-            _uiEvent.tryEmit(ReportUiEvent.ShowError(RepositoryConstants.REPORT_INVALID_DATE_FORMAT))
+            viewModelScope.launch(dispatcher) {
+                _uiEvent.emit(ReportUiEvent.ShowError(RepositoryConstants.REPORT_INVALID_DATE_FORMAT))
+            }
             _uiState.value = ReportUiState.Initial
             return
         }
 
         viewModelScope.launch(dispatcher) {
-            when (val result = reportRepository.getCollectionHistoryByDateRange(
+            when (val result = getCollectionHistoryByDateRangeUseCase(
                 startTimestamp,
                 endTimestamp
             )) {
@@ -170,22 +178,22 @@ class ReportViewModel @Inject constructor(
                                 list = list,
                                 schema = getReportSchema()
                             )
-                            _uiEvent.tryEmit(
+                            _uiEvent.emit(
                                 ReportUiEvent.ShowSuccess("$fileName report generated successfully")
                             )
                         } catch (e: Exception) {
-                            _uiEvent.tryEmit(
+                            _uiEvent.emit(
                                 ReportUiEvent.ShowError("Failed to create report for $fileName ERROR $e")
                             )
                         }
                     } else {
-                        _uiEvent.tryEmit(
+                        _uiEvent.emit(
                             ReportUiEvent.ShowError("No collection report for $fileName")
                         )
                     }
                 }
                 is Result.Error -> {
-                    _uiEvent.tryEmit(
+                    _uiEvent.emit(
                         ReportUiEvent.ShowError(
                             "No collection report for $fileName ${result.exception.message}"
                         )
@@ -201,17 +209,19 @@ class ReportViewModel @Inject constructor(
         _uiState.value = ReportUiState.Loading
         val dir = File(path)
         if (!dir.exists() && !dir.mkdirs()) {
-            _uiEvent.tryEmit(
-                ReportUiEvent.ShowError(
-                    "${RepositoryConstants.REPORT_DIR_NOT_CREATED} ${dir.name}"
+            viewModelScope.launch(dispatcher) {
+                _uiEvent.emit(
+                    ReportUiEvent.ShowError(
+                        "${RepositoryConstants.REPORT_DIR_NOT_CREATED} ${dir.name}"
+                    )
                 )
-            )
+            }
             _uiState.value = ReportUiState.Initial
             return
         }
 
         viewModelScope.launch(dispatcher) {
-            when (val result = reportRepository.getAllShops()) {
+            when (val result = getAllShopsUseCase()) {
                 is Result.Success -> {
                     val list = result.data
                     if (list.isNotEmpty()) {
@@ -222,39 +232,39 @@ class ReportViewModel @Inject constructor(
                                 list = list,
                                 schema = getShopsSchema()
                             )
-                            _uiEvent.tryEmit(
+                            _uiEvent.emit(
                                 ReportUiEvent.ShowSuccess("AllShops report generated successfully")
                             )
                         } catch (e: FileNotFoundException) {
                             Timber.tag("FileNotFoundException").d("DELETE -> ${dir.delete()}")
                             if (!dir.delete()) {
-                                reportFileHelper.deleteOldFile(dir.name)?.let { msg ->
-                                    _uiEvent.tryEmit(ReportUiEvent.ShowError(msg))
+                                deleteOldReportFileUseCase(dir.name)?.let { msg ->
+                                    _uiEvent.emit(ReportUiEvent.ShowError(msg))
                                 } ?: run {
-                                    _uiEvent.tryEmit(
+                                    _uiEvent.emit(
                                         ReportUiEvent.ShowError(
                                             "Please DELETE old folder \"${dir.name}\" and try again"
                                         )
                                     )
                                 }
                             } else {
-                                _uiEvent.tryEmit(ReportUiEvent.ShowError("Please try again"))
+                                _uiEvent.emit(ReportUiEvent.ShowError("Please try again"))
                             }
                         } catch (e: Exception) {
-                            _uiEvent.tryEmit(
+                            _uiEvent.emit(
                                 ReportUiEvent.ShowError(
                                     "Failed to create AllShops report ERROR $e\n\nPlease DELETE old folder \"${dir.name}\" and try again"
                                 )
                             )
                         }
                     } else {
-                        _uiEvent.tryEmit(
+                        _uiEvent.emit(
                             ReportUiEvent.ShowError("Failed to create AllShops report")
                         )
                     }
                 }
                 is Result.Error -> {
-                    _uiEvent.tryEmit(
+                    _uiEvent.emit(
                         ReportUiEvent.ShowError("Failed to create AllShops report ${result.exception.message}")
                     )
                 }

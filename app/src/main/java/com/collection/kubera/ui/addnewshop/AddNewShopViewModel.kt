@@ -2,15 +2,10 @@ package com.collection.kubera.ui.addnewshop
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.Result
 import com.collection.kubera.data.Shop
-import com.collection.kubera.data.repository.BalanceRepository
-import com.collection.kubera.data.repository.CollectionHistoryRepository
 import com.collection.kubera.data.repository.RepositoryConstants
-import com.collection.kubera.data.repository.ShopRepository
-import com.collection.kubera.data.repository.TodaysCollectionRepository
-import com.collection.kubera.data.repository.UserPreferencesRepository
+import com.collection.kubera.domain.addnewshop.usecase.AddShopUseCase
 import com.collection.kubera.states.AddNewShopUiState
 import com.google.firebase.Timestamp
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,11 +22,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AddNewShopViewModel @Inject constructor(
-    private val shopRepository: ShopRepository,
-    private val collectionHistoryRepository: CollectionHistoryRepository,
-    private val balanceRepository: BalanceRepository,
-    private val todaysCollectionRepository: TodaysCollectionRepository,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val addShopUseCase: AddShopUseCase,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -81,19 +72,11 @@ class AddNewShopViewModel @Inject constructor(
         }
 
         viewModelScope.launch(dispatcher) {
-            Timber.d("addShopDetails: calling shopRepository.addShop")
-            when (val result = shopRepository.addShop(shop)) {
+            Timber.d("addShopDetails: calling addShopUseCase")
+            when (val result = addShopUseCase(shop)) {
                 is Result.Success -> {
                     val addedShop = result.data
                     Timber.d("addShopDetails: addShop Success shopId=${addedShop.id} shopName=${addedShop.shopName}")
-                    if ((addedShop.balance ?: 0L) != 0L) {
-                        insertCollectionHistory(addedShop)
-                        balanceRepository.updateBalance(addedShop.balance!!, true)
-                        todaysCollectionRepository.updateOrInsertTodaysCollection(
-                            addedShop.balance!!,
-                            true
-                        )
-                    }
                     Timber.d("addShopDetails: emitting ShowSuccess and NavigateBack")
                     _uiEvent.emit(AddNewShopUiEvent.ShowSuccess(RepositoryConstants.ADD_SHOP_SUCCESS_MESSAGE))
                     _uiEvent.emit(AddNewShopUiEvent.NavigateBack)
@@ -112,48 +95,4 @@ class AddNewShopViewModel @Inject constructor(
         }
     }
 
-    private suspend fun insertCollectionHistory(shop: Shop) {
-        Timber.d("insertCollectionHistory")
-        val collectionModel = CollectionModel().apply {
-            if (shop.id.isNotEmpty()) this.shopId = shop.id
-            if (shop.shopName.isNotEmpty()) {
-                this.shopName = shop.shopName
-                this.s_shopName = shop.shopName.lowercase()
-            }
-            if ((shop.balance ?: 0L) != 0L) this.amount = shop.balance
-            if (shop.firstName.isNotEmpty()) {
-                this.firstName = shop.firstName
-                this.s_firstName = shop.firstName.lowercase()
-            }
-            if ((shop.lastName ?: "").isNotEmpty()) {
-                this.lastName = shop.lastName
-                this.s_lastName = (shop.lastName ?: "").lowercase()
-            }
-            if (shop.phoneNumber?.isNotEmpty() == true) this.phoneNumber = shop.phoneNumber
-            if (shop.secondPhoneNumber != null && shop.secondPhoneNumber!!.isNotEmpty()) {
-                this.secondPhoneNumber = shop.secondPhoneNumber
-            }
-            if ((shop.mailId ?: "").isNotEmpty()) this.mailId = shop.mailId
-            this.collectedById = userPreferencesRepository.getUserId().ifEmpty { null }
-            this.collectedBy = userPreferencesRepository.getUserName().ifEmpty { "Admin" }
-            this.timestamp = Timestamp.now()
-            this.transactionType = when {
-                (this.amount ?: 0L) > 0L -> "Credit"
-                (this.amount ?: 0L) < 0L -> "Debit"
-                else -> null
-            }
-        }
-
-        when (val result = collectionHistoryRepository.insertCollectionHistory(collectionModel)) {
-            is Result.Success -> Timber.d("insertCollectionHistory: success")
-            is Result.Error -> {
-                Timber.e(result.exception, "insertCollectionHistory: error")
-                _uiEvent.emit(
-                    AddNewShopUiEvent.ShowError(
-                        result.exception.message ?: RepositoryConstants.COLLECTION_HISTORY_NOT_UPDATED
-                    )
-                )
-            }
-        }
-    }
 }

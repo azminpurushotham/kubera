@@ -1,4 +1,4 @@
-package com.collection.kubera.ui.profile
+package com.collection.kubera.states
 
 import com.collection.kubera.data.User
 

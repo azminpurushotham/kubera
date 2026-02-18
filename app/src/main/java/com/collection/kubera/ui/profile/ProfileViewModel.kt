@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.Result
 import com.collection.kubera.data.User
 import com.collection.kubera.data.repository.RepositoryConstants
-import com.collection.kubera.data.repository.UserPreferencesRepository
-import com.collection.kubera.data.repository.UserRepository
+import com.collection.kubera.domain.profile.usecase.GetCurrentUserIdUseCase
+import com.collection.kubera.domain.profile.usecase.GetUserByIdUseCase
+import com.collection.kubera.domain.updatecredentials.usecase.UpdateUserCredentialsUseCase
+import com.collection.kubera.states.ProfileUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -21,46 +23,49 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    private val userRepository: UserRepository,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val getCurrentUserIdUseCase: GetCurrentUserIdUseCase,
+    private val getUserByIdUseCase: GetUserByIdUseCase,
+    private val updateUserCredentialsUseCase: UpdateUserCredentialsUseCase,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<ProfileUiState>(ProfileUiState.Initial)
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<ProfileUiEvent>()
+    private val _uiEvent = MutableSharedFlow<ProfileUiEvent>(replay = 0, extraBufferCapacity = 2)
     val uiEvent: SharedFlow<ProfileUiEvent> = _uiEvent.asSharedFlow()
 
     private var userCredentials: User? = null
 
     fun init() {
         Timber.d("init")
-        val userId = userPreferencesRepository.getUserId()
+        val userId = getCurrentUserIdUseCase()
         if (userId.isNotEmpty()) {
             getUserDetails(userId)
         } else {
-            _uiEvent.tryEmit(
-                ProfileUiEvent.ShowError(RepositoryConstants.PROFILE_USER_DETAILS_ERROR)
-            )
+            viewModelScope.launch(dispatcher) {
+                _uiEvent.emit(
+                    ProfileUiEvent.ShowError(RepositoryConstants.PROFILE_USER_DETAILS_ERROR)
+                )
+            }
         }
     }
 
     fun getUserDetails(id: String) {
         viewModelScope.launch(dispatcher) {
-            when (val result = userRepository.getUserById(id)) {
+            when (val result = getUserByIdUseCase(id)) {
                 is Result.Success -> {
                     result.data?.let { user ->
                         userCredentials = user
                         _uiState.value = ProfileUiState.UserCredentials(user)
                     } ?: run {
-                        _uiEvent.tryEmit(
+                        _uiEvent.emit(
                             ProfileUiEvent.ShowError(RepositoryConstants.PROFILE_USER_DETAILS_ERROR)
                         )
                     }
                 }
                 is Result.Error -> {
-                    _uiEvent.tryEmit(
+                    _uiEvent.emit(
                         ProfileUiEvent.ShowError(
                             result.exception.message
                                 ?: RepositoryConstants.PROFILE_USER_DETAILS_ERROR
@@ -93,20 +98,22 @@ class ProfileViewModel @Inject constructor(
 
         val user = userCredentials
         if (user == null) {
-            _uiEvent.tryEmit(ProfileUiEvent.ShowError(RepositoryConstants.PROFILE_USER_DETAILS_ERROR))
+            viewModelScope.launch(dispatcher) {
+                _uiEvent.emit(ProfileUiEvent.ShowError(RepositoryConstants.PROFILE_USER_DETAILS_ERROR))
+            }
             return
         }
 
         _uiState.value = ProfileUiState.Loading
         viewModelScope.launch(dispatcher) {
-            when (val result = userRepository.updateUserCredentials(user.id, userName, password)) {
+            when (val result = updateUserCredentialsUseCase(user.id, userName, password)) {
                 is Result.Success -> {
-                    _uiEvent.tryEmit(
+                    _uiEvent.emit(
                         ProfileUiEvent.ShowSuccess(RepositoryConstants.PROFILE_CREDENTIALS_UPDATED)
                     )
                 }
                 is Result.Error -> {
-                    _uiEvent.tryEmit(
+                    _uiEvent.emit(
                         ProfileUiEvent.ShowError(
                             "${RepositoryConstants.PROFILE_UPDATE_FAILED}\n${result.exception.message}"
                         )

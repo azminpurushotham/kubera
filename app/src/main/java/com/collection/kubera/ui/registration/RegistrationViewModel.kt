@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.Result
 import com.collection.kubera.data.User
 import com.collection.kubera.data.repository.RepositoryConstants
-import com.collection.kubera.data.repository.UserRepository
+import com.collection.kubera.domain.registration.usecase.GetAllUsersUseCase
 import com.collection.kubera.states.RegistrationUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -21,7 +21,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class RegistrationViewModel @Inject constructor(
-    private val userRepository: UserRepository,
+    private val getAllUsersUseCase: GetAllUsersUseCase,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -31,20 +31,20 @@ class RegistrationViewModel @Inject constructor(
     private val _users = MutableStateFlow<List<User>>(emptyList())
     val users: StateFlow<List<User>> = _users.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<RegistrationUiEvent>()
+    private val _uiEvent = MutableSharedFlow<RegistrationUiEvent>(replay = 0, extraBufferCapacity = 2)
     val uiEvent: SharedFlow<RegistrationUiEvent> = _uiEvent.asSharedFlow()
 
     fun init() {
         Timber.d("getUsers")
         _uiState.value = RegistrationUiState.Loading
         viewModelScope.launch(dispatcher) {
-            when (val result = userRepository.getAllUsers()) {
+            when (val result = getAllUsersUseCase()) {
                 is Result.Success -> {
                     _users.value = result.data
                     _uiState.value = RegistrationUiState.Initial
                 }
                 is Result.Error -> {
-                    _uiEvent.tryEmit(
+                    _uiEvent.emit(
                         RegistrationUiEvent.ShowError(
                             result.exception.message ?: RepositoryConstants.DEFAULT_ERROR_MESSAGE
                         )
@@ -68,7 +68,7 @@ class RegistrationViewModel @Inject constructor(
                 _uiEvent.emit(RegistrationUiEvent.NavigateToUpdateCredentials(user))
             } else {
                 _uiState.value = RegistrationUiState.Initial
-                _uiEvent.tryEmit(
+                _uiEvent.emit(
                     RegistrationUiEvent.ShowError(RepositoryConstants.LOGIN_CREDENTIALS_ERROR)
                 )
             }

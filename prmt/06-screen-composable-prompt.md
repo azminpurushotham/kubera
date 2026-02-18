@@ -4,7 +4,7 @@ Use when creating/refactoring Compose screens.
 
 ---
 
-> Follow ShopListScreen pattern:
+> Follow ShopListScreen pattern (ViewModel uses use cases, not repositories):
 >
 > - ViewModel: `viewModel: XxxViewModel = hiltViewModel()`
 > - Use `LaunchedEffect(Unit)` for one-time init (`viewModel.init()`)

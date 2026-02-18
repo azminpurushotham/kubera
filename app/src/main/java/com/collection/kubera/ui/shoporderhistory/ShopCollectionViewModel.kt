@@ -6,7 +6,7 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.collection.kubera.data.CollectionModel
 import com.collection.kubera.data.Shop
-import com.collection.kubera.data.repository.TransactionHistoryRepository
+import com.collection.kubera.domain.shoporderhistory.usecase.GetShopCollectionHistoryPagingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -22,7 +22,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ShopCollectionViewModel @Inject constructor(
-    private val transactionHistoryRepository: TransactionHistoryRepository,
+    private val getShopCollectionHistoryPagingUseCase: GetShopCollectionHistoryPagingUseCase,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -33,13 +33,11 @@ class ShopCollectionViewModel @Inject constructor(
     val balance: StateFlow<Long> = _balance.asStateFlow()
 
     private val _listFlow = MutableStateFlow(
-        transactionHistoryRepository
-            .getShopCollectionHistoryPagingFlow("")
-            .cachedIn(viewModelScope)
+        getShopCollectionHistoryPagingUseCase("").cachedIn(viewModelScope)
     )
     val listFlow: StateFlow<Flow<PagingData<CollectionModel>>> = _listFlow.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<ShopCollectionUiEvent>()
+    private val _uiEvent = MutableSharedFlow<ShopCollectionUiEvent>(replay = 0, extraBufferCapacity = 2)
     val uiEvent: SharedFlow<ShopCollectionUiEvent> = _uiEvent.asSharedFlow()
 
     fun init(shop: Shop) {
@@ -47,9 +45,7 @@ class ShopCollectionViewModel @Inject constructor(
         _shop.value = shop
         _balance.value = shop.balance ?: 0L
         viewModelScope.launch(dispatcher) {
-            _listFlow.value = transactionHistoryRepository
-                .getShopCollectionHistoryPagingFlow(shop.id)
-                .cachedIn(viewModelScope)
+            _listFlow.value = getShopCollectionHistoryPagingUseCase(shop.id).cachedIn(viewModelScope)
         }
     }
 
@@ -57,9 +53,7 @@ class ShopCollectionViewModel @Inject constructor(
         Timber.d("onRefresh")
         _shop.value?.let { currentShop ->
             viewModelScope.launch(dispatcher) {
-                _listFlow.value = transactionHistoryRepository
-                    .getShopCollectionHistoryPagingFlow(currentShop.id)
-                    .cachedIn(viewModelScope)
+                _listFlow.value = getShopCollectionHistoryPagingUseCase(currentShop.id).cachedIn(viewModelScope)
             }
         }
     }

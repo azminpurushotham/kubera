@@ -44,6 +44,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.collection.kubera.states.ProfileUiState
 import com.collection.kubera.ui.theme.KuberaTheme
 import com.collection.kubera.ui.theme.onHintD
 import kotlinx.coroutines.flow.collectLatest

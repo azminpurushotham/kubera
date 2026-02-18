@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.collection.kubera.data.Result
 import com.collection.kubera.data.Shop
 import com.collection.kubera.data.repository.RepositoryConstants
-import com.collection.kubera.data.repository.ShopRepository
+import com.collection.kubera.domain.updateshop.usecase.UpdateShopUseCase
 import com.collection.kubera.states.UpdateShopUiState
 import com.google.firebase.Timestamp
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,7 +22,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class UpdateShopViewModel @Inject constructor(
-    private val shopRepository: ShopRepository,
+    private val updateShopUseCase: UpdateShopUseCase,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -32,7 +32,7 @@ class UpdateShopViewModel @Inject constructor(
     private val _shop = MutableStateFlow<Shop?>(null)
     val shop: StateFlow<Shop?> = _shop.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<UpdateShopUiEvent>()
+    private val _uiEvent = MutableSharedFlow<UpdateShopUiEvent>(replay = 0, extraBufferCapacity = 2)
     val uiEvent: SharedFlow<UpdateShopUiEvent> = _uiEvent.asSharedFlow()
 
     fun init(shop: Shop) {
@@ -90,17 +90,17 @@ class UpdateShopViewModel @Inject constructor(
 
         _uiState.value = UpdateShopUiState.Loading
         viewModelScope.launch(dispatcher) {
-            when (val result = shopRepository.updateShop(currentShop.id, updates)) {
+            when (val result = updateShopUseCase(currentShop.id, updates)) {
                 is Result.Success -> {
                     _uiState.value = UpdateShopUiState.Initial
-                    _uiEvent.tryEmit(
+                    _uiEvent.emit(
                         UpdateShopUiEvent.ShowSuccess(RepositoryConstants.UPDATE_SHOP_SUCCESS_MESSAGE)
                     )
-                    _uiEvent.tryEmit(UpdateShopUiEvent.NavigateBack)
+                    _uiEvent.emit(UpdateShopUiEvent.NavigateBack)
                 }
                 is Result.Error -> {
                     _uiState.value = UpdateShopUiState.Initial
-                    _uiEvent.tryEmit(
+                    _uiEvent.emit(
                         UpdateShopUiEvent.ShowError(
                             result.exception.message
                                 ?: RepositoryConstants.UPDATE_SHOP_ERROR_MESSAGE

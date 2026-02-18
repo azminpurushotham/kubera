@@ -2,7 +2,7 @@ package com.collection.kubera.ui.landing
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.collection.kubera.data.repository.UserPreferencesRepository
+import com.collection.kubera.domain.landing.usecase.GetLoginStatusUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class LandingViewModel @Inject constructor(
-    private val userPreferencesRepository: UserPreferencesRepository,
+    private val getLoginStatusUseCase: GetLoginStatusUseCase,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -24,7 +24,7 @@ class LandingViewModel @Inject constructor(
     fun init() {
         Timber.d("init - checkLoginStatus")
         viewModelScope.launch(dispatcher) {
-            val isLoggedIn = userPreferencesRepository.isLoggedIn()
+            val isLoggedIn = getLoginStatusUseCase()
             Timber.d("isLoggedIn -> $isLoggedIn")
             if (isLoggedIn) {
                 _uiEvent.emit(LandingUiEvent.NavigateToMain)

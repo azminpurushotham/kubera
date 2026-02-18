@@ -4,15 +4,18 @@ Use when creating/refactoring repositories.
 
 ---
 
-> Extract all data/API calls (Firestore, REST, Room) from ViewModel into repositories.
+> Extract all data/API calls (Firestore, REST, Room) from use cases into repositories.
 >
-> - Create `interface XxxRepository` with suspend/Flow methods
-> - Create `XxxRepositoryImpl` implementing the interface
-> - Use `Result<T>` or sealed class for success/error
+> - Create `interface XxxRepository` in `data/repository/` with suspend/Flow methods
+> - Create `XxxRepositoryImpl` in `genaral/` or `cloud/` (flavor-specific)
+> - Use `Result<T>` for success/error wrapping
 > - Use suspend + `await()` instead of `addOnSuccessListener` / `addOnFailureListener`
 > - Add constants to `RepositoryConstants` (page sizes, debounce, error messages)
-> - Keep repositories in `data/repository/`, never in `ui/`
+> - **Repositories are used by UseCases**, never injected into ViewModels
+> - Keep repository interfaces in `data/repository/`, impls in flavor source sets
 
 ---
 
-**Reference:** `data/repository/ShopRepository.kt`, `TodaysCollectionRepository.kt`
+**Clean Architecture:** `Data` layer. ViewModel → UseCase → Repository
+
+**Reference:** `data/repository/ShopRepository.kt`, `domain/shoplist/usecase/GetShopsPagingUseCase.kt`

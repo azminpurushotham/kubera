@@ -7,10 +7,10 @@ import androidx.paging.cachedIn
 import com.collection.kubera.data.Result
 import com.collection.kubera.data.TodaysCollectionData
 import com.collection.kubera.data.repository.RepositoryConstants
-import com.collection.kubera.data.repository.TodaysCollectionRepository
-import com.collection.kubera.data.CollectionModel
-import com.collection.kubera.data.repository.TransactionHistoryRepository
 import com.collection.kubera.data.repository.TransactionSortType
+import com.collection.kubera.data.CollectionModel
+import com.collection.kubera.domain.orderhistory.usecase.GetTransactionHistoryPagingUseCase
+import com.collection.kubera.domain.shoplist.usecase.SyncTodaysCollectionUseCase
 import com.collection.kubera.states.CollectionHistoryUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
@@ -27,8 +27,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CollectionViewModel @Inject constructor(
-    private val transactionHistoryRepository: TransactionHistoryRepository,
-    private val todaysCollectionRepository: TodaysCollectionRepository,
+    private val getTransactionHistoryPagingUseCase: GetTransactionHistoryPagingUseCase,
+    private val syncTodaysCollectionUseCase: SyncTodaysCollectionUseCase,
     private val dispatcher: CoroutineDispatcher
 ) : ViewModel() {
 
@@ -38,15 +38,13 @@ class CollectionViewModel @Inject constructor(
     private val _todaysCollection = MutableStateFlow(TodaysCollectionData(0L, 0L, 0L))
     val todaysCollection: StateFlow<TodaysCollectionData> = _todaysCollection.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<CollectionHistoryUiEvent>()
+    private val _uiEvent = MutableSharedFlow<CollectionHistoryUiEvent>(replay = 0, extraBufferCapacity = 2)
     val uiEvent: SharedFlow<CollectionHistoryUiEvent> = _uiEvent.asSharedFlow()
 
     private var currentSortType = TransactionSortType.TIMESTAMP_DESC
 
     private val _listFlow = MutableStateFlow<Flow<PagingData<CollectionModel>>>(
-        transactionHistoryRepository
-            .getTransactionHistoryPagingFlow(currentSortType)
-            .cachedIn(viewModelScope)
+        getTransactionHistoryPagingUseCase(currentSortType).cachedIn(viewModelScope)
     )
     val list: StateFlow<Flow<PagingData<CollectionModel>>> = _listFlow.asStateFlow()
 
@@ -65,15 +63,13 @@ class CollectionViewModel @Inject constructor(
         Timber.d("getCollectionHistory sortType=${sortType.code}")
         currentSortType = sortType
         viewModelScope.launch(dispatcher) {
-            _listFlow.value = transactionHistoryRepository
-                .getTransactionHistoryPagingFlow(sortType)
-                .cachedIn(viewModelScope)
+            _listFlow.value = getTransactionHistoryPagingUseCase(sortType).cachedIn(viewModelScope)
         }
     }
 
     private fun syncTodaysCollection() {
         viewModelScope.launch(dispatcher) {
-            when (val result = todaysCollectionRepository.syncTodaysCollection()) {
+            when (val result = syncTodaysCollectionUseCase()) {
                 is Result.Success -> {
                     _todaysCollection.value = result.data
                 }
@@ -92,8 +88,6 @@ class CollectionViewModel @Inject constructor(
 
     private fun refreshTransactionHistory() {
         Timber.d("refreshTransactionHistory")
-        _listFlow.value = transactionHistoryRepository
-            .getTransactionHistoryPagingFlow(currentSortType)
-            .cachedIn(viewModelScope)
+        _listFlow.value = getTransactionHistoryPagingUseCase(currentSortType).cachedIn(viewModelScope)
     }
 }

@@ -23,7 +23,6 @@ android {
     }
 
     flavorDimensions += "environment"
-
     productFlavors {
         create("genaral") {
             dimension = "environment"

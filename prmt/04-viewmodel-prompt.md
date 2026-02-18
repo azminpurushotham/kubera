@@ -4,60 +4,72 @@ Use when creating/refactoring ViewModels.
 
 ---
 
+## Clean Architecture
+
+- **ViewModel injects UseCases only** — never inject repositories directly
+- ViewModel coordinates use cases and maps results to UI state/events
+- Business logic lives in UseCases; ViewModel only orchestrates
+
+---
+
 ## Core Rules
 
 - **ViewModel must not hold** Activity, Fragment, View, or Context reference
 - **One ViewModel per screen** (feature-scoped)
 - **ViewModel should survive configuration changes** without reloading data
-- **ViewModel should be lifecycle independent** — UI notifies ViewModel about lifecycle events
 - **ViewModel must not depend on lifecycle methods** (onResume/onPause/etc.)
 
 ## State & Events
 
-- **UI actions** should be emitted as events, not executed inside ViewModel
-- **Never expose mutable state** from ViewModel
-- **Public state must be immutable**, private state mutable
-- Use **StateFlow** (state) and **SharedFlow** (events)
-- **UI reads state**, ViewModel updates state — **UI must not modify ViewModel data directly**
-- Avoid **MutableList** exposure — expose **List** only
-- Update state using **new object reference** (copy/replace, not mutate)
-- Maintain **single source of truth** inside ViewModel
+- Use **StateFlow** for UI state (`_uiState`)
+- Use **SharedFlow** for one-time events: `MutableSharedFlow(replay = 0, extraBufferCapacity = 2)`
+- Use `emit()` from coroutines — never `tryEmit` for event emission
+- **Never expose mutable state**; public state must be immutable
+- **Never store** error/navigation in uiState — emit as UiEvent
 
 ## Data Layer
 
-- **Heavy work** must be inside Repository/UseCase, not ViewModel
-- ViewModel **only coordinates data**, not fetch directly from API layer
+- **Heavy work** in UseCase/Repository, not ViewModel
+- ViewModel **only coordinates** via use cases
 - **Store only UI state** inside ViewModel
-- **Business logic** belongs to domain/repository layers
+- **Business logic** in domain (UseCases) and data (Repositories)
 
 ## Coroutines & Scope
 
 - **Always use viewModelScope** for coroutines
-- **Never use GlobalScope** in ViewModel
-- **Cancel running jobs** automatically using viewModelScope
-- Do not create **long-running blocking operations** in ViewModel
+- **Never use GlobalScope**
+- Use `viewModelScope.launch(dispatcher)` for async work
+- Call use cases from inside `launch` — use `emit()` for SharedFlow
 
 ## Restrictions
 
-- **Do not store** adapters, views, bitmaps, or large caches in ViewModel
-- **ViewModel should not perform navigation directly** (emit event instead)
-- **ViewModel should not show Toast/Snackbar directly**
-- **Handle errors in ViewModel**, display in UI
-- Keep ViewModel **free from Android framework UI classes**
-- Keep ViewModel **testable** (no Android dependencies)
+- **Do not inject** repositories — use use cases
+- **ViewModel should not perform navigation directly** — emit event
+- **ViewModel should not show Toast/Snackbar directly** — emit event
+- Keep ViewModel **testable** (no Android UI dependencies)
 
 ## Implementation Pattern
 
-- Use `@HiltViewModel` and `@Inject constructor` for all dependencies
-- Use `StateFlow` for UI state (e.g. `_uiState`, `_data`)
-- Use `SharedFlow` for one-time events (errors, navigation) — never persist in state
-- Inject `CoroutineDispatcher` for testability (provide via Hilt)
-- No direct Firestore/API/Context in ViewModel — use repositories only
-- Use `viewModelScope.launch(dispatcher)` for async work
-- Use `Result` or sealed class for repository results, map to state/events
-- **Initial data loading** should happen in `init {}`
-- Debounce search input with `debounce()` + `distinctUntilChanged()` when applicable
+```kotlin
+@HiltViewModel
+class XxxViewModel @Inject constructor(
+    private val getXxxUseCase: GetXxxUseCase,
+    private val dispatcher: CoroutineDispatcher
+) : ViewModel() {
+    private val _uiState = MutableStateFlow<XxxUiState>(...)
+    private val _uiEvent = MutableSharedFlow<XxxUiEvent>(replay = 0, extraBufferCapacity = 2)
+    
+    fun load() {
+        viewModelScope.launch(dispatcher) {
+            when (val result = getXxxUseCase()) {
+                is Result.Success -> _uiState.value = ...
+                is Result.Error -> _uiEvent.emit(XxxUiEvent.ShowError(...))
+            }
+        }
+    }
+}
+```
 
 ---
 
-**Reference:** `ui/shoplist/ShopListViewModel.kt`
+**Reference:** `ui/shoplist/ShopListViewModel.kt`, `domain/shoplist/usecase/`
