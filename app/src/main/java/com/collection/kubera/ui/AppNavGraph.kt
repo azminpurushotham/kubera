@@ -8,14 +8,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.TextSnippet
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Assessment
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Store
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.DrawerState
 import androidx.compose.material3.DrawerValue
@@ -123,48 +124,55 @@ fun AppNavGraph(
             )
         },
         bottomBar = {
+            val isHome = currentRoute == AllDestinations.SHOP_LIST
+            val isCollections = currentRoute == AllDestinations.COLLECTION_HISTORY ||
+                currentRoute.contains(AllDestinations.SHOP_COLLECTION_HISTORY)
+            val isNewShop = currentRoute == AllDestinations.ADD_NEW_SHOP
+            val isReport = currentRoute == AllDestinations.REPORT
+            val isProfile = currentRoute == AllDestinations.PROFILE
+
             BottomAppBar(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
             ) {
                 Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
                     BottomAppBarItem(
-                        iconResId = Icons.Default.Home,
+                        modifier = Modifier.weight(1f),
+                        iconResId = Icons.Outlined.Home,
                         label = "Home",
-                        onClick = {
-                            navigationActions.navigateToShopList()
-                        }
+                        selected = isHome,
+                        onClick = { navigationActions.navigateToShopList() }
                     )
                     BottomAppBarItem(
-                        iconResId = Icons.Default.History,
+                        modifier = Modifier.weight(1f),
+                        iconResId = Icons.Outlined.History,
                         label = "Collections",
-                        onClick = {
-                            navigationActions.navigateToCollectionHistory()
-                        }
+                        selected = isCollections,
+                        onClick = { navigationActions.navigateToCollectionHistory() }
                     )
                     BottomAppBarItem(
-                        iconResId = Icons.Default.Add,
+                        modifier = Modifier.weight(1f),
+                        iconResId = Icons.Outlined.Store,
                         label = "New Shop",
-                        onClick = {
-                            navigationActions.navigateToAddNewShop()
-                        }
+                        selected = isNewShop,
+                        onClick = { navigationActions.navigateToAddNewShop() }
                     )
                     BottomAppBarItem(
-                        iconResId = Icons.Default.TextSnippet,
+                        modifier = Modifier.weight(1f),
+                        iconResId = Icons.Outlined.Assessment,
                         label = "Report",
-                        onClick = {
-                            navigationActions.navigateToReport()
-                        }
+                        selected = isReport,
+                        onClick = { navigationActions.navigateToReport() }
                     )
                     BottomAppBarItem(
-                        iconResId = Icons.Default.Person,
+                        modifier = Modifier.weight(1f),
+                        iconResId = Icons.Outlined.Person,
                         label = "Profile",
-                        onClick = {
-                            navigationActions.navigateToProfile()
-                        }
+                        selected = isProfile,
+                        onClick = { navigationActions.navigateToProfile() }
                     )
                 }
             }
@@ -238,27 +246,30 @@ fun AppNavGraph(
 
 @Composable
 fun BottomAppBarItem(
+    modifier: Modifier = Modifier,
     iconResId: ImageVector,
     label: String,
+    selected: Boolean = false,
     onClick: () -> Unit
 ) {
+    val iconColor = if (selected) Color.White else Color.White.copy(alpha = 0.7f)
     Column(
-        modifier = Modifier
+        modifier = modifier
             .clickable(onClick = onClick)
-            .padding(4.dp),
+            .padding(vertical = 8.dp, horizontal = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Icon(
-            iconResId,
+            imageVector = iconResId,
             contentDescription = label,
             modifier = Modifier.size(24.dp),
-            tint = Color.White
+            tint = iconColor
         )
         Text(
             text = label,
-            fontSize = 12.sp,
-            color = Color.White,
-            fontWeight = FontWeight.Normal
+            fontSize = 11.sp,
+            color = iconColor,
+            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
         )
     }
 }
